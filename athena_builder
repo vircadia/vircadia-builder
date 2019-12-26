@@ -64,7 +64,7 @@ my $DISTRO = detect_distro();
 my %PACKAGES = get_package_list();
 install_missing_packages();
 collect_info();
-#install();
+install();
 setup_desktop();
 
 
