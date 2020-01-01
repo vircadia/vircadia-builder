@@ -1,6 +1,7 @@
 #!/usr/bin/env perl
 use warnings;
 use strict;
+use Getopt::Long;
 
 $| = 1;
 
@@ -60,7 +61,23 @@ my $inst_dir     = "$ENV{HOME}/Athena";
 my $build_cores  = calculate_cores();
 my $desktop      = get_desktop();
 
-my $DISTRO = detect_distro();
+my ($opt_keep_source);
+my ($cmd_help);
+
+GetOptions(
+	"keep-source|K"          => \$opt_keep_source,
+	"help|h"                 => \$cmd_help,
+	"auto|y"                 => \$opt_auto,
+) or help(1);
+
+help(1) if ($cmd_help);
+
+
+
+
+
+
+my ($DISTRO, $DISTRO_VER) = detect_distro();
 my %PACKAGES = get_package_list();
 install_missing_packages();
 collect_info();
@@ -74,8 +91,11 @@ sub detect_distro {
 	info "Detecting distribution... ";
 
 	if ( -f "/etc/fedora-release" ) {
-		info "Fedora\n";
-		return "fedora";
+		my ($release_line) = readfile("/etc/fedora-release");
+		my ($ver) = $release_line =~ /^Fedora release (\d+)/;
+
+		info "Fedora $ver\n";
+		return ("fedora", $ver);
 	}
 
 	if ( -f "/etc/lsb-release" ) {
@@ -134,7 +154,7 @@ sub collect_info {
 	info "value.\n\n";
 
 	my $rl = Term::ReadLine->new('athena_setup');
-	my $ok = "no";
+	my $ok = $opt_auto ? "yes" : "no";
 
 	while($ok ne "yes") {
 		$repo         = $rl->readline("Git repository  : ", $repo);
@@ -163,10 +183,12 @@ sub install {
 
 		run("git", "checkout", $repo_tag);
 	} else {
-		chdir("$inst_dir/source");
-		run("git", "fetch");
-		run("git", "clean", "-f");
-		run("git", "reset", "--hard", $repo_tag);
+		if ( !$opt_keep_source ) {
+			chdir("$inst_dir/source");
+			run("git", "fetch");
+			run("git", "clean", "-f");
+			run("git", "reset", "--hard", $repo_tag);
+		}
 	}
 	
 
@@ -295,4 +317,22 @@ sub readfile {
 	chomp @data;
 	close $fh;
 	return @data;
+}
+
+sub help() {
+	my $retval = shift // 0;
+
+	print <<HELP;
+
+$0 [options]
+Downloads, compiles and installs the Athena Project
+
+Options:
+	--auto              Run without asking any questions
+	--keep-source       Don't overwrite the current source tree
+
+
+HELP;
+
+	exit($retval);
 }
