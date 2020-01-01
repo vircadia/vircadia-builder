@@ -231,6 +231,10 @@ sub setup_desktop {
 	print $dsk "Icon=$inst_dir/source/interface/icon/interface.ico\n";
 	print $dsk "Categories=Graphics;AudioVideo;Network\n";
 	close $dsk;
+
+	info "Marking desktop icon as trusted... ";
+	run("gio", "set", "$desktop/Athena.desktop", "metadata::trusted", "yes");
+	info "done.\n";
 }
 
 
