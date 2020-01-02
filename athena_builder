@@ -5,17 +5,17 @@ use Getopt::Long;
 
 $| = 1;
 
-sub info($) {
+sub info {
 	print STDERR shift;
 }
 
-sub warning($) {
+sub warning {
 	print STDERR shift;
 }
 
-sub fatal($) {
+sub fatal {
 	print STDERR shift;
-	print STDERR "Please notify Dale Glass#8576 on Discord of this problem.";
+	print STDERR "\n\nPlease notify Dale Glass#8576 on Discord of this problem.\n";
 	exit 1;
 }
 
@@ -143,13 +143,13 @@ setup_desktop();
 
 
 sub detect_distro {
-	info "Detecting distribution... ";
+	info("Detecting distribution... ");
 
 	if ( -f "/etc/fedora-release" ) {
 		my ($release_line) = readfile("/etc/fedora-release");
 		my ($ver) = $release_line =~ /^Fedora release (\d+)/;
 
-		info "Fedora $ver\n";
+		info("Fedora $ver\n");
 		return ("fedora", $ver);
 	}
 
@@ -162,17 +162,17 @@ sub detect_distro {
 		(undef, $distro_name) = split(/=/, $dist);
 		(undef, $release)     = split(/=/, $ver);
 
-		info "$distro_name $release\n";
+		info("$distro_name $release\n");
 		return (lc($distro_name), $release);
 	}
 
-	die "Failed to detect distribution!";
+	fatal("Failed to detect distribution!");
 }
 
 
 
 sub get_package_list {
-	info "Getting the package list... ";	
+	info("Getting the package list... ");
 	my @packages;
 	if ( $DISTRO eq "fedora" ) {
 		@packages = `rpm -qa --qf "%{NAME}\\n"`
@@ -182,15 +182,15 @@ sub get_package_list {
 
 	chomp @packages;
 
-	info "done.\n";
+	info("done.\n");
 	return map { $_ => 1 } @packages;
 }
 
 sub install_missing_packages {
-	info "Checking if any packages need installing... ";
+	info("Checking if any packages need installing... ");
 
 	if ( !exists $required_packages->{"${DISTRO}-${DISTRO_VER}"} ) {
-		die "No required package list for this distribution!";
+		fatal("No required package list for $DISTRO $DISTRO_VER, distribution unsupported.");
 	}
 
 	my @missing = grep { !exists $PACKAGES{$_} } @{$required_packages->{"$DISTRO-$DISTRO_VER"}};
@@ -214,10 +214,10 @@ sub install_missing_packages {
 
 sub collect_info {
 	require Term::ReadLine;
-	info "\n";
-	info "Everything seems to be in order. I am going to ask you some questions now.\n";
-	info "The defaults should be just fine. Simply press ENTER to accept the suggested\n";
-	info "value.\n\n";
+	info("\n");
+	info("Everything seems to be in order. I am going to ask you some questions now.\n");
+	info("The defaults should be just fine. Simply press ENTER to accept the suggested\n");
+	info("value.\n\n");
 
 	my $rl = Term::ReadLine->new('athena_setup');
 	my $ok = $opt_auto ? "yes" : "no";
@@ -227,7 +227,7 @@ sub collect_info {
 		$repo_tag     = $rl->readline("Git tag         : ", $repo_tag);
 		$inst_dir     = $rl->readline("Installation dir: ", $inst_dir);
 		$build_cores  = $rl->readline("CPU cores to use: ", $build_cores);
-		info "\n";
+		info("\n");
 		$ok = $rl->readline("If the above is okay, say 'yes' to begin installation: ", "yes");
 	}
 
@@ -235,11 +235,11 @@ sub collect_info {
 }
 
 sub install {
-	info "\n\n";
-	info "############################################################\n";
-	info "# Starting installation\n";
-	info "############################################################\n";
-	info "\n";
+	info("\n\n");
+	info("############################################################\n");
+	info("# Starting installation\n");
+	info("############################################################\n");
+	info("\n");
 
 	mkdir($inst_dir);
 	
@@ -269,11 +269,11 @@ sub install {
 
 	run("cmake", "../source");
 
-	info "\n\n";
-	info "############################################################\n";
-	info "# Building\n";
-	info "############################################################\n";
-	info "\n";
+	info("\n\n");
+	info("############################################################\n");
+	info("# Building\n");
+	info("############################################################\n");
+	info("\n");
 
 
 	run("make", "interface", "-j${build_cores}");
@@ -292,12 +292,12 @@ sub setup_desktop {
 		}
 		run("cp", "-Rdp", $qt_dir, "$inst_dir/qt5-install");
 		
-		info "done.\n";
+		info("done.\n");
 	} else {
-		die "Failed to find Qt dir in $inst_dir/vcpkg!";
+		fatal("Failed to find Qt dir in $inst_dir/vcpkg!");
 	}
 
-	open(my $script, ">", "$inst_dir/build/run_interface") or die "Can't create $inst_dir/build/interface: $!";
+	open(my $script, ">", "$inst_dir/build/run_interface") or fatal("Can't create $inst_dir/build/interface: $!");
 	print $script "#!/bin/bash\n";
 	print $script "export QT_DIR=$inst_dir/qt5-install\n";
 	print $script "export QT_QPA_PLATFORM_PLUGIN_PATH=\$QT_DIR/plugins\n";
@@ -309,7 +309,7 @@ sub setup_desktop {
 	chmod 0755,  "$inst_dir/build/run_interface";
 
 
-	open(my $dsk, ">", "$desktop/Athena.desktop") or die "Can't create $desktop/Athena.desktop: $!";
+	open(my $dsk, ">", "$desktop/Athena.desktop") or fatal("Can't create $desktop/Athena.desktop: $!");
 	print $dsk "[Desktop Entry]\n";
 	print $dsk "Version=1.0\n";
 	print $dsk "Name=Athena VR\n";
@@ -320,24 +320,24 @@ sub setup_desktop {
 	print $dsk "Categories=Graphics;AudioVideo;Network\n";
 	close $dsk;
 
-	info "Marking desktop icon as trusted... ";
+	info("Marking desktop icon as trusted... ");
 	run("gio", "set", "$desktop/Athena.desktop", "metadata::trusted", "yes");
-	info "done.\n";
+	info("done.\n");
 }
 
 
 sub run {
 	my (@command) = @_;
-	system(@command) == 0 or die "Failed to run " . join(' ', @command) . ": $?";
+	system(@command) == 0 or fatal("Failed to run " . join(' ', @command) . ": $?");
 }
 
 
 sub sudo_run {
 	my (@command) = @_;
 
-	info "Root privileges are needed to run the following command:\n";
-	info "\t" . join(' ', @command) . "\n";
-	info "Please enter your password to continue\n\n";
+	info("Root privileges are needed to run the following command:\n");
+	info("\t" . join(' ', @command) . "\n");
+	info("Please enter your password to continue\n\n");
 
 	run("sudo", @command);
 }
@@ -378,7 +378,7 @@ sub get_desktop {
 
 sub readfile {
 	my ($file) = @_;
-	open(my $fh, $file) or die "Can't open $file: $!";
+	open(my $fh, $file) or fatal("Can't open $file: $!");
 	my @data = <$fh>;
 	chomp @data;
 	close $fh;
