@@ -85,7 +85,7 @@ my $required_packages = {
 		'libgl1-mesa-dev',
 		'xdg-user-dirs',
 		# Qt
-		'libdouble-conversion-dev', 'libxcb-xinerama0-dev',
+		'libdouble-conversion-dev', 'libxcb-xinerama0-dev', 'libpcre2-16-0', 'libxcb-xinput0',
 		# Interface
 		'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
 		# Misc
