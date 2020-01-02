@@ -2,6 +2,8 @@
 use warnings;
 use strict;
 use Getopt::Long;
+use Term::ANSIColor;
+
 
 $| = 1;
 
@@ -9,13 +11,30 @@ sub info {
 	print STDERR shift;
 }
 
-sub warning {
+sub info_ok {
+	print STDERR color('bold green');
 	print STDERR shift;
+	print STDERR color('reset');
 }
 
+sub warning {
+	print STDERR color('bold red');
+	print STDERR shift;
+	print STDERR color('reset');
+}
+
+sub important {
+	print STDERR color('bold white');
+	print STDERR shift;
+	print STDERR color('reset');
+}
+
+
 sub fatal {
+	print STDERR color('bold red');
 	print STDERR shift;
 	print STDERR "\n\nPlease notify Dale Glass#8576 on Discord of this problem.\n";
+	print STDERR color('reset');
 	exit 1;
 }
 
@@ -149,7 +168,7 @@ sub detect_distro {
 		my ($release_line) = readfile("/etc/fedora-release");
 		my ($ver) = $release_line =~ /^Fedora release (\d+)/;
 
-		info("Fedora $ver\n");
+		info_ok("Fedora $ver\n");
 		return ("fedora", $ver);
 	}
 
@@ -162,7 +181,7 @@ sub detect_distro {
 		(undef, $distro_name) = split(/=/, $dist);
 		(undef, $release)     = split(/=/, $ver);
 
-		info("$distro_name $release\n");
+		info_ok("$distro_name $release\n");
 		return (lc($distro_name), $release);
 	}
 
@@ -182,7 +201,7 @@ sub get_package_list {
 
 	chomp @packages;
 
-	info("done.\n");
+	info_ok("done.\n");
 	return map { $_ => 1 } @packages;
 }
 
@@ -205,19 +224,19 @@ sub install_missing_packages {
 			sudo_run("apt-get", "install", "-y", @missing);
 		}
 
-		info "\nPackages have been installed, please run $0 again.\n\n";
+		info_ok("\nPackages have been installed, please run $0 again.\n\n");
 		exit(0);
 	} else {
-		print "no.\n";
+		info_ok("no.\n");
 	}
 }
 
 sub collect_info {
 	require Term::ReadLine;
 	info("\n");
-	info("Everything seems to be in order. I am going to ask you some questions now.\n");
-	info("The defaults should be just fine. Simply press ENTER to accept the suggested\n");
-	info("value.\n\n");
+	important("Everything seems to be in order. I am going to ask you some questions now.\n");
+	important("The defaults should be just fine. Simply press ENTER to accept the suggested\n");
+	important("value.\n\n");
 
 	my $rl = Term::ReadLine->new('athena_setup');
 	my $ok = $opt_auto ? "yes" : "no";
@@ -286,13 +305,13 @@ sub setup_desktop {
 	chomp $qt_dir;
 
 	if ( -d "$qt_dir" ) {
-		info "Creating permanent qt dir... ";
+		info("Creating permanent qt dir... ");
 		if ( -d "$inst_dir/qt5-install" ) {
 			run("rm", "-rf", "$inst_dir/qt5-install");
 		}
 		run("cp", "-Rdp", $qt_dir, "$inst_dir/qt5-install");
 		
-		info("done.\n");
+		info_ok("done.\n");
 	} else {
 		fatal("Failed to find Qt dir in $inst_dir/vcpkg!");
 	}
@@ -322,7 +341,7 @@ sub setup_desktop {
 
 	info("Marking desktop icon as trusted... ");
 	run("gio", "set", "$desktop/Athena.desktop", "metadata::trusted", "yes");
-	info("done.\n");
+	info_ok("done.\n");
 }
 
 
@@ -335,9 +354,9 @@ sub run {
 sub sudo_run {
 	my (@command) = @_;
 
-	info("Root privileges are needed to run the following command:\n");
-	info("\t" . join(' ', @command) . "\n");
-	info("Please enter your password to continue\n\n");
+	important("Root privileges are needed to run the following command:\n");
+	important("\t" . join(' ', @command) . "\n");
+	important("Please enter your password to continue\n\n");
 
 	run("sudo", @command);
 }
