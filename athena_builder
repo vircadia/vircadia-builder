@@ -21,7 +21,7 @@ sub fatal($) {
 
 
 my $required_packages = {
-	'ubuntu' => [
+	'ubuntu-16.04' => [
 		'libterm-readline-gnu-perl',
 		'build-essential',
 		'git',
@@ -46,6 +46,57 @@ my $required_packages = {
 		'nodejs'
 
 	],
+	'ubuntu-18.04' => [
+		'libterm-readline-gnu-perl',
+		'build-essential',
+		'git',
+		'make',
+		'cmake',
+		'python',
+		'libdrm-dev',
+		'mesa-common-dev',
+		'mesa-utils',
+		'libglvnd-dev',
+		'libgl1-mesa-dev',
+		'xdg-user-dirs',
+		# Qt
+		'libdouble-conversion1', 'libxcb-xinerama0-dev',
+		# Interface
+		'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
+		# Misc
+		'libasound2', 'libxmu-dev', 'libxi-dev', 'freeglut3-dev', 'libasound2-dev', 'libjack0', 'libjack-dev', 'libxrandr-dev', 'libudev-dev', 'libssl-dev', 'zlib1g-dev',
+		# Server
+		'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
+		# Docs
+		'nodejs'
+
+	],
+	'ubuntu-19.10' => [
+		'libterm-readline-gnu-perl',
+		'build-essential',
+		'git',
+		'make',
+		'cmake',
+		'python',
+		'libdrm-dev',
+		'mesa-common-dev',
+		'mesa-utils',
+		'libglvnd-dev',
+		'libgl1-mesa-dev',
+		'xdg-user-dirs',
+		# Qt
+		'libdouble-conversion-dev', 'libxcb-xinerama0-dev',
+		# Interface
+		'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
+		# Misc
+		'libasound2', 'libxmu-dev', 'libxi-dev', 'freeglut3-dev', 'libasound2-dev', 'libjack0', 'libjack-dev', 'libxrandr-dev', 'libudev-dev', 'libssl-dev', 'zlib1g-dev',
+		# Server
+		'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
+		# Docs
+		'nodejs'
+
+	],
+
 	'fedora' => [
 		'git',
 		'perl-Term-ReadLine-Gnu',
@@ -101,8 +152,14 @@ sub detect_distro {
 	if ( -f "/etc/lsb-release" ) {
 		my @lsb = readfile("/etc/lsb-release");
 		my ($dist) = grep { /^DISTRIB_ID/ } @lsb;
-		my ($f, $v) = split(/=/, $dist);
-		return lc($v);
+		my ($ver)  = grep { /^DISTRIB_RELEASE/ } @lsb;
+
+		my ($distro_name, $release);
+		(undef, $distro_name) = split(/=/, $dist);
+		(undef, $release)     = split(/=/, $ver);
+
+		info "$distro_name $release\n";
+		return (lc($distro_name), $release);
 	}
 
 	die "Failed to detect distribution!";
@@ -127,7 +184,12 @@ sub get_package_list {
 
 sub install_missing_packages {
 	info "Checking if any packages need installing... ";
-	my @missing = grep { !exists $PACKAGES{$_} } @{$required_packages->{$DISTRO}};
+
+	if ( !exists $required_packages->{"${DISTRO}-${DISTRO_VER}"} ) {
+		die "No required package list for this distribution!";
+	}
+
+	my @missing = grep { !exists $PACKAGES{$_} } @{$required_packages->{"$DISTRO-$DISTRO_VER"}};
 
 
 	if ( @missing ) {
