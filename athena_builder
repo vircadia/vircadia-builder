@@ -273,7 +273,7 @@ sub sudo_run {
 	info "\t" . join(' ', @command) . "\n";
 	info "Please enter your password to continue\n\n";
 
-	system("sudo", @command);
+	run("sudo", @command);
 }
 
 
