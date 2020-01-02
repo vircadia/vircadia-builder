@@ -119,6 +119,10 @@ GetOptions(
 	"keep-source|K"          => \$opt_keep_source,
 	"help|h"                 => \$cmd_help,
 	"auto|y"                 => \$opt_auto,
+	"repo|r=s"               => \$repo,
+	"tag|t=s"                => \$repo_tag,
+        "destdir|d=s"            => \$inst_dir,
+        "cores|j=i"              => \$build_cores
 ) or help(1);
 
 help(1) if ($cmd_help);
@@ -390,8 +394,13 @@ $0 [options]
 Downloads, compiles and installs the Athena Project
 
 Options:
-	--auto              Run without asking any questions
-	--keep-source       Don't overwrite the current source tree
+	-d, --destdir DIR       Set the installation directory
+	-h, --help              Shows this text
+	-j, --cores NUM         Use NUM cores during build
+	-k, --keep-source       Don't overwrite the current source tree
+	-r, --repo REPO         Set the repository to REPO
+	-t, --tag TAG           Set the tag to TAG
+	-y, --auto              Run without asking any questions
 
 
 HELP
