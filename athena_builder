@@ -61,7 +61,7 @@ my $inst_dir     = "$ENV{HOME}/Athena";
 my $build_cores  = calculate_cores();
 my $desktop      = get_desktop();
 
-my ($opt_keep_source);
+my ($opt_keep_source, $opt_auto);
 my ($cmd_help);
 
 GetOptions(
@@ -319,7 +319,7 @@ sub readfile {
 	return @data;
 }
 
-sub help() {
+sub help {
 	my $retval = shift // 0;
 
 	print <<HELP;
@@ -332,7 +332,7 @@ Options:
 	--keep-source       Don't overwrite the current source tree
 
 
-HELP;
+HELP
 
 	exit($retval);
 }
