@@ -39,93 +39,179 @@ sub fatal {
 }
 
 
-my $required_packages = {
-	'ubuntu-16.04' => [
-		'libterm-readline-gnu-perl',
-		'build-essential',
-		'git',
-		'make',
-		'cmake',
-		'python',
-		'libdrm-dev',
-		'mesa-common-dev',
-		'mesa-utils',
-		'libglvnd-dev',
-		'libgl1-mesa-dev',
-		'xdg-user-dirs',
-		# Qt
-		'libdouble-conversion1', 'libxcb-xinerama0-dev',
-		# Interface
-		'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
-		# Misc
-		'libasound2', 'libxmu-dev', 'libxi-dev', 'freeglut3-dev', 'libasound2-dev', 'libjack0', 'libjack-dev', 'libxrandr-dev', 'libudev-dev', 'libssl-dev', 'zlib1g-dev',
-		# Server
-		'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
-		# Docs
-		'nodejs'
+my $data = {
+	'ubuntu-16.04' => {
+		has_binary_qt_package => 1,
+		source_dependencies => [
+			'libterm-readline-gnu-perl',
+			'build-essential',
+			'git',
+			'make',
+			'cmake',
+			'python',
+			'libdrm-dev',
+			'mesa-common-dev',
+			'mesa-utils',
+			'libglvnd-dev',
+			'libgl1-mesa-dev',
+			'xdg-user-dirs',
+			# Qt runtime
+			'libdouble-conversion1', 'libxcb-xinerama0-dev',
+			# Interface
+			'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
+			# Misc
+			'libasound2', 'libxmu-dev', 'libxi-dev', 'freeglut3-dev', 'libasound2-dev', 'libjack0', 'libjack-dev', 'libxrandr-dev', 'libudev-dev', 'libssl-dev', 'zlib1g-dev',
+			# Server
+			'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
+			# Docs
+			'nodejs'
+		]
 
-	],
-	'ubuntu-18.04' => [
-		'libterm-readline-gnu-perl',
-		'build-essential',
-		'git',
-		'make',
-		'cmake',
-		'python',
-		'libdrm-dev',
-		'mesa-common-dev',
-		'mesa-utils',
-		'libglvnd-dev',
-		'libgl1-mesa-dev',
-		'xdg-user-dirs',
-		# Qt
-		'libdouble-conversion1', 'libxcb-xinerama0-dev',
-		# Interface
-		'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
-		# Misc
-		'libasound2', 'libxmu-dev', 'libxi-dev', 'freeglut3-dev', 'libasound2-dev', 'libjack0', 'libjack-dev', 'libxrandr-dev', 'libudev-dev', 'libssl-dev', 'zlib1g-dev',
-		# Server
-		'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
-		# Docs
-		'nodejs'
+	},
+	'ubuntu-18.04' => {
+		has_binary_qt_package => 1,
+		source_dependencies => [
+			'libterm-readline-gnu-perl',
+			'build-essential',
+			'git',
+			'make',
+			'cmake',
+			'python',
+			'libdrm-dev',
+			'mesa-common-dev',
+			'mesa-utils',
+			'libglvnd-dev',
+			'libgl1-mesa-dev',
+			'xdg-user-dirs',
+			# Qt runtime
+			'libdouble-conversion1', 'libxcb-xinerama0-dev',
+			# Interface
+			'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
+			# Misc
+			'libasound2', 'libxmu-dev', 'libxi-dev', 'freeglut3-dev', 'libasound2-dev', 'libjack0', 'libjack-dev', 'libxrandr-dev', 'libudev-dev', 'libssl-dev', 'zlib1g-dev',
+			# Server
+			'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
+			# Docs
+			'nodejs'
+		]
 
-	],
-	'ubuntu-19.10' => [
-		'libterm-readline-gnu-perl',
-		'build-essential',
-		'git',
-		'make',
-		'cmake',
-		'python',
-		'libdrm-dev',
-		'mesa-common-dev',
-		'mesa-utils',
-		'libglvnd-dev',
-		'libgl1-mesa-dev',
-		'xdg-user-dirs',
-		# Qt
-		'libdouble-conversion-dev', 'libxcb-xinerama0-dev', 'libpcre2-16-0', 'libxcb-xinput0',
-		# Interface
-		'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
-		# Misc
-		'libasound2', 'libxmu-dev', 'libxi-dev', 'freeglut3-dev', 'libasound2-dev', 'libjack0', 'libjack-dev', 'libxrandr-dev', 'libudev-dev', 'libssl-dev', 'zlib1g-dev',
-		# Server
-		'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
-		# Docs
-		'nodejs'
+	},
+	'ubuntu-19.10' => {
+		has_binary_qt_package => 1,
+		source_dependencies => [
+			'libterm-readline-gnu-perl',
+			'build-essential',
+			'git',
+			'make',
+			'cmake',
+			'python',
+			'libdrm-dev',
+			'mesa-common-dev',
+			'mesa-utils',
+			'libglvnd-dev',
+			'libgl1-mesa-dev',
+			'xdg-user-dirs',
+			# Qt
+			'libdouble-conversion-dev', 'libxcb-xinerama0-dev', 'libpcre2-16-0', 'libxcb-xinput0',
+			# Interface
+			'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
+			# Misc
+			'libasound2', 'libxmu-dev', 'libxi-dev', 'freeglut3-dev', 'libasound2-dev', 'libjack0', 'libjack-dev', 'libxrandr-dev', 'libudev-dev', 'libssl-dev', 'zlib1g-dev',
+			# Server
+			'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
+			# Docs
+			'nodejs'
+		]
+	},
 
-	],
-
-	'fedora' => [
-		'git',
-		'perl-Term-ReadLine-Gnu',
-		'cmake',
-		'make',
-		'gcc-c++'
-	]
+	'fedora-31' => {
+		has_binary_qt_package => 0,
+		qt_version => '5.12.6',
+		qt_patches => [
+			'aec.patch',
+			'mac-web-video.patch',
+#			'qfloat16.patch',  # Doesn't apply against 5.12.6
+			'qtscript-crash-fix.patch'
+		],
+		source_dependencies => [
+			'git',
+			'perl-Term-ReadLine-Gnu',
+			'cmake',
+			'make',
+			'gcc-c++',
+			'libatomic'
+		],
+		qt_source_dependencies => [
+			"patch",
+			"alsa-lib-devel",
+			"cups-devel",
+			"firebird-devel",
+			"freetds-devel",
+			"glib2-devel",
+			"gtk3-devel",
+			"libdrm-devel",
+			"libinput-devel",
+			"libjpeg-turbo-devel",
+			"libpq-devel",
+			"libtiff-devel",
+			"libxkbcommon-devel",
+			"libxkbcommon-x11-devel",
+			"mariadb-connector-c-devel",
+			"mesa-libEGL-devel",
+			"mesa-libGL-devel",
+			"mesa-libgbm-devel",
+			"pcre2-devel",
+			"sqlite-devel",
+			"systemd-devel",
+			"xkeyboard-config-devel",
+			"zlib-devel",
+			"at-spi2-core-devel",
+			"dbus-devel",
+			"fontconfig-devel",
+			"harfbuzz-devel",
+			"libICE-devel",
+			"libSM-devel",
+			"libicu-devel",
+			"libmng-devel",
+			"libpng-devel",
+			"libproxy-devel",
+			"libxcb-devel",
+			"openssl-devel",
+			"pcre-devel",
+			"perl-generators",
+			"pulseaudio-libs-devel",
+			"qt5-rpm-macros",
+			"unixODBC-devel",
+			"xcb-util-image-devel",
+			"xcb-util-keysyms-devel",
+			"xcb-util-renderutil-devel",
+			"xcb-util-wm-devel",
+			"libxcb-devel",
+			"python2",
+			"gperf",
+			"bison",
+			"flex",
+			"nss-devel",
+			"libstdc++-static",
+			# Possibly unnecessary, optional dependencies of
+			# WebEngine. Should check what's useful and what not.
+			"jsoncpp-devel",
+			"libxslt-devel",
+			"libvpx-devel",
+			"libicu-devel",
+			"re2-devel",
+			"libxml2-devel",
+			"opus-devel",
+			"libicu-devel",
+			"libwebp-devel"
+		]
+	}
 };
 
+my @x11_lib_paths = ("/usr/lib64", "/usr/X11R6/lib64", "/usr/lib/x86_64-linux-gnu", "/usr/lib");
+
 my $repo         = "https://github.com/kasenvr/project-athena";
+my $qt_repo      = "git://code.qt.io/qt/qt5.git";
 my $repo_tag     = "kasen/core";
 my $inst_dir     = "$ENV{HOME}/Athena";
 my $build_cores  = calculate_cores();
@@ -152,9 +238,21 @@ help(1) if ($cmd_help);
 
 
 my ($DISTRO, $DISTRO_VER) = detect_distro();
+
+if ( !exists $data->{"${DISTRO}-${DISTRO_VER}"} ) {
+	fatal("No configuration for $DISTRO $DISTRO_VER, distribution unsupported.");
+}
+
+my $DD = $data->{"${DISTRO}-${DISTRO_VER}"};
+
+
+
 my %PACKAGES = get_package_list();
 install_missing_packages();
 collect_info();
+
+get_source();
+install_qt() unless($DD->{has_binary_qt_package});
 install();
 setup_desktop();
 
@@ -206,13 +304,29 @@ sub get_package_list {
 }
 
 sub install_missing_packages {
-	info("Checking if any packages need installing... ");
+	my @required_packages = @{$DD->{source_dependencies}};
 
-	if ( !exists $required_packages->{"${DISTRO}-${DISTRO_VER}"} ) {
-		fatal("No required package list for $DISTRO $DISTRO_VER, distribution unsupported.");
+	info("Checking Qt availability...");
+
+
+	if ( !$DD->{has_binary_qt_package} ) {
+		warning("There is no binary Qt package available for your system!\n\n");
+		warning("This script can build it for you, but it can take a long time,\n");
+		warning("up to several hours, depending on hardware capabilities.\n\n");
+		warning("Fortunately, it only needs to be built once.\n\n");
+
+		push @required_packages, @{ $DD->{qt_source_dependencies} }
+	} else {
+		info_ok(" yes\n");
 	}
 
-	my @missing = grep { !exists $PACKAGES{$_} } @{$required_packages->{"$DISTRO-$DISTRO_VER"}};
+
+
+
+	info("Checking if any packages need installing... ");
+
+
+	my @missing = grep { !exists $PACKAGES{$_} } @required_packages;
 
 
 	if ( @missing ) {
@@ -253,29 +367,32 @@ sub collect_info {
 
 }
 
-sub install {
+
+sub get_source {
 	info("\n\n");
-	info("############################################################\n");
-	info("# Starting installation\n");
-	info("############################################################\n");
+	important("############################################################\n");
+	important("# Starting installation\n");
+	important("############################################################\n");
 	info("\n");
 
 	mkdir($inst_dir);
 	
-	if ( ! -d "$inst_dir/source/.git" ) {
-		run("git", "clone", $repo, "$inst_dir/source");
-		chdir("$inst_dir/source");
+	clone_repo($repo, "source", $repo_tag);
+}
 
-		run("git", "checkout", $repo_tag);
-	} else {
-		if ( !$opt_keep_source ) {
-			chdir("$inst_dir/source");
-			run("git", "fetch");
-			run("git", "clean", "-f");
-			run("git", "reset", "--hard", $repo_tag);
-		}
-	}
-	
+sub install {
+	info("\n\n");
+	important("############################################################\n");
+	important("# Building\n");
+	important("############################################################\n");
+	info("\n");
+
+
+	if ( check_qt_install() ) {
+		important("Using compiled Qt\n");
+		$ENV{QT_CMAKE_PREFIX_PATH}="$inst_dir/qt5-install/lib/cmake";
+	}	
+
 
 	$ENV{HIFI_VCPKG_BASE} = "$inst_dir/vcpkg";
 
@@ -287,34 +404,108 @@ sub install {
 	chdir("$inst_dir/build");
 
 	run("cmake", "../source");
-
-	info("\n\n");
-	info("############################################################\n");
-	info("# Building\n");
-	info("############################################################\n");
-	info("\n");
-
-
 	run("make", "interface", "-j${build_cores}");
 	
 
 }
 
-sub setup_desktop {
-	my $qt_dir = `find "$inst_dir/vcpkg" -type d -name "qt5-install"`;
-	chomp $qt_dir;
 
-	if ( -d "$qt_dir" ) {
-		info("Creating permanent qt dir... ");
-		if ( -d "$inst_dir/qt5-install" ) {
-			run("rm", "-rf", "$inst_dir/qt5-install");
-		}
-		run("cp", "-Rdp", $qt_dir, "$inst_dir/qt5-install");
-		
-		info_ok("done.\n");
-	} else {
-		fatal("Failed to find Qt dir in $inst_dir/vcpkg!");
+sub install_qt {
+
+	if ( check_qt_install() ) {
+		important("Skipping Qt5 build. You can remove $inst_dir/qt5-install if you want to force it to be rebuilt.\n");
+		return;
 	}
+
+
+	info("\n\n");
+	important("############################################################\n");
+	important("# Starting Qt build\n");
+	important("############################################################\n");
+	info("\n");
+
+
+	mkdir($inst_dir);
+	chdir($inst_dir);
+#	run("git", "clone", "--recursive", $qt_repo
+	clone_repo($qt_repo, "qt5",  $DD->{qt_version});
+
+
+	info("Applying patches...\n");
+	chdir("$inst_dir/qt5");
+
+	foreach my $patch ( @{ $DD->{qt_patches} } ) {
+		run("patch", "-p1", "-i", "$inst_dir/source/tools/qt-builder/patches/$patch");
+	}
+
+	info("Configuring paths...\n");
+	my $xlib_path  = find_lib_dir('libX11.so', @x11_lib_paths);
+	my $gllib_path = find_lib_dir('libGL.so', @x11_lib_paths);
+
+	edit_qt_conf(
+		"$inst_dir/qt5/qtbase/mkspecs/linux-g++-64/qmake.conf",
+		QMAKE_LIBDIR_X11    => $xlib_path,
+		QMAKE_LIBDIR_OPENGL => $gllib_path
+	);
+		
+
+
+	del_dir("$inst_dir/qt5-install");
+	del_dir("$inst_dir/qt5-build");
+
+	mkdir("$inst_dir/qt5-install");
+	mkdir("$inst_dir/qt5-build");
+
+	chdir("$inst_dir/qt5-build");
+	run("../qt5/configure", "-opensource", "-confirm-license", 
+		"-platform", "linux-g++-64",
+		"-nomake", "examples",
+		"-nomake", "tests",
+		"-skip", "qttranslations",
+		"-skip", "qtserialport",
+		"-skip", "qt3d",
+		"-skip", "qtlocation",
+		"-skip", "qtwayland",
+		"-skip", "qtsensors",
+		"-skip", "qtgamepad",
+		"-skip", "qtspeech",
+		"-skip", "qtcharts",
+		"-skip", "qtmacextras",
+		"-skip", "qtvirtualkeyboard",
+		"-skip", "qtpurchasing",
+		"-skip", "qtdatavis3d",
+		"-no-warnings-are-errors", "-no-pch", "-opengl", "-xcb-xlib", "-no-egl", "-no-icu",
+		"-prefix", "../qt5-install");
+
+	# TODO:
+	# Check if WebEngine will be compiled. Qt can compile without it, but the Athena source
+	# won't build without it.
+	run("make", "-j${build_cores}");
+	run("make", "-j${build_cores}", "install");
+
+
+
+}
+
+sub setup_desktop {
+
+	if (!check_qt_install()) {
+		my $qt_dir = `find "$inst_dir/vcpkg" -type d -name "qt5-install"`;
+		chomp $qt_dir;
+
+		if ( -d "$qt_dir" ) {
+			info("Creating permanent qt dir... ");
+			if ( -d "$inst_dir/qt5-install" ) {
+				run("rm", "-rf", "$inst_dir/qt5-install");
+			}
+			run("cp", "-Rdp", $qt_dir, "$inst_dir/qt5-install");
+		
+			info_ok("done.\n");
+		} else {
+			fatal("Failed to find Qt dir in $inst_dir/vcpkg!");
+		}
+	}
+
 
 	open(my $script, ">", "$inst_dir/build/run_interface") or fatal("Can't create $inst_dir/build/interface: $!");
 	print $script "#!/bin/bash\n";
@@ -363,23 +554,27 @@ sub sudo_run {
 
 
 sub calculate_cores {
+	info("Checking how many cores to use for the build... ");
 
 	my $mem_per_core = 1 * 1024 * 1024;
 
 	my $core_count =  grep { /^processor/ } readfile("/proc/cpuinfo");
 	my ($mem_avail) = grep { /^MemAvailable/ } readfile("/proc/meminfo");
 
+	info_ok("$core_count cores");
+
 	$mem_avail =~ /:\s*(\d+)/;
 	$mem_avail = $1;
+
 	
 	my $cores = $core_count;
 	if ( $cores >= ($mem_avail / $mem_per_core )) {
-		$cores = $mem_avail / $mem_per_core;
+		$cores = int($mem_avail / $mem_per_core);
+		$cores = 1 unless ($cores);
+		warning(", memory limited to $cores\n");
+
 	}
-
-	$cores = int($cores);
-
-	$cores = 1 unless ($cores);
+	info_ok("\n");
 
 	return $cores;
 }
@@ -404,6 +599,103 @@ sub readfile {
 	return @data;
 }
 
+sub clone_repo {
+	my ($url, $destdir, $tag, %opts) = @_;
+
+	info("Cloning $url ($tag)... ");
+
+	if ( ! -d "$inst_dir/$destdir/.git" ) {
+		my @git_extra_args;
+		info("\n");
+
+		if ( exists $opts{git_args} ) {
+			@git_extra_args = @{$opts{git_args}};
+		}
+
+		run("git", "clone", "--recursive", $url, "$inst_dir/$destdir", "-b", $tag, "--single-branch"); # "@git_extra_args);
+
+	} else {
+		info_ok("Already cloned, updating...\n");
+
+		if ( !$opt_keep_source ) {
+			chdir("$inst_dir/$destdir");
+			run("git", "fetch");
+			run("git", "submodule", "update", "-f", "--init");
+			run("git", "clean", "-f");
+			run("git", "reset", "--hard", $tag);
+		}
+	}
+}
+	
+
+sub edit_qt_conf {
+	my ($file, %values) = @_;
+
+	info("Editing qt config file $file... ");
+
+	open(my $rh, "<", $file) or fatal("Failed to open $file: $!");
+	open(my $wh, ">", "$file.new") or fatal("Failed to create $file.new: $!");
+	while(my $line = <$rh>) {
+		if ( $line =~ /^(\w+)\s*=\s*(.*?)$/ && exists $values{$1} ) {
+			print $wh "$1=$values{$1}\n";
+			delete $values{$1};
+		} else {
+			print $wh $line;
+		}
+	}
+
+	close $wh;
+	close $rh;
+
+	rename("$file.new", $file) or fatal("Failed to rename $file.new to $file: $!");
+
+	if ( %values ) {
+		fatal("Failed to find settings when editing $file: " . join(', ', keys %values));
+	}
+
+	info_ok("done.\n");
+}
+
+
+sub find_lib_dir {
+	my ($lib, @paths) = @_;
+	info("Trying to find where $lib is... ");
+	foreach my $dir (@paths) {
+		if ( -f "$dir/$lib" || -l "$dir/$lib" ) {
+			info_ok("Found in $dir\n");
+			return $dir;
+		}
+	}
+
+	fatal("Failed! Looked in: " . join(', ', @paths));
+}
+
+sub del_dir {
+	my ($dir) = @_;
+
+	info("Ensuring $dir doesn't exist... ");
+	if ( -d "$dir" ) {
+		run("rm", "-rf", $dir);
+		info_ok("deleted.\n");
+	} else {
+		info_ok("ok.\n");
+	}
+}
+
+
+sub check_qt_install {
+	info("Checking whether Qt is already installed... ");
+
+	if ( -f "$inst_dir/qt5-install/lib/libQt5Widgets.so" || -l "$inst_dir/qt5-install/lib/libQt5Widgets.so" ) {
+		info_ok("yes.\n");
+		return 1;
+	} else {
+		info_ok("no.\n");
+		return 0;
+	}
+}
+
+
 sub help {
 	my $retval = shift // 0;
 
@@ -424,5 +716,7 @@ Options:
 
 HELP
 
+
+	exit(1);
 	exit($retval);
 }
