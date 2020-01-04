@@ -477,9 +477,8 @@ sub install_qt {
 		"-no-warnings-are-errors", "-no-pch", "-opengl", "-xcb-xlib", "-no-egl", "-no-icu",
 		"-prefix", "../qt5-install");
 
-	# TODO:
-	# Check if WebEngine will be compiled. Qt can compile without it, but the Athena source
-	# won't build without it.
+	check_qt_webengine();
+
 	run("make", "-j${build_cores}");
 	run("make", "-j${build_cores}", "install");
 
@@ -699,6 +698,91 @@ sub check_qt_install {
 	}
 }
 
+sub check_qt_webengine {
+	# This checks if QtWebEngine is going to be built, and if any required dependencies
+	# are missing. This works by parsing config.summary, which seems very clunky.
+	#
+	# This is necessary because Qt will build fine without WebEngine, but then
+	# the interface will fail to build.
+	#
+	# Improvements are welcome.
+
+	info("Checking QtWebEngine configuration... ");
+
+	open(my $fh, '<', "$inst_dir/qt5-build/config.summary")
+		or fatal("Can't open $inst_dir/qt5-build/config.summary: $!");
+
+
+
+	my $sections_found = 0;
+	my $lines_found = 0;
+
+	my $in_webengine;
+	my $in_req;
+	my $in_req_sys_qpa;
+	my @missing;
+
+
+	while(my $line = <$fh>) {
+		chomp $line;
+
+
+
+		if ( $line !~ /^\s+/ || $line =~ /^\s*$/ ) {
+			# Line doesn't start with a space, or the line is empty
+			undef $in_webengine;
+			undef $in_req;
+		}
+
+		if ( $line !~ /^\s{4}/ ) {
+			undef $in_req;
+		}
+
+		if ( $line =~ /^Qt WebEngine:/ ) {
+			$in_webengine = 1;
+			$sections_found++;
+			next;
+		}
+
+		if ( $in_webengine && $line =~ /^  Required/ ) {
+			$in_req = 1;
+			$sections_found++;
+			next;
+		}
+
+		if ( $in_req ) {
+			if ( $line =~ /^\s*(.*?)[ .]+(\w+)$/ ) {
+				$lines_found++;
+
+				my ( $dep, $val ) = ($1, $2);
+				if ( $val =~ /no/i ) {
+					push @missing, $dep;
+				}
+			} else {
+				fatal("Failed to parse line '$line' in $inst_dir/qt5-build/config.summary");
+			}
+		}
+
+	}
+	close $fh;
+
+	if ($sections_found < 3) {
+		fatal("Failed to parse $inst_dir/qt5-build/config.summary: only $sections_found of 3 sections were found");
+	}
+
+	if ($lines_found < 5) {
+		# There are 11 lines in Qt 5.12.6.
+		# We don't care about the exact amount, just that something matched and the result is plausible.
+		fatal("Failed to parse $inst_dir/qt5-build/config.summary: only $lines_found lines were found inside the sections");
+	}
+
+
+	if (@missing) {
+		fatal("Missing QtWebEngine dependencies: " . join(', ', @missing));
+	} else {
+		info_ok("ok.\n");
+	}
+}
 
 sub help {
 	my $retval = shift // 0;
