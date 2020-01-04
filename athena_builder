@@ -7,35 +7,104 @@ use Term::ANSIColor;
 
 $| = 1;
 
+my $timestamp = make_timestamp();
+my $logdir    = "$ENV{HOME}/.athena-builder/logs/$timestamp";
+my $collect_system_info;
+my $log_fh;
+
+
+
 sub info {
-	print STDERR shift;
+	my $text = shift;
+	print STDERR $text;
+
+	write_to_log($text);
 }
 
 sub info_ok {
+	my $text = shift;
 	print STDERR color('bold green');
-	print STDERR shift;
+	print STDERR $text;
 	print STDERR color('reset');
+
+	write_to_log($text);
 }
 
 sub warning {
+	my $text = shift;
 	print STDERR color('bold red');
-	print STDERR shift;
+	print STDERR $text;
 	print STDERR color('reset');
+
+	write_to_log($text);
 }
 
 sub important {
+	my $text = shift;
 	print STDERR color('bold white');
-	print STDERR shift;
+	print STDERR $text;
 	print STDERR color('reset');
+
+	write_to_log($text);
 }
 
+sub debug {
+	my $text = shift;
+	write_to_log($text);
+}
 
 sub fatal {
+	my $text = shift;
+
+	write_to_log("FATAL ERROR!\n");
+	write_to_log($text);
+
+
+	if ( $collect_system_info ) {
+		important("Collecting additional system info to aid with debugging...\n");
+		read_from_cmd_into_file("$logdir/df", "df");
+		read_from_cmd_into_file("$logdir/uname", "uname", "-a");
+		system("cp", "-v", "/proc/cpuinfo", "$logdir/cpuinfo");
+		system("cp", "-v", "/proc/meminfo", "$logdir/meminfo");
+
+	} else {
+		important("To aid with debugging, please re-run with the --collect-info argument.\n");
+	}
+
+	close $log_fh;
+
+	
+	my $compressed = "athena-builder-error-$timestamp.tar.gz";
+	system("tar", "-czf", $compressed, $logdir);
+
+
 	print STDERR color('bold red');
-	print STDERR shift;
-	print STDERR "\n\nPlease notify Dale Glass#8576 on Discord of this problem.\n";
+	print STDERR "\nFatal error:\n";
+	print STDERR $text;
+	print STDERR "\n\n";
+	print STDERR color('reset');
+	print STDERR "Logs have been collected in ";
+	print STDERR color('bold white');
+
+	if ( -f $compressed ) {
+		print STDERR "$compressed\n";
+	} else {
+		print STDERR "$logdir\n";
+	}
+	
+	print STDERR "Please notify Dale Glass#8576 on Discord of this problem.\n";
 	print STDERR color('reset');
 	exit 1;
+}
+
+sub write_to_log {
+	my $text = shift;
+
+	if ( $log_fh && fileno($log_fh) ) {
+		print $log_fh $text;
+	} else {
+		die "log $log_fh not open";
+	}
 }
 
 
@@ -214,8 +283,8 @@ my $repo         = "https://github.com/kasenvr/project-athena";
 my $qt_repo      = "git://code.qt.io/qt/qt5.git";
 my $repo_tag     = "kasen/core";
 my $inst_dir     = "$ENV{HOME}/Athena";
-my $build_cores  = calculate_cores();
-my $desktop      = get_desktop();
+my $build_cores;
+my $desktop;
 
 my ($opt_keep_source, $opt_auto);
 my ($cmd_help);
@@ -227,15 +296,23 @@ GetOptions(
 	"repo|r=s"               => \$repo,
 	"tag|t=s"                => \$repo_tag,
         "destdir|d=s"            => \$inst_dir,
-        "cores|j=i"              => \$build_cores
+        "cores|j=i"              => \$build_cores,
+	"collect-info|C"         => \$collect_system_info
 ) or help(1);
 
 help(1) if ($cmd_help);
 
 
+mkdir("$ENV{HOME}/.athena-builder");
+mkdir("$ENV{HOME}/.athena-builder/logs");
+mkdir($logdir);
+
+open($log_fh, ">", "$logdir/log.txt") or warn("Couldn't create log '$logdir/log.txt': $!");
 
 
 
+$build_cores  //= calculate_cores();
+$desktop      //= get_desktop();
 
 my ($DISTRO, $DISTRO_VER) = detect_distro();
 
@@ -292,9 +369,9 @@ sub get_package_list {
 	info("Getting the package list... ");
 	my @packages;
 	if ( $DISTRO eq "fedora" ) {
-		@packages = `rpm -qa --qf "%{NAME}\\n"`
+		@packages = read_from_cmd("rpm", "-qa", "--qf", "%{NAME}\\n");
 	} elsif ( $DISTRO eq "ubuntu" ) {
-		@packages = `dpkg-query --show -f "\\\${Package}\n"`
+		@packages = read_from_cmd("dpkg-query", "--show", "-f", "\${Package}\n");
 	}
 
 	chomp @packages;
@@ -489,7 +566,7 @@ sub install_qt {
 sub setup_desktop {
 
 	if (!check_qt_install()) {
-		my $qt_dir = `find "$inst_dir/vcpkg" -type d -name "qt5-install"`;
+		my $qt_dir = read_from_cmd("find", "$inst_dir/vcpkg", "-type", "d", "-name", "qt5-install");
 		chomp $qt_dir;
 
 		if ( -d "$qt_dir" ) {
@@ -541,7 +618,14 @@ sub setup_desktop {
 
 sub run {
 	my (@command) = @_;
-	system(@command) == 0 or fatal("Failed to run " . join(' ', @command) . ": $?");
+	debug("RUN: " . join(' ', @command) . "\n");
+
+	open(my $fh, "-|", @command) or fatal("Failed to run " . join(' ', @command) . ": $?");
+	while(my $line = <$fh>) {
+		print $line;
+		debug($line);
+	}
+	close $fh;
 }
 
 
@@ -554,6 +638,34 @@ sub sudo_run {
 
 	run("sudo", @command);
 }
+
+sub read_from_cmd {
+	my (@command) = @_;
+	my $buf;
+
+	debug("READ_FROM_CMD: " . join(' ', @command) . "\n");
+
+	open(my $fh, "-|", @command) or fatal("Failed to run " . join(' ', @command) . ": $?");
+	local $/;
+	undef $/;
+	$buf = <$fh>;
+	close $fh;
+
+	debug($buf . "\n");
+
+	return wantarray ? split(/\n/, $buf) : $buf;
+}
+
+sub read_from_cmd_into_file {
+	my ($filename, @cmd) = @_;
+	my $text = read_from_cmd(@cmd);
+
+	# die instead of fatal() here since this may be called from fatal.
+	open(my $fh, '>', $filename) or die "Failed to create $filename: $!";
+	print $fh $text;
+	close $fh;
+}
+
 
 
 sub calculate_cores {
@@ -583,22 +695,30 @@ sub calculate_cores {
 }
 
 sub get_desktop {
-	my $desktop = `xdg-user-dir DESKTOP`;
+	info("Detecting desktop location... ");
+
+	my $desktop = read_from_cmd("xdg-user-dir", "DESKTOP");
 	if (!$desktop) {
 		$desktop = "$ENV{HOME}/Desktop";
 	}
 
 	chomp $desktop;
+	info_ok($desktop . "\n");
+
 	return $desktop;
 }
 
 
 sub readfile {
 	my ($file) = @_;
+	debug("READFILE: $file\n");
+
 	open(my $fh, $file) or fatal("Can't open $file: $!");
 	my @data = <$fh>;
 	chomp @data;
 	close $fh;
+
+	debug(join("\n", @data));
 	return @data;
 }
 
@@ -782,6 +902,12 @@ sub check_qt_webengine {
 	} else {
 		info_ok("ok.\n");
 	}
+}
+
+sub make_timestamp {
+	# Avoid need for strftime
+	my ($sec, $min, $hour, $mday, $month, $year) = localtime(time);
+	return sprintf("%04i-%02i-%02i_T%02i_%02i_%02i", $year + 1900, $month, $mday, $hour, $min, $sec);
 }
 
 sub help {
