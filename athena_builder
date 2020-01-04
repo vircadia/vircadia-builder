@@ -619,6 +619,8 @@ sub setup_desktop {
 sub run {
 	my (@command) = @_;
 	debug("RUN: " . join(' ', @command) . "\n");
+	my $start = time;
+
 
 	open(my $fh, "-|", @command) or fatal("Failed to run " . join(' ', @command) . ": $?");
 	while(my $line = <$fh>) {
@@ -626,8 +628,14 @@ sub run {
 		debug($line);
 	}
 	close $fh;
-}
+	my $retval = $?;
 
+	debug("\nCommand exited after " . (time - $start) . " seconds with return code $retval\n");
+	if ( $retval != 0 ) {
+		fatal("Command failed with code $?");
+	}
+
+}
 
 sub sudo_run {
 	my (@command) = @_;
@@ -644,14 +652,21 @@ sub read_from_cmd {
 	my $buf;
 
 	debug("READ_FROM_CMD: " . join(' ', @command) . "\n");
+	my $start = time;
 
 	open(my $fh, "-|", @command) or fatal("Failed to run " . join(' ', @command) . ": $?");
 	local $/;
 	undef $/;
 	$buf = <$fh>;
 	close $fh;
-
+	my $retval = $?;
 	debug($buf . "\n");
+
+	debug("\nCommand exited after " . (time - $start) . " seconds with return code $retval\n");
+
+	if ( $retval != 0 ) {
+		fatal("Command failed with code $?");
+	}
 
 	return wantarray ? split(/\n/, $buf) : $buf;
 }
