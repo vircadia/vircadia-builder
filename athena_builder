@@ -530,9 +530,13 @@ sub setup_desktop {
 	print $dsk "Categories=Graphics;AudioVideo;Network\n";
 	close $dsk;
 
-	info("Marking desktop icon as trusted... ");
+	info("Marking desktop icon as trusted...\n");
 	run("gio", "set", "$desktop/Athena.desktop", "metadata::trusted", "yes");
-	info_ok("done.\n");
+
+	info("Adding to menu...\n");
+	run("xdg-desktop-menu", "install", "--novendor", "$desktop/Athena.desktop");
+
+	info_ok("All done!\n");
 }
 
 
