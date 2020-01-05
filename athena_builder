@@ -62,8 +62,10 @@ sub fatal {
 
 	if ( $collect_system_info ) {
 		important("Collecting additional system info to aid with debugging...\n");
-		read_from_cmd_into_file("$logdir/df", "df");
-		read_from_cmd_into_file("$logdir/uname", "uname", "-a");
+		read_from_cmd_into_file("$logdir/df"   , { fail_ok => 1}, "df");
+		read_from_cmd_into_file("$logdir/uname", { fail_ok => 1}, "uname", "-a");
+		read_from_cmd_into_file("$logdir/dmesg", { fail_ok => 1}, "dmesg");
+
 		system("cp", "-v", "/proc/cpuinfo", "$logdir/cpuinfo");
 		system("cp", "-v", "/proc/meminfo", "$logdir/meminfo");
 
@@ -810,10 +812,10 @@ sub setup_desktop {
 	close $dsk;
 
 	info("Marking desktop icon as trusted...\n");
-	run("gio", "set", "$desktop/Athena.desktop", "metadata::trusted", "yes");
+	run({ fail_ok => 1 }, "gio", "set", "$desktop/Athena.desktop", "metadata::trusted", "yes");
 
 	info("Adding to menu...\n");
-	run("xdg-desktop-menu", "install", "--novendor", "$desktop/Athena.desktop");
+	run({ fail_ok => 1 }, "xdg-desktop-menu", "install", "--novendor", "$desktop/Athena.desktop");
 
 	info_ok("All done!\n");
 }
@@ -821,6 +823,12 @@ sub setup_desktop {
 
 sub run {
 	my (@command) = @_;
+	my %opts;
+
+	if ( ref($command[0]) eq "HASH" ) {
+		%opts = { shift @command };
+	}
+
 	debug("RUN: " . join(' ', @command) . "\n");
 	my $start = time;
 
@@ -834,8 +842,13 @@ sub run {
 	my $retval = $?;
 
 	debug("\nCommand exited after " . (time - $start) . " seconds with return code $retval\n");
+
 	if ( $retval != 0 ) {
-		fatal("Command failed with code $?");
+		if ( %opts{fail_ok} ) {
+			warning("Command failed with code $?");
+		} else {
+			fatal("Command failed with code $?");
+		}
 	}
 
 }
@@ -853,6 +866,11 @@ sub sudo_run {
 sub read_from_cmd {
 	my (@command) = @_;
 	my $buf;
+	my %opts;
+
+	if ( ref($command[0]) eq "HASH" ) {
+		%opts = { shift @command };
+	}
 
 	debug("READ_FROM_CMD: " . join(' ', @command) . "\n");
 	my $start = time;
@@ -868,7 +886,11 @@ sub read_from_cmd {
 	debug("\nCommand exited after " . (time - $start) . " seconds with return code $retval\n");
 
 	if ( $retval != 0 ) {
-		fatal("Command failed with code $?");
+		if ( %opts{fail_ok} ) {
+			warning("Command failed with code $?");
+		} else {
+			fatal("Command failed with code $?");
+		}
 	}
 
 	return wantarray ? split(/\n/, $buf) : $buf;
