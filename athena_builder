@@ -903,6 +903,9 @@ sub check_qt_webengine {
 		chomp $line;
 
 
+		if ( $line =~ /^WARNING: (.*?) is required to build QtWebEngine/ ) {
+			push @missing, $1;
+		}
 
 		if ( $line !~ /^\s+/ || $line =~ /^\s*$/ ) {
 			# Line doesn't start with a space, or the line is empty
