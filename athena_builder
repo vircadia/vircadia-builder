@@ -844,7 +844,7 @@ sub run {
 	debug("\nCommand exited after " . (time - $start) . " seconds with return code $retval\n");
 
 	if ( $retval != 0 ) {
-		if ( %opts{fail_ok} ) {
+		if ( $opts{fail_ok} ) {
 			warning("Command failed with code $?");
 		} else {
 			fatal("Command failed with code $?");
@@ -886,7 +886,7 @@ sub read_from_cmd {
 	debug("\nCommand exited after " . (time - $start) . " seconds with return code $retval\n");
 
 	if ( $retval != 0 ) {
-		if ( %opts{fail_ok} ) {
+		if ( $opts{fail_ok} ) {
 			warning("Command failed with code $?");
 		} else {
 			fatal("Command failed with code $?");
