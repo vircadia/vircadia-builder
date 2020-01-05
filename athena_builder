@@ -243,7 +243,8 @@ my $data = {
 			# Server
 			'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
 			# Docs
-			'nodejs'
+			'nodejs',
+			'python3-distro'
 		],
 		qt_source_dependencies => [
 			'autoconf',
