@@ -727,7 +727,7 @@ sub read_from_cmd_into_file {
 sub calculate_cores {
 	info("Checking how many cores to use for the build... ");
 
-	my $mem_per_core = 1.2 * 1024 * 1024;
+	my $mem_per_core = 1.5 * 1024 * 1024;
 
 	my $core_count =  grep { /^processor/ } readfile("/proc/cpuinfo");
 	my ($mem_avail) = grep { /^MemAvailable/ } readfile("/proc/meminfo");
