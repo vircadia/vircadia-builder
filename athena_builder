@@ -478,7 +478,7 @@ my $build_cores_qt;
 my $desktop;
 my $distro;
 
-my ($opt_keep_source, $opt_auto);
+my ($opt_keep_source, $opt_auto, $opt_build_qt);
 my ($cmd_help, $cmd_get_supported, $cmd_get_source_deps, $cmd_get_qt_deps, $cmd_get_qt_version, $cmd_get_qt_patches, $cmd_make_pkglist);
 
 GetOptions(
@@ -491,6 +491,7 @@ GetOptions(
         "cores|j=i"              => \$build_cores,
 	"collect-info|C"         => \$collect_system_info,
 	"distro|D=s"             => \$distro,
+	"build-qt|B"             => \$opt_build_qt,
 	"get-supported"          => \$cmd_get_supported,
 	"get-source-deps=s"      => \$cmd_get_source_deps,
 	"get-qt-deps=s"          => \$cmd_get_qt_deps,
@@ -537,7 +538,7 @@ install_missing_packages();
 collect_info();
 
 get_source();
-install_qt() unless($DD->{has_binary_qt_package});
+install_qt() if (!$DD->{has_binary_qt_package} || $opt_build_qt);
 install();
 setup_desktop();
 
@@ -598,12 +599,15 @@ sub install_missing_packages {
 	info("Checking Qt availability...");
 
 
-	if ( !$DD->{has_binary_qt_package} ) {
-		warning("There is no binary Qt package available for your system!\n\n");
-		warning("This script can build it for you, but it can take a long time,\n");
-		warning("up to several hours, depending on hardware capabilities.\n\n");
-		warning("Fortunately, it only needs to be built once.\n\n");
-
+	if ( !$DD->{has_binary_qt_package} || $opt_build_qt ) {
+		if( !$DD->{has_binary_qt_package} ) {
+			warning("There is no binary Qt package available for your system!\n\n");
+			warning("This script can build it for you, but it can take a long time,\n");
+			warning("up to several hours, depending on hardware capabilities.\n\n");
+			warning("Fortunately, it only needs to be built once.\n\n");
+		} else {
+			info_ok("Qt source build selected by user.\n");
+		}
 		push @required_packages, @{ $DD->{qt_source_dependencies} }
 	} else {
 		info_ok(" yes\n");
@@ -1226,6 +1230,7 @@ $0 [options]
 Downloads, compiles and installs the Athena Project
 
 Options:
+	-B, --build-qt          Built Qt even if there's a binery package
 	-C, --collect-info      Collect additional info for debugging
 	-D, --distro DIST       Set the distribution
 	-d, --destdir DIR       Set the installation directory
