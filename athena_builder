@@ -305,7 +305,7 @@ my $desktop;
 my $distro;
 
 my ($opt_keep_source, $opt_auto);
-my ($cmd_help, $cmd_get_supported, $cmd_get_source_deps, $cmd_get_qt_deps, $cmd_get_qt_version, $cmd_get_qt_patches);
+my ($cmd_help, $cmd_get_supported, $cmd_get_source_deps, $cmd_get_qt_deps, $cmd_get_qt_version, $cmd_get_qt_patches, $cmd_make_pkglist);
 
 GetOptions(
 	"keep-source|K"          => \$opt_keep_source,
@@ -321,7 +321,8 @@ GetOptions(
 	"get-source-deps=s"      => \$cmd_get_source_deps,
 	"get-qt-deps=s"          => \$cmd_get_qt_deps,
 	"get-qt-version=s"       => \$cmd_get_qt_version,
-	"get-qt-patches=s"       => \$cmd_get_qt_patches
+	"get-qt-patches=s"       => \$cmd_get_qt_patches,
+	"make-pkglist"           => \$cmd_make_pkglist
 ) or help(1);
 
 help(1) if ($cmd_help);
@@ -330,6 +331,7 @@ get_conf( 'source_dependencies', $cmd_get_source_deps ) if ( $cmd_get_source_dep
 get_conf( 'qt_source_dependencies', $cmd_get_qt_deps )  if ( $cmd_get_qt_deps );
 get_conf( 'qt_version', $cmd_get_qt_version )           if ( $cmd_get_qt_version );
 get_conf( 'qt_patches', $cmd_get_qt_patches )           if ( $cmd_get_qt_patches );
+make_pkglist()                                          if ( $cmd_make_pkglist );
 
 
 
@@ -996,6 +998,21 @@ sub get_conf {
 	exit(0);
 }
 
+sub make_pkglist {
+	my @packages;
+	while(my $line = <STDIN>) {
+		chomp $line;
+		my @pkgs = grep { $_ } split(/\s+/, $line);
+		push @packages, @pkgs;
+	}
+
+	foreach my $pkg ( sort @packages ) {
+		print "\t\t\t\'$pkg',\n";
+	}
+
+	exit(0);
+}
+
 
 sub help {
 	my $retval = shift // 0;
@@ -1031,7 +1048,9 @@ to work without them.
 	                        is built from source on disto DIST.
 	--get-qt-patches DIST   Lists the patches that will be applied if Qt
 	                        is built from source on distro DIST.
-
+	--make-pkglist          Reads a list of package names from STDIN and
+	                        outputs them in a format suitable for pasting
+	                        into the script's source code.
 
 HELP
 
