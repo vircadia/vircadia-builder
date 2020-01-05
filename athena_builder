@@ -109,8 +109,22 @@ sub write_to_log {
 
 
 my $data = {
+	'custom' => {
+		has_binary_qt_package  => 0,
+		source_dependencies    => [ ],
+		qt_source_dependencies => [ ],
+		qt_version => '5.12.6',
+		qt_patches => [
+			'aec.patch',
+			'mac-web-video.patch',
+#			'qfloat16.patch',  # Doesn't apply against 5.12.6
+			'qtscript-crash-fix.patch'
+		],
+		package_manager => 'none'
+	},
 	'ubuntu-16.04' => {
 		has_binary_qt_package => 1,
+		package_manager => 'apt',
 		source_dependencies => [
 			'libterm-readline-gnu-perl',
 			'build-essential',
@@ -139,6 +153,7 @@ my $data = {
 	},
 	'ubuntu-18.04' => {
 		has_binary_qt_package => 1,
+		package_manager => 'apt',
 		source_dependencies => [
 			'libterm-readline-gnu-perl',
 			'build-essential',
@@ -167,6 +182,7 @@ my $data = {
 	},
 	'ubuntu-19.10' => {
 		has_binary_qt_package => 1,
+		package_manager => 'apt',
 		source_dependencies => [
 			'libterm-readline-gnu-perl',
 			'build-essential',
@@ -202,6 +218,7 @@ my $data = {
 #			'qfloat16.patch',  # Doesn't apply against 5.12.6
 			'qtscript-crash-fix.patch'
 		],
+		package_manager => 'dnf',
 		source_dependencies => [
 			'git',
 			'perl-Term-ReadLine-Gnu',
@@ -285,9 +302,10 @@ my $repo_tag     = "kasen/core";
 my $inst_dir     = "$ENV{HOME}/Athena";
 my $build_cores;
 my $desktop;
+my $distro;
 
 my ($opt_keep_source, $opt_auto);
-my ($cmd_help);
+my ($cmd_help, $cmd_get_supported, $cmd_get_source_deps, $cmd_get_qt_deps, $cmd_get_qt_version, $cmd_get_qt_patches);
 
 GetOptions(
 	"keep-source|K"          => \$opt_keep_source,
@@ -297,10 +315,23 @@ GetOptions(
 	"tag|t=s"                => \$repo_tag,
         "destdir|d=s"            => \$inst_dir,
         "cores|j=i"              => \$build_cores,
-	"collect-info|C"         => \$collect_system_info
+	"collect-info|C"         => \$collect_system_info,
+	"distro|D=s"             => \$distro,
+	"get-supported"          => \$cmd_get_supported,
+	"get-source-deps=s"      => \$cmd_get_source_deps,
+	"get-qt-deps=s"          => \$cmd_get_qt_deps,
+	"get-qt-version=s"       => \$cmd_get_qt_version,
+	"get-qt-patches=s"       => \$cmd_get_qt_patches
 ) or help(1);
 
 help(1) if ($cmd_help);
+get_supported() if ( $cmd_get_supported );
+get_conf( 'source_dependencies', $cmd_get_source_deps ) if ( $cmd_get_source_deps );
+get_conf( 'qt_source_dependencies', $cmd_get_qt_deps )  if ( $cmd_get_qt_deps );
+get_conf( 'qt_version', $cmd_get_qt_version )           if ( $cmd_get_qt_version );
+get_conf( 'qt_patches', $cmd_get_qt_patches )           if ( $cmd_get_qt_patches );
+
+
 
 
 mkdir("$ENV{HOME}/.athena-builder");
@@ -313,14 +344,14 @@ open($log_fh, ">", "$logdir/log.txt") or warn("Couldn't create log '$logdir/log.
 
 $build_cores  //= calculate_cores();
 $desktop      //= get_desktop();
+$distro       //= detect_distro();
 
-my ($DISTRO, $DISTRO_VER) = detect_distro();
 
-if ( !exists $data->{"${DISTRO}-${DISTRO_VER}"} ) {
-	fatal("No configuration for $DISTRO $DISTRO_VER, distribution unsupported.");
+if ( !exists $data->{$distro} ) {
+	fatal("No configuration for $distro, distribution unsupported.");
 }
 
-my $DD = $data->{"${DISTRO}-${DISTRO_VER}"};
+my $DD = $data->{$distro};
 
 
 
@@ -344,7 +375,7 @@ sub detect_distro {
 		my ($ver) = $release_line =~ /^Fedora release (\d+)/;
 
 		info_ok("Fedora $ver\n");
-		return ("fedora", $ver);
+		return "fedora-$ver";
 	}
 
 	if ( -f "/etc/lsb-release" ) {
@@ -357,7 +388,7 @@ sub detect_distro {
 		(undef, $release)     = split(/=/, $ver);
 
 		info_ok("$distro_name $release\n");
-		return (lc($distro_name), $release);
+		return lc($distro_name) . "-$release";
 	}
 
 	fatal("Failed to detect distribution!");
@@ -368,10 +399,14 @@ sub detect_distro {
 sub get_package_list {
 	info("Getting the package list... ");
 	my @packages;
-	if ( $DISTRO eq "fedora" ) {
+	if ( $DD->{package_manager} eq "dnf" ) {
 		@packages = read_from_cmd("rpm", "-qa", "--qf", "%{NAME}\\n");
-	} elsif ( $DISTRO eq "ubuntu" ) {
+	} elsif ( $DD->{package_manager} eq "apt" ) {
 		@packages = read_from_cmd("dpkg-query", "--show", "-f", "\${Package}\n");
+	} elsif ( $DD->{package_manager} eq "none" ) {
+		# Nothing
+	} else {
+		fatal("Internal error: unknown package manager " . $DD->{package_manager});
 	}
 
 	chomp @packages;
@@ -409,10 +444,14 @@ sub install_missing_packages {
 	if ( @missing ) {
 		print scalar(@missing) . " additional packages needed: " . join(", ", @missing) . "\n";
 
-		if ( $DISTRO eq "fedora" ) {
+		if ( $DD->{package_manager} eq "dnf" ) {
 			sudo_run("dnf", "install", "-y", @missing);
-		} elsif ( $DISTRO eq "ubuntu" ) {
+		} elsif ( $DD->{package_manager} eq "apt" ) {
 			sudo_run("apt-get", "install", "-y", @missing);
+		} elsif ( $DD->{package_manager} eq "none" ) {
+			# Nothing
+		} else {
+			fatal("Internal error: unknown package manager " . $DD->{package_manager});
 		}
 
 		info_ok("\nPackages have been installed, please run $0 again.\n\n");
@@ -925,6 +964,39 @@ sub make_timestamp {
 	return sprintf("%04i-%02i-%02i_T%02i_%02i_%02i", $year + 1900, $month, $mday, $hour, $min, $sec);
 }
 
+
+sub get_supported {
+	foreach my $k ( keys %$data ) {
+		print "$k\n";
+	}
+	exit(0);
+}
+
+sub get_conf {
+	my ($key, $dist) = @_;
+	unless(exists $data->{$dist}) {
+		print STDERR "No such distribution: '$dist'. Try $0 --get-supported\n";
+		exit(1);
+	}
+
+	unless( exists $data->{$dist}->{$key} ) {
+		print STDERR "$key not defined in the config for distro '$dist'\n";
+		exit(1);
+	}
+
+
+	if ( ref($data->{$dist}->{$key}) eq "ARRAY" ) {
+		foreach my $pkg ( @{ $data->{$dist}->{$key} } ) {
+			print "$pkg\n";
+		}
+	} else {
+		print $data->{$dist}->{$key} . "\n";
+	}
+
+	exit(0);
+}
+
+
 sub help {
 	my $retval = shift // 0;
 
@@ -934,6 +1006,8 @@ $0 [options]
 Downloads, compiles and installs the Athena Project
 
 Options:
+	-C, --collect-info      Collect additional info for debugging
+	-D, --distro DIST       Set the distribution
 	-d, --destdir DIR       Set the installation directory
 	-h, --help              Shows this text
 	-j, --cores NUM         Use NUM cores during build
@@ -941,6 +1015,22 @@ Options:
 	-r, --repo REPO         Set the repository to REPO
 	-t, --tag TAG           Set the tag to TAG
 	-y, --auto              Run without asking any questions
+
+Custom mode options:
+
+This script is intended to be user friendly and as automatic as possible, so
+it has embedded presets for a number of distributions. However, it can be made
+to work without them.
+
+	--get-supported         Lists the distributions that are supported
+	--get-source-deps DIST  Lists the packages needed to build the source on
+	                        distro DIST.
+	--get-qt-deps DIST      Lists the packages needed to build Qt on distro
+	                        DIST.
+	--get-qt-version DIST   Outputs the Qt version that will be used if Qt
+	                        is built from source on disto DIST.
+	--get-qt-patches DIST   Lists the patches that will be applied if Qt
+	                        is built from source on distro DIST.
 
 
 HELP
