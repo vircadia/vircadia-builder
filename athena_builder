@@ -461,11 +461,20 @@ my $data = {
 
 my @x11_lib_paths = ("/usr/lib64", "/usr/X11R6/lib64", "/usr/lib/x86_64-linux-gnu", "/usr/lib");
 
+# Amount of RAM needed to build Athena, per compiler process.
+my $mem_per_core_athena = 1.2 * 1024 * 1024;
+
+# Qt has a build stage that consumes a huge amount of RAM.
+# This runs into the OOM killer into distributions like Mint that allocate very little swap space.
+my $mem_per_core_qt     = 2 * 1024 * 1024;
+
 my $repo         = "https://github.com/kasenvr/project-athena";
 my $qt_repo      = "git://code.qt.io/qt/qt5.git";
 my $repo_tag     = "kasen/core";
 my $inst_dir     = "$ENV{HOME}/Athena";
 my $build_cores;
+my $build_cores_qt;
+
 my $desktop;
 my $distro;
 
@@ -509,9 +518,10 @@ open($log_fh, ">", "$logdir/log.txt") or warn("Couldn't create log '$logdir/log.
 
 
 
-$build_cores  //= calculate_cores();
-$desktop      //= get_desktop();
-$distro       //= detect_distro();
+$build_cores    //= calculate_cores("Athena", $mem_per_core_athena);
+$build_cores_qt //= calculate_cores("Qt", $mem_per_core_qt);
+$desktop        //= get_desktop();
+$distro         //= detect_distro();
 
 
 if ( !exists $data->{$distro} ) {
@@ -639,10 +649,12 @@ sub collect_info {
 	my $ok = $opt_auto ? "yes" : "no";
 
 	while($ok ne "yes") {
-		$repo         = $rl->readline("Git repository  : ", $repo);
-		$repo_tag     = $rl->readline("Git tag         : ", $repo_tag);
-		$inst_dir     = $rl->readline("Installation dir: ", $inst_dir);
-		$build_cores  = $rl->readline("CPU cores to use: ", $build_cores);
+		$repo            = $rl->readline("Git repository             : ", $repo);
+		$repo_tag        = $rl->readline("Git tag                    : ", $repo_tag);
+		$inst_dir        = $rl->readline("Installation dir           : ", $inst_dir);
+		$build_cores     = $rl->readline("CPU cores to use for Athena: ", $build_cores);
+		$build_cores_qt  = $rl->readline("CPU cores to use for Qt5   : ", $build_cores_qt);
+
 		info("\n");
 		$ok = $rl->readline("If the above is okay, say 'yes' to begin installation: ", "yes");
 	}
@@ -740,6 +752,11 @@ sub install_qt {
 	mkdir("$inst_dir/qt5-build");
 
 	chdir("$inst_dir/qt5-build");
+
+	# Referenced in
+	# qtwebengine/src/core/gn_run.pro
+	$ENV{NINJAFLAGS} = "-j${build_cores_qt}";
+
 	run("../qt5/configure", "-opensource", "-confirm-license", 
 		"-platform", "linux-g++-64",
 		"-nomake", "examples",
@@ -761,9 +778,8 @@ sub install_qt {
 		"-prefix", "../qt5-install");
 
 	check_qt_webengine();
-
-	run("make", "-j${build_cores}");
-	run("make", "-j${build_cores}", "install");
+	run("make", "-j${build_cores_qt}");
+	run("make", "-j${build_cores_qt}", "install");
 
 
 
@@ -910,9 +926,8 @@ sub read_from_cmd_into_file {
 
 
 sub calculate_cores {
-	info("Checking how many cores to use for the build... ");
-
-	my $mem_per_core = 1.5 * 1024 * 1024;
+	my ($name, $mem_per_core) = @_;
+	info("Checking how many cores to use for building $name... ");
 
 	my $core_count =  grep { /^processor/ } readfile("/proc/cpuinfo");
 	my ($mem_avail) = grep { /^MemAvailable/ } readfile("/proc/meminfo");
@@ -927,7 +942,7 @@ sub calculate_cores {
 	if ( $cores >= ($mem_avail / $mem_per_core )) {
 		$cores = int($mem_avail / $mem_per_core);
 		$cores = 1 unless ($cores);
-		warning(", memory limited to $cores\n");
+		warning(", memory limited to $cores");
 
 	}
 	info_ok("\n");
