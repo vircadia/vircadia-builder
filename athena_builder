@@ -462,11 +462,10 @@ my $data = {
 my @x11_lib_paths = ("/usr/lib64", "/usr/X11R6/lib64", "/usr/lib/x86_64-linux-gnu", "/usr/lib");
 
 # Amount of RAM needed to build Athena, per compiler process.
-my $mem_per_core_athena = 1.2 * 1024 * 1024;
+my $mem_per_core_athena = 1 * 1024 * 1024;
 
-# Qt has a build stage that consumes a huge amount of RAM.
-# This runs into the OOM killer into distributions like Mint that allocate very little swap space.
-my $mem_per_core_qt     = 2 * 1024 * 1024;
+# Qt has a build stage that consumes a huge amount of RAM. Be a bit conservative here.
+my $mem_per_core_qt     = 1.2 * 1024 * 1024;
 
 my $repo         = "https://github.com/kasenvr/project-athena";
 my $qt_repo      = "git://code.qt.io/qt/qt5.git";
@@ -757,7 +756,10 @@ sub install_qt {
 
 	chdir("$inst_dir/qt5-build");
 
-	# Referenced in
+	# The build process calls Ninja for QtWebEngine, which calculates the number of processes
+	# on its own. Fortunately there's an environment variable we can use to rein it in.
+	#
+	# This var can be found referenced in
 	# qtwebengine/src/core/gn_run.pro
 	$ENV{NINJAFLAGS} = "-j${build_cores_qt}";
 
