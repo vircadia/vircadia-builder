@@ -104,8 +104,6 @@ sub write_to_log {
 
 	if ( $log_fh && fileno($log_fh) ) {
 		print $log_fh $text;
-	} else {
-		die "log $log_fh not open";
 	}
 }
 
