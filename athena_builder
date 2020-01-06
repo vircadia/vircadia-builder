@@ -608,8 +608,12 @@ my $build_cores_qt;
 my $desktop;
 my $distro;
 
-my ($opt_keep_source, $opt_auto, $opt_build_qt);
+my ($opt_keep_source, $opt_auto, $opt_build_qt, $opt_build);
 my ($cmd_help, $cmd_get_supported, $cmd_get_source_deps, $cmd_get_qt_deps, $cmd_get_qt_version, $cmd_get_qt_patches, $cmd_make_pkglist);
+
+$opt_build = "interface";
+my @build_list;
+
 
 GetOptions(
 	"keep-source|K"          => \$opt_keep_source,
@@ -622,6 +626,7 @@ GetOptions(
 	"collect-info|C"         => \$collect_system_info,
 	"distro|D=s"             => \$distro,
 	"build-qt|B"             => \$opt_build_qt,
+	"build|U=s"              => \$opt_build,
 	"get-supported"          => \$cmd_get_supported,
 	"get-source-deps=s"      => \$cmd_get_source_deps,
 	"get-qt-deps=s"          => \$cmd_get_qt_deps,
@@ -630,7 +635,11 @@ GetOptions(
 	"make-pkglist"           => \$cmd_make_pkglist
 ) or help(1);
 
+
+@build_list = parse_build_option($opt_build);
+
 help(1) if ($cmd_help);
+
 get_supported() if ( $cmd_get_supported );
 get_conf( 'source_dependencies', $cmd_get_source_deps ) if ( $cmd_get_source_deps );
 get_conf( 'qt_source_dependencies', $cmd_get_qt_deps )  if ( $cmd_get_qt_deps );
@@ -646,7 +655,6 @@ mkdir("$ENV{HOME}/.athena-builder/logs");
 mkdir($logdir);
 
 open($log_fh, ">", "$logdir/log.txt") or warn("Couldn't create log '$logdir/log.txt': $!");
-
 
 
 $build_cores    //= calculate_cores("Athena", $mem_per_core_athena);
@@ -833,7 +841,10 @@ sub install {
 	chdir("$inst_dir/build");
 
 	run("cmake", "../source");
-	run("make", "interface", "-j${build_cores}");
+	foreach my $target (@build_list) {
+		important("Building target $target\n");
+		run("make", $target, "-j${build_cores}");
+	}
 	
 
 }
@@ -924,6 +935,12 @@ sub install_qt {
 
 sub setup_desktop {
 
+
+	if ( ! -x "$inst_dir/build/interface/interface" ) {
+		info("interface not built, skipping desktop setup\n");
+		return;
+	}
+
 	if (!check_qt_install()) {
 		my $qt_dir = read_from_cmd("find", "$inst_dir/vcpkg", "-type", "d", "-name", "qt5-install");
 		chomp $qt_dir;
@@ -941,6 +958,8 @@ sub setup_desktop {
 		}
 	}
 
+
+	info("Creating desktop icon for interface... ");
 
 	open(my $script, ">", "$inst_dir/build/run_interface") or fatal("Can't create $inst_dir/build/interface: $!");
 	print $script "#!/bin/bash\n";
@@ -964,6 +983,8 @@ sub setup_desktop {
 	print $dsk "Icon=$inst_dir/source/interface/icon/interface.ico\n";
 	print $dsk "Categories=Graphics;AudioVideo;Network\n";
 	close $dsk;
+
+	info_ok("done.\n");
 
 	info("Marking desktop icon as trusted...\n");
 	run({ fail_ok => 1 }, "gio", "set", "$desktop/Athena.desktop", "metadata::trusted", "yes");
@@ -1375,6 +1396,66 @@ sub make_pkglist {
 	exit(0);
 }
 
+sub parse_build_option {
+	my ($optval) = @_;
+
+
+	# Valid build targets for the makefile
+	my @all_targets = qw(  domain-server assignment-client ice-server
+	                       interface atp-client oven nitpick skeleton-dump
+	                       ac-client ktx-tool ice-client gpu-frame-player
+	                       vhacd-util
+	                    );
+
+	# Valid aliases (names for groups of targets)
+	my @all_aliases = qw( all client server );
+
+	my %all_valid = map { $_ => 1 } (@all_aliases, @all_targets);
+	my %split = map { $_ => 1 } split(/,/, $optval);
+	my @out;
+
+	if ( $split{all} ) {
+		delete $split{all};
+		foreach my $t (@all_targets) {
+			$split{$t} = 1;
+		}
+	}
+
+	if ( $split{client} ) {
+		delete $split{client};
+		$split{'interface'}        = 1;
+	}
+
+	if ( $split{server} ) {
+		delete $split{server};
+		$split{'domain-server'}     = 1;
+		$split{'assignment-client'} = 1;
+	}
+
+	foreach my $k ( keys %all_valid ) {
+		push @out, $k if exists $split{$k};
+		delete $split{$k};
+	}
+
+	debug("Parsed build targets: " . join(', ', @out));
+
+	if ( %split ) {
+		my $bad = join(', ', keys %split);
+
+		print STDERR "Bad value '$bad' for build option, only these values are valid:\n";
+		print STDERR  join(', ', sort keys %all_valid) . "\n\n";
+		print STDERR "You probably want one of:\n";
+		print STDERR "\tclient      Build the graphical desktop client. This is the default.\n";
+		print STDERR "\t            Choosing this option builds the 'interface' target\n\n";
+		print STDERR "\tserver      Build the components needed to create a server (domain)\n";
+		print STDERR "\t            Choosing this option builds domain-server and assignment-client\n\n";
+		print STDERR "\tall         Build everything, including development and testing tools\n";
+		print STDERR "\nTry $0 --help for more information on the command-line arguments\n";
+		exit(1);
+	}
+
+	return @out;
+}
 
 sub help {
 	my $retval = shift // 0;

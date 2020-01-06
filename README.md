@@ -31,6 +31,19 @@ It will ask some questions, all of which can be left with their default values.
 
 It will detect the system's core count and amount of available memory, and do a parallel build taking care not to exhaust the system memory on high core count systems.
 
+## Build targets
+
+The script by default builds the GUI ('interface') but it can also build the server components using the --build option. For instance:
+
+    $ ./athena_builder --build server
+
+Will build only the server components. To build both, separate entries with a comma:
+
+    $ ./athena_builder --build server,client
+
+Have in mind that each build overwrites the previous one, so if you want to have both desktop and server components at the same time, you need to build them both in one command like above.
+
+
 ## Qt
 
 The Athena codebase uses a specific, patched version of Qt. Binary packages are only available for some platforms. For platforms without a package, Qt can be built from source by the script.
