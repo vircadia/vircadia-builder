@@ -86,6 +86,8 @@ As an optional step, if you'd like to improve the script yourself, you can use t
 
 ####  How much disk space does it need?
 
+Some packages will likely need to be installed, depending on the distro and the current instalation. On a Fedora 31 VPS without a desktop, this required 130 MiB of packages.
+
 In addition to any packages that may be needed to do the build:
 
 * About 20 GiB for a full build including Qt.

@@ -521,7 +521,8 @@ my $data = {
 			'cmake',
 			'make',
 			'gcc-c++',
-			'libatomic'
+			'libatomic',
+			'xdg-user-dirs'
 		],
 		qt_source_dependencies => [
 			"patch",
@@ -1133,7 +1134,7 @@ sub calculate_cores {
 sub get_desktop {
 	info("Detecting desktop location... ");
 
-	my $desktop = read_from_cmd("xdg-user-dir", "DESKTOP");
+	my $desktop = read_from_cmd({ fail_ok => 1 }, "xdg-user-dir", "DESKTOP");
 	if (!$desktop) {
 		$desktop = "$ENV{HOME}/Desktop";
 	}
