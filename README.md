@@ -98,11 +98,12 @@ In addition to any packages that may be needed to do the build:
 
 It's extremely variable, depending greatly on hardware. Here are some sample numbers, only of the compilation process:
 
-| Processor  | Qt  | Athena   |
-| ------------ | ------------ | ------------ |
-| Ryzen 9 3950X, using 32 cores  |  19:01  | 4:07   |
-| Ryzen 9 3950X, using 16 cores in VM | 25:32 | 4:46  |
-| Core i7-8550U (Dell XPS 13 laptop) | 2:20:22 | 19:37 |
+| Processor                           | Qt           | CMake | Athena Client  | Athena Server |
+| ------------                        | ------------ | ----- | ------------   | ----------    |
+| Ryzen 9 3950X, using 32 cores       | 19:01        | ?     | 4:07           | ?             |
+| Ryzen 9 3950X, using 16 cores in VM | 25:32        | ?     | 4:46           | ?             |
+| Core i7-8550U (Dell XPS 13 laptop)  | 2:20:22      | ?     | 19:37          | ?             |
+| Linode 8GB                          | 3:09:40      | 14:25 | 31:47          | 16:30         |
 
 
 #### Why is it using such a weird number of cores for the build?
