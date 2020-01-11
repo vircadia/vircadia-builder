@@ -730,7 +730,7 @@ sub detect_distro {
 sub get_package_list {
 	info("Getting the package list... ");
 	my @packages;
-	if ( $DD->{package_manager} eq "dnf" ) {
+	if ( $DD->{package_manager} eq "dnf" || $DD->{package_manager} eq "yum" ) {
 		@packages = read_from_cmd("rpm", "-qa", "--qf", "%{NAME}\\n");
 	} elsif ( $DD->{package_manager} eq "apt" ) {
 		@packages = read_from_cmd("dpkg-query", "--show", "-f", "\${Package}\n");
@@ -788,6 +788,8 @@ sub install_missing_packages {
 
 		if ( $DD->{package_manager} eq "dnf" ) {
 			sudo_run("dnf", "install", "-y", @missing);
+		} elsif ( $DD->{package_manager} eq "yum" ) {
+			sudo_run("yum", "install", "-y", @missing);
 		} elsif ( $DD->{package_manager} eq "apt" ) {
 			sudo_run("apt-get", "install", "-y", @missing);
 		} elsif ( $DD->{package_manager} eq "none" ) {
