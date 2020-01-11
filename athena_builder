@@ -700,28 +700,29 @@ setup_desktop();
 sub detect_distro {
 	info("Detecting distribution... ");
 
-	if ( -f "/etc/fedora-release" ) {
-		my ($release_line) = readfile("/etc/fedora-release");
-		my ($ver) = $release_line =~ /^Fedora release (\d+)/;
+	if ( -f "/etc/os-release" ) {
+		my @release_info = readfile("/etc/os-release");
+		my %release_data;
 
-		info_ok("Fedora $ver\n");
-		return "fedora-$ver";
+		debug("Parsing /etc/os-release...\n");
+		foreach my $line (@release_info) {
+			my ($k, $v) = $line =~ /^(\w+)=(.*?)$/;
+
+			$v =~ s/^"//;
+			$v =~ s/"$//;
+
+			$release_data{$k} = $v;
+			debug("\t$k => '$v'\n");
+		}
+
+		my $id          = $release_data{ID} . "-" . $release_data{VERSION_ID};
+		my $pretty_name = $release_data{PRETTY_NAME} // ( $release_data{NAME} . " " . $release_data{VERSION} );
+
+		info_ok("$pretty_name ($id)\n");
+		return $id;
 	}
 
-	if ( -f "/etc/lsb-release" ) {
-		my @lsb = readfile("/etc/lsb-release");
-		my ($dist) = grep { /^DISTRIB_ID/ } @lsb;
-		my ($ver)  = grep { /^DISTRIB_RELEASE/ } @lsb;
-
-		my ($distro_name, $release);
-		(undef, $distro_name) = split(/=/, $dist);
-		(undef, $release)     = split(/=/, $ver);
-
-		info_ok("$distro_name $release\n");
-		return lc($distro_name) . "-$release";
-	}
-
-	fatal("Failed to detect distribution!");
+	fatal("Failed to detect distribution! Couldn't find /etc/os-release.");
 }
 
 
