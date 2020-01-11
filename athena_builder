@@ -611,10 +611,10 @@ my $data = {
 #			'qfloat16.patch',  # Doesn't apply against 5.12.6
 			'qtscript-crash-fix.patch'
 		],
-		package_manager => 'dnf',
+		package_manager => 'yum',
 		source_dependencies => [
 			'git',
-			'perl-Term-ReadLine-Gnu',
+#			'perl-Term-ReadLine-Gnu',
 			'cmake',
 			'make',
 			'gcc-c++',
@@ -637,7 +637,6 @@ my $data = {
 			"tar",
 			"alsa-lib-devel",
 			"cups-devel",
-			"freetds-devel",
 			"glib2-devel",
 			"gtk3-devel",
 			"libdrm-devel",
@@ -675,12 +674,11 @@ my $data = {
 			"xcb-util-renderutil-devel",
 			"xcb-util-wm-devel",
 			"libxcb-devel",
-			"python2",
+			"python",
 			"gperf",
 			"bison",
 			"flex",
 			"nss-devel",
-			"libstdc++-static",
 			# Possibly unnecessary, optional dependencies of
 			# WebEngine. Should check what's useful and what not.
 			"jsoncpp-devel",
