@@ -1108,6 +1108,7 @@ sub setup_desktop {
 
 
 	info("Creating desktop icon for interface... ");
+	mkdir($desktop);
 
 	open(my $script, ">", "$inst_dir/build/run_interface") or fatal("Can't create $inst_dir/build/interface: $!");
 	print $script "#!/bin/bash\n";
