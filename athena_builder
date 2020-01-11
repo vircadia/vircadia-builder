@@ -3,6 +3,9 @@ use warnings;
 use strict;
 use Getopt::Long;
 use Term::ANSIColor;
+use IO::Select;
+use IPC::Open3;
+use Symbol qw(gensym);
 
 
 $| = 1;
@@ -62,12 +65,12 @@ sub fatal {
 
 	if ( $collect_system_info ) {
 		important("Collecting additional system info to aid with debugging...\n");
-		read_from_cmd_into_file("$logdir/df"   , { fail_ok => 1}, "df");
-		read_from_cmd_into_file("$logdir/uname", { fail_ok => 1}, "uname", "-a");
-		read_from_cmd_into_file("$logdir/dmesg", { fail_ok => 1}, "dmesg");
+		read_from_cmd_into_file("$logdir/df"   , { fail_ok => 1, no_log => 1}, "df");
+		read_from_cmd_into_file("$logdir/uname", { fail_ok => 1, no_log => 1}, "uname", "-a");
+		read_from_cmd_into_file("$logdir/dmesg", { fail_ok => 1, no_log => 1}, "dmesg");
 
-		system("cp", "-v", "/proc/cpuinfo", "$logdir/cpuinfo");
-		system("cp", "-v", "/proc/meminfo", "$logdir/meminfo");
+		system("cp", "/proc/cpuinfo", "$logdir/cpuinfo");
+		system("cp", "/proc/meminfo", "$logdir/meminfo");
 
 	} else {
 		important("To aid with debugging, please re-run with the --collect-info argument.\n");
@@ -77,7 +80,7 @@ sub fatal {
 
 	
 	my $compressed = "athena-builder-error-$timestamp.tar.gz";
-	system("tar", "-czf", $compressed, $logdir);
+	run( { fail_ok => 1, no_log => 1, quiet => 1 }, "tar", "-czf", $compressed, $logdir);
 
 
 	print STDERR color('bold red');
@@ -669,7 +672,6 @@ mkdir($logdir);
 
 open($log_fh, ">", "$logdir/log.txt") or warn("Couldn't create log '$logdir/log.txt': $!");
 
-
 $build_cores    //= calculate_cores("Athena", $mem_per_core_athena);
 $build_cores_qt //= calculate_cores("Qt", $mem_per_core_qt);
 $desktop        //= get_desktop();
@@ -681,8 +683,6 @@ if ( !exists $data->{$distro} ) {
 }
 
 my $DD = $data->{$distro};
-
-
 
 my %PACKAGES = get_package_list();
 install_missing_packages();
@@ -1069,38 +1069,72 @@ sub run {
 
 	my $cmdstr = join(' ', @command);
 	debug("RUN: $cmdstr\n");
-	my $buf = "";
+	my $out_buf = "";
 	my $start = time;
 
 
-	if ( open(my $fh, "-|", @command) ) {
-		while(my $line = <$fh>) {
-			$buf .= $line if ( $opts{keep_buf} );
-			print $line unless ( $opts{keep_buf} );
-			debug($line);
-		}
-		close $fh;
-		my $retval = $?;
-		my $errstr = $!;
+	my ($in, $out);
+	my $err = gensym(); # Ok, this is a horrible interface
+	my $pid;
 
-		debug("\nCommand '$cmdstr' " . error_to_text($retval, $errstr) . "  after " . secs_to_time(time - $start) . "\n");
+	eval {
+		$pid = open3($in, $out, $err, @command);
+	};
+	if ( $@ =~ /^open3:/ ) {
+		my $errstr = $@;
+		$errstr =~ s/^open3://;
 
-		if ( $retval != 0 ) {
-			if ( $opts{fail_ok} ) {
-				warning( "Command '$cmdstr' " . error_to_text($?, $!) . "\n" );
-			} else {
-				fatal( "Command '$cmdstr' " . error_to_text($?, $!) . "\n" );
-			}
-		}
-	} else {
 		if ( $opts{fail_ok} ) {
-			warning("Failed to run '$cmdstr'. Command " . error_to_text($?, $!, 1) . "\n");
+			warning("Failed to run '$cmdstr'. Command failed to start: $errstr\n");
+			return;
 		} else {
-			fatal("Failed to run '$cmdstr'. Command " . error_to_text($?, $!, 1) . "\n");
+			fatal("Failed to run '$cmdstr'. Command failed to start: $errstr\n");
+		}
+	} elsif ( $@ ) {
+		fatal_error("Unrecognized error when trying to run '$cmdstr': $@\n");
+	}
+
+	debug("Program started as PID $pid\n");
+
+	close $in;
+	my $select = IO::Select->new();
+	$select->add($out);
+	$select->add($err);
+
+	CMDLOOP: while(my @ready = $select->can_read()) {
+		foreach my $fh (@ready) {
+			my $data = "";
+			my $bytes = sysread($fh, $data, 16384);
+			last CMDLOOP if ( $bytes == 0 );
+
+			debug($data) unless $opts{no_log};
+
+			if ( $fh == $out && $opts{keep_buf} ) {
+				$out_buf .= $data;
+			}
+
+			if (!$opts{quiet}) {
+				print $data        if ( $fh == $out && !$opts{keep_buf});
+				print STDERR $data if ( $fh == $err );
+			}
 		}
 	}
 
-	return  wantarray ? split(/\n/, $buf) : $buf;
+	waitpid($pid, 0);
+	my $retval = $?;
+	my $errstr = $!;
+
+	debug("\nCommand '$cmdstr' " . error_to_text($retval, $errstr) . "  after " . secs_to_time(time - $start) . "\n");
+
+	if ( $retval != 0 ) {
+		if ( $opts{fail_ok} ) {
+			warning( "Command '$cmdstr' " . error_to_text($?, $!) . "\n" );
+		} else {
+			fatal( "Command '$cmdstr' " . error_to_text($?, $!) . "\n" );
+		}
+	}
+
+	return  wantarray ? split(/\n/, $out_buf) : $out_buf;
 }
 
 sub sudo_run {
