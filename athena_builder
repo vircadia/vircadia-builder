@@ -949,7 +949,7 @@ sub get_source {
 
 	mkdir($inst_dir);
 	
-	clone_repo($repo, "source", $repo_tag);
+	get_source_from_git($repo, "source", $repo_tag);
 
 	if ( $opt_sys_qt ) {
 		info("Applying System Qt patch... ");
@@ -1010,7 +1010,7 @@ sub install_qt {
 	mkdir($inst_dir);
 	chdir($inst_dir);
 #	run("git", "clone", "--recursive", $qt_repo
-	clone_repo($qt_repo, "qt5",  $DD->{qt_version});
+	get_source_from_git($qt_repo, "qt5",  $DD->{qt_version});
 
 
 	info("Applying patches...\n");
@@ -1339,34 +1339,83 @@ sub readfile {
 	return @data;
 }
 
-sub clone_repo {
+sub get_source_from_git {
 	my ($url, $destdir, $tag, %opts) = @_;
 
-	info("Cloning $url ($tag)... ");
+	info("Getting source from git $url ($tag)...\n");
 
 	if ( ! -d "$inst_dir/$destdir/.git" ) {
-		my @git_extra_args;
-		info("\n");
+		clone_repo($url, $destdir, $tag, %opts);
+	} else {
+		info("Checking if updating the existing source is possible... ");
 
-		if ( exists $opts{git_args} ) {
-			@git_extra_args = @{$opts{git_args}};
+		chdir("$inst_dir/$destdir") or fatal("Can't chdir into $inst_dir/$destdir: $!");
+		my @remotes = read_from_cmd("git", "remote", "-v");
+		my $no_update;
+
+		foreach my $line (@remotes) {
+			my ($name, $remote) = split(/\s+/, $line);
+			if ( $name ne "origin" ) {
+				info_ok("no, additional remote $name present.\n");
+				$no_update=1;
+				last;
+			}
+
+			if ( $remote ne $url ) {
+				info_ok("no, url '$remote' differs from wanted URL.\n");
+				$no_update=1;
+				last;
+			}
 		}
 
-		run("git", "clone", "--recursive", $url, "$inst_dir/$destdir", "-b", $tag, "--single-branch"); # "@git_extra_args);
+		chdir($inst_dir);
 
-	} else {
-		info_ok("Already cloned, updating...\n");
-
-		if ( !$opt_keep_source ) {
-			chdir("$inst_dir/$destdir");
-			run("git", "fetch");
-			run("git", "submodule", "update", "-f", "--init");
-			run("git", "clean", "-f");
-			run("git", "reset", "--hard", "origin/$tag");
+		if ( $no_update ) {
+			clone_repo($url, $destdir, $tag, %opts);
+		} else {
+			info_ok("yes\n");
+			update_repo($url, $destdir, $tag, %opts);
 		}
 	}
 }
+
+sub clone_repo {
+	my ($url, $destdir, $tag, %opts) = @_;
+	my @git_extra_args;
+
+	info("Checking $inst_dir/$destdir... ");
+	if ( -d "$inst_dir/$destdir" ) {
+		run("rm", "-rf", "$inst_dir/$destdir");
+		info_ok("deleted for a clean clone.\n");
+	} else {
+		info_ok("ok.\n");
+	}
+
+	if ( exists $opts{git_args} ) {
+		@git_extra_args = @{$opts{git_args}};
+	}
+
+	run("git", "clone", "--progress", "--recursive", $url, "$inst_dir/$destdir", "-b", $tag, "--single-branch"); # "@git_extra_args);
+}
+
+sub update_repo {
+	my ($url, $destdir, $tag, %opts) = @_;
+
+	if ( ! -d "$inst_dir/$destdir/.git" ) {
+		fatal("Can't update $inst_dir/$destdir: there doesn't seem to be a git repo there!");
+	}
+
+	info_ok("Already cloned, updating...\n");
+
+	if ( !$opt_keep_source ) {
+		chdir("$inst_dir/$destdir");
+		run("git", "fetch", "origin", "$tag:refs/remotes/origin/$tag");
+		run("git", "submodule", "update", "-f", "--init");
+		run("git", "clean", "-f");
+		run("git", "checkout", "origin/$tag");
+	}
 	
+}
 
 sub edit_qt_conf {
 	my ($file, %values) = @_;
