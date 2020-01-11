@@ -602,7 +602,7 @@ my $data = {
 			"libwebp-devel"
 		]
 	},
-	'amazn-2' => {
+	'amzn-2' => {
 		has_binary_qt_package => 0,
 		qt_version => '5.12.6',
 		qt_patches => [
