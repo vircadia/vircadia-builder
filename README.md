@@ -8,13 +8,14 @@ Builds Project Athena, an Open Source fork of the High Fidelity codebase.
 * Ubuntu 19.10 (experimental)
 * Linux Mint 19.3 (experimental)
 * Fedora 31 (experimental, needs to build Qt)
-(more coming soon)
+* Amazon Linux 2 (experimental, needs newer cmake)
+* (more coming soon)
 
 ## Instructions:
 
     git clone https://github.com/daleglass/athena-builder.git
     cd athena-builder
-	chmod +x athena_builder
+    chmod +x athena_builder
     ./athena_builder
 
 ## What it does
@@ -47,6 +48,20 @@ Have in mind that each build overwrites the previous one, so if you want to have
 ## Qt
 
 The Athena codebase uses a specific, patched version of Qt. Binary packages are only available for some platforms. For platforms without a package, Qt can be built from source by the script.
+
+**WARNING: The Qt build uses a large amount of RAM, which can be a problem with VPSes. A minimum of 4 GB RAM + 2GB swap is recommended for building Qt with one process**. The swap usage should be tolerable, as Qt has a few very memory intensive parts in the compilation process, but the rest is much less so.
+
+In case of trouble, look at the autodetected number of cores, eg:
+
+    Checking how many cores to use for building Athena... 4 cores, memory limited to 2
+    Checking how many cores to use for building Qt... 4 cores, memory limited to 3
+
+And manually specify a lower number. For instance:
+
+    ./athena_builder --qt-cores 1
+
+
+In any case, building in low resource environments is slow and problematic. While it can be done, it might be faster and easier to do the build in Docker or a bigger VM running on a local machine, and then copy the files over.
 
 ## Adding support for more distributions
 
