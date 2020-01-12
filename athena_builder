@@ -1121,7 +1121,12 @@ sub setup_desktop {
 	chmod 0755,  "$inst_dir/build/run_interface";
 
 
-	open(my $dsk, ">", "$desktop/Athena.desktop") or fatal("Can't create $desktop/Athena.desktop: $!");
+	mkdir("$ENV{HOME}/.local");
+	mkdir("$ENV{HOME}/.local/share");
+	mkdir("$ENV{HOME}/.local/share/applications");
+	my $desktop_file = "$ENV{HOME}/.local/share/applications/Athena.desktop";
+
+	open(my $dsk, ">", $desktop_file) or fatal("Can't create $desktop_file: $!");
 	print $dsk "[Desktop Entry]\n";
 	print $dsk "Version=1.0\n";
 	print $dsk "Name=Athena VR\n";
@@ -1131,14 +1136,23 @@ sub setup_desktop {
 	print $dsk "Icon=$inst_dir/source/interface/icon/interface.ico\n";
 	print $dsk "Categories=Graphics;AudioVideo;Network\n";
 	close $dsk;
-
 	info_ok("done.\n");
 
+	info("Creating a link in the user's desktop... ");
+	mkdir($desktop);
+	unlink("$desktop/Athena.desktop") if ( -e "$desktop/Athena.desktop" );
+
+	if ( symlink($desktop_file, "$desktop/Athena.desktop") ) {
+		info_ok("done.\n");
+	} else {
+		warning("failed: $!\n");
+	}
+
 	info("Marking desktop icon as trusted...\n");
-	run({ fail_ok => 1 }, "gio", "set", "$desktop/Athena.desktop", "metadata::trusted", "yes");
+	run({ fail_ok => 1 }, "gio", "set", $desktop_file, "metadata::trusted", "yes");
 
 	info("Adding to menu...\n");
-	run({ fail_ok => 1 }, "xdg-desktop-menu", "install", "--novendor", "$desktop/Athena.desktop");
+	run({ fail_ok => 1 }, "xdg-desktop-menu", "install", "--novendor", $desktop_file);
 
 	info_ok("All done!\n");
 }
