@@ -734,6 +734,7 @@ GetOptions(
 	"tag|t=s"                => \$repo_tag,
         "destdir|d=s"            => \$inst_dir,
         "cores|j=i"              => \$build_cores,
+	"qt-cores|J=i"           => \$build_cores_qt,
 	"collect-info|C"         => \$collect_system_info,
 	"distro|D=s"             => \$distro,
 	"build-qt|B"             => \$opt_build_qt,
@@ -1713,7 +1714,8 @@ Options:
 	-D, --distro DIST       Set the distribution
 	-d, --destdir DIR       Set the installation directory
 	-h, --help              Shows this text
-	-j, --cores NUM         Use NUM cores during build
+	-j, --cores NUM         Use NUM cores during main build
+	-J, --qt-cores NUM      Use NUM cores during Qt build
 	-k, --keep-source       Don't overwrite the current source tree
 	-r, --repo REPO         Set the repository to REPO
 	-t, --tag TAG           Set the tag to TAG
