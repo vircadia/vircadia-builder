@@ -142,6 +142,7 @@ my $data = {
 			'libglvnd-dev',
 			'libgl1-mesa-dev',
 			'xdg-user-dirs',
+			'libharfbuzz-dev',
 			# Qt runtime
 			'libdouble-conversion1', 'libxcb-xinerama0-dev',
 			# Interface
@@ -172,6 +173,7 @@ my $data = {
 			'libgl1-mesa-dev',
 			'xdg-user-dirs',
 			'python3-distro',
+			'libharfbuzz-dev',
 			# Qt runtime
 			'libdouble-conversion1', 'libxcb-xinerama0-dev',
 			# Interface
@@ -202,6 +204,7 @@ my $data = {
 			'libgl1-mesa-dev',
 			'xdg-user-dirs',
 			'python3-distro',
+			'libharfbuzz-dev',
 			# Qt
 			'libdouble-conversion-dev', 'libxcb-xinerama0-dev', 'libpcre2-16-0', 'libxcb-xinput0',
 			# Interface
@@ -371,6 +374,8 @@ my $data = {
 			'libglvnd-dev',
 			'libgl1-mesa-dev',
 			'xdg-user-dirs',
+			'python3-distro',
+			'libharfbuzz-dev',
 			# Qt
 			'libdouble-conversion-dev', 'libxcb-xinerama0-dev', 'libpcre2-16-0', 'libxcb-xinput0',
 			# Interface
@@ -529,7 +534,8 @@ my $data = {
 			'gcc-c++',
 			'libatomic',
 			'xdg-user-dirs',
-			'python3-distro'
+			'python3-distro',
+			'harfbuzz-devel',
 		],
 		qt_binary_dependencies => [
 			'qt5-devel',
