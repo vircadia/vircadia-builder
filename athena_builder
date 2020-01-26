@@ -709,6 +709,24 @@ my $data = {
 
 };
 
+# Valid build targets for the makefile
+my $all_targets = {
+	'domain-server'       => { service => 1, service_desc => "Athena Domain Server"    , service_args => [] },
+	'assignment-client'   => { service => 1, service_desc => "Athena Assignment Client", service_args => ["-n", "6"] },
+	'ice-server'          => { service => 1, service_desc => "Athena ICE Server"       , service_args => [] },
+	'interface'           => { service => 0 },
+	'atp-client'          => { service => 0 },
+	'oven'                => { service => 0 },
+	'nitpick'             => { service => 0 },
+	'skeleton-dump'       => { service => 0 },
+	'ac-client'           => { service => 0 },
+	'ktx-tool'            => { service => 0 },
+	'ice-client'          => { service => 0 },
+	'gpu-frame-player'    => { service => 0 },
+	'vhacd-util'          => { service => 0 }
+};
+
+
 my @x11_lib_paths = ("/usr/lib64", "/usr/X11R6/lib64", "/usr/lib/x86_64-linux-gnu", "/usr/lib");
 my @system_qt_paths = ('/usr/lib64/cmake', '/usr/lib/x86_64-linux-gnu/cmake');
 
@@ -728,7 +746,7 @@ my $build_cores_qt;
 my $desktop;
 my $distro;
 
-my ($opt_keep_source, $opt_auto, $opt_build_qt, $opt_build, $opt_sys_qt);
+my ($opt_keep_source, $opt_auto, $opt_build_qt, $opt_build, $opt_sys_qt, $opt_skip_build);
 my ($cmd_help, $cmd_get_supported, $cmd_get_source_deps, $cmd_get_qt_deps, $cmd_get_qt_version, $cmd_get_qt_patches, $cmd_make_pkglist);
 
 $opt_build = "interface";
@@ -754,7 +772,8 @@ GetOptions(
 	"get-qt-version=s"       => \$cmd_get_qt_version,
 	"get-qt-patches=s"       => \$cmd_get_qt_patches,
 	"make-pkglist"           => \$cmd_make_pkglist,
-	"use-system-qt|S"        => \$opt_sys_qt
+	"use-system-qt|S"        => \$opt_sys_qt,
+	"skip-build"             => \$opt_skip_build
 ) or help(1);
 
 
@@ -796,9 +815,15 @@ install_missing_packages();
 verify_system_qt() if ($opt_sys_qt);
 collect_info();
 
-get_source();
-install_qt() if (!$DD->{has_binary_qt_package} || $opt_build_qt);
-install();
+unless($opt_skip_build) {
+	get_source();
+	install_qt() if (!$DD->{has_binary_qt_package} || $opt_build_qt);
+	install();
+}
+
+setup_qt();
+setup_scripts();
+setup_services();
 setup_desktop();
 
 
@@ -1089,14 +1114,10 @@ sub verify_system_qt {
 	info("Verifying system Qt... ");
 
 }
-sub setup_desktop {
 
 
-	if ( ! -x "$inst_dir/build/interface/interface" ) {
-		info("interface not built, skipping desktop setup\n");
-		return;
-	}
 
+sub setup_qt {
 	if (!check_qt_install()) {
 		my $qt_dir = read_from_cmd("find", "$inst_dir/vcpkg", "-type", "d", "-name", "qt5-install");
 		chomp $qt_dir;
@@ -1113,7 +1134,50 @@ sub setup_desktop {
 			fatal("Failed to find Qt dir in $inst_dir/vcpkg!");
 		}
 	}
+}
 
+
+sub setup_scripts {
+	foreach my $target (keys %$all_targets) {
+		if ( -x "$inst_dir/build/$target/$target" ) {
+			info("Creating script for $target...");
+			create_script($target, "$target/$target");
+			info_ok("done.\n");
+		}
+	}
+}
+
+sub setup_services {
+	my $services_created;
+
+	foreach my $target (keys %$all_targets) {
+		my $t = $all_targets->{$target};
+		next unless ($t->{service});
+
+		if ( -x "$inst_dir/build/$target/$target" ) {
+			info("Creating service for $target...");
+			create_service( user => 1, name => $target, args => $t->{service_args}, desc => $t->{service_desc} );
+			info_ok("done.\n");
+
+			$services_created = 1;
+		}
+	}
+
+	if ( $services_created ) {
+		info("Reloading systemd config... ");
+		run("systemctl", "--user", "daemon-reload");
+		info_ok("done.\n");
+	}
+}
+
+
+sub setup_desktop {
+
+
+	if ( ! -x "$inst_dir/build/interface/interface" ) {
+		info("interface not built, skipping desktop setup\n");
+		return;
+	}
 
 	info("Creating desktop icon for interface... ");
 	mkdir($desktop);
@@ -1164,6 +1228,79 @@ sub setup_desktop {
 	run({ fail_ok => 1 }, "xdg-desktop-menu", "install", "--novendor", $desktop_file);
 
 	info_ok("All done!\n");
+}
+
+sub create_script {
+	my ($name, $command) = @_;
+
+	open(my $script, ">", "$inst_dir/build/run_$name") or fatal("Can't create $inst_dir/build/run_$name: $!");
+
+	print $script "#!/bin/bash\n";
+	print $script "export QT_DIR=$inst_dir/qt5-install\n";
+	print $script "export QT_QPA_PLATFORM_PLUGIN_PATH=\$QT_DIR/plugins\n";
+	print $script "export LD_LIBRARY_PATH=\$QT_DIR/lib:\$LD_LIBRARY_PATH\n";
+	print $script "export PATH=\$QT_DIR/bin:\$QT_DIR/libexec:\$PATH\n";
+	print $script "export QTWEBENGINEPROCESS_PATH=\$QT_DIR/libexec/QtWebEngineProcess\n";
+	print $script "\"$inst_dir/build/$command\" \"\$@\" 2>&1 | tee -a \"$inst_dir/build/$name.log\"\n";
+	close $script;
+	chmod 0755,  "$inst_dir/build/run_$name";
+
+
+}
+
+sub create_service {
+	my (%args) = @_;
+
+	my @dirs;
+	if ( $args{user} ) {
+		@dirs = ($ENV{'HOME'}, ".config", "systemd", "user");
+	}
+
+
+	mkdir_path(@dirs);
+
+	my $unit_path = join_path(@dirs, $args{name} . ".service");
+
+	open(my $serv, '>', $unit_path) or fatal("Can't create $unit_path: $!");
+	print $serv "[Unit]\n";
+	print $serv "Description=$args{desc}\n";
+	print $serv "After=network.target\n";
+	print $serv "\n";
+	print $serv "[Service]\n";
+	print $serv "Restart=always\n";
+	print $serv "WorkingDirectory=$inst_dir/build/$args{name}\n";
+	print $serv "Environment=\"LD_LIBRARY_PATH=$inst_dir/build/$args{name}\"\n";
+	print $serv "Environment=\"HIFI_ENVIRONMENT=production\"\n";
+	print $serv "ExecStart=$inst_dir/build/$args{name}/$args{name} " . join(' ', @{$args{args}}) . "\n";
+	print $serv "\n";
+	print $serv "[Install]\n";
+
+	if ( $args{user} ) {
+		print $serv "WantedBy=default.target\n";
+	} else {
+		print $serv "WantedBy=multi-user.target\n";
+	}
+
+	close $serv;
+}
+
+
+sub mkdir_path {
+	my (@parts) = @_;
+	my $path = "";
+
+	while(@parts) {
+		$path .= "/" if ($path);
+		$path .= shift(@parts);
+		if ( ! mkdir($path) ) {
+			fatal("Can't create $path: $!") unless ($!{EEXIST});
+		}
+	}
+}
+
+sub join_path {
+	my (@parts) = @_;
+	return join('/', @parts);
 }
 
 
@@ -1666,23 +1803,16 @@ sub parse_build_option {
 	my ($optval) = @_;
 
 
-	# Valid build targets for the makefile
-	my @all_targets = qw(  domain-server assignment-client ice-server
-	                       interface atp-client oven nitpick skeleton-dump
-	                       ac-client ktx-tool ice-client gpu-frame-player
-	                       vhacd-util
-	                    );
-
 	# Valid aliases (names for groups of targets)
 	my @all_aliases = qw( all client server );
 
-	my %all_valid = map { $_ => 1 } (@all_aliases, @all_targets);
+	my %all_valid = map { $_ => 1 } (@all_aliases, keys %$all_targets);
 	my %split = map { $_ => 1 } split(/,/, $optval);
 	my @out;
 
 	if ( $split{all} ) {
 		delete $split{all};
-		foreach my $t (@all_targets) {
+		foreach my $t (keys %$all_targets) {
 			$split{$t} = 1;
 		}
 	}
