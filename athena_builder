@@ -146,7 +146,7 @@ my $data = {
 			# Qt runtime
 			'libdouble-conversion1', 'libxcb-xinerama0-dev',
 			# Interface
-			'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
+			'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1', 'libsdl2-dev',
 			# Misc
 			'libasound2', 'libxmu-dev', 'libxi-dev', 'freeglut3-dev', 'libasound2-dev', 'libjack0', 'libjack-dev', 'libxrandr-dev', 'libudev-dev', 'libssl-dev', 'zlib1g-dev',
 			# Server
@@ -177,7 +177,7 @@ my $data = {
 			# Qt runtime
 			'libdouble-conversion1', 'libxcb-xinerama0-dev',
 			# Interface
-			'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
+			'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1', 'libsdl2-dev',
 			# Misc
 			'libasound2', 'libxmu-dev', 'libxi-dev', 'freeglut3-dev', 'libasound2-dev', 'libjack0', 'libjack-dev', 'libxrandr-dev', 'libudev-dev', 'libssl-dev', 'zlib1g-dev',
 			# Server
@@ -342,7 +342,7 @@ my $data = {
 			# Qt
 			'libdouble-conversion-dev', 'libxcb-xinerama0-dev', 'libpcre2-16-0', 'libxcb-xinput0',
 			# Interface
-			'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
+			'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1', 'libsdl2-dev',
 			# Misc
 			'libasound2', 'libxmu-dev', 'libxi-dev', 'freeglut3-dev', 'libasound2-dev', 'libjack0', 'libjack-dev', 'libxrandr-dev', 'libudev-dev', 'libssl-dev', 'zlib1g-dev',
 			# Server
@@ -513,7 +513,7 @@ my $data = {
 			# Qt
 			'libdouble-conversion-dev', 'libxcb-xinerama0-dev', 'libpcre2-16-0', 'libxcb-xinput0',
 			# Interface
-			'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
+			'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1', 'libsdl2-dev',
 			# Misc
 			'libasound2', 'libxmu-dev', 'libxi-dev', 'freeglut3-dev', 'libasound2-dev', 'libjack0', 'libjack-dev', 'libxrandr-dev', 'libudev-dev', 'libssl-dev', 'zlib1g-dev',
 			# Server
@@ -670,6 +670,7 @@ my $data = {
 			'xdg-user-dirs',
 			'python3-distro',
 			'harfbuzz-devel',
+			"SDL2-devel"
 		],
 		qt_binary_dependencies => [
 			'qt5-devel',
@@ -764,7 +765,8 @@ my $data = {
 			'libatomic',
 			'xdg-user-dirs',
 			"tar",
-			"python3"
+			"python3",
+			"SDL2-devel"
 		],
 		qt_binary_dependencies => [
 			'qt5-devel',
@@ -832,7 +834,7 @@ my $data = {
 			"opus-devel",
 			"libicu-devel",
 			"libwebp-devel",
-			"libXtst-devel"
+			"libXtst-devel",
 		],
 		'environment' => {
 			# Hack for Amazon Linux, Qt for some reason
