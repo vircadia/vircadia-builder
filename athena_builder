@@ -962,6 +962,7 @@ unless($opt_skip_build) {
 
 setup_qt();
 adjust_library_paths() unless ($opt_no_modify_rpath);
+setup_files();
 setup_scripts();
 setup_services();
 setup_desktop();
@@ -1372,6 +1373,20 @@ sub setup_qt {
 }
 
 
+sub setup_files {
+	my $settings_file = "$inst_dir/build/domain-server/resources/describe-settings.json";
+
+	info("Checking describe-settings.json... ");
+
+	if ( -l $settings_file ) {
+		my $target = readlink($settings_file);
+		unlink($settings_file);
+		run("cp", $target, $settings_file);
+		info_ok("un-symlinked\n");
+	} else {
+		info_ok("ok");
+	}
+}
 sub setup_scripts {
 	foreach my $target (keys %$all_targets) {
 		if ( -x "$inst_dir/build/$target/$target" ) {
