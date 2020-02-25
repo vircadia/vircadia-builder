@@ -6,6 +6,8 @@ use Term::ANSIColor;
 use IO::Select;
 use IPC::Open3;
 use Symbol qw(gensym);
+use File::Find;
+use File::Spec;
 
 
 $| = 1;
@@ -882,7 +884,7 @@ my $build_cores_qt;
 my $desktop;
 my $distro;
 
-my ($opt_keep_source, $opt_auto, $opt_build_qt, $opt_build, $opt_sys_qt, $opt_skip_build);
+my ($opt_keep_source, $opt_auto, $opt_build_qt, $opt_build, $opt_sys_qt, $opt_skip_build, $opt_no_modify_rpath);
 my ($cmd_help, $cmd_get_supported, $cmd_get_source_deps, $cmd_get_qt_deps, $cmd_get_qt_version, $cmd_get_qt_patches, $cmd_make_pkglist);
 
 $opt_build = "interface";
@@ -909,7 +911,8 @@ GetOptions(
 	"get-qt-patches=s"       => \$cmd_get_qt_patches,
 	"make-pkglist"           => \$cmd_make_pkglist,
 	"use-system-qt|S"        => \$opt_sys_qt,
-	"skip-build"             => \$opt_skip_build
+	"skip-build"             => \$opt_skip_build,
+	"no-modify-rpath"        => \$opt_no_modify_rpath,
 ) or help(1);
 
 
@@ -958,6 +961,7 @@ unless($opt_skip_build) {
 }
 
 setup_qt();
+adjust_library_paths() unless ($opt_no_modify_rpath);
 setup_scripts();
 setup_services();
 setup_desktop();
@@ -1162,6 +1166,101 @@ sub install {
 
 }
 
+sub adjust_library_paths {
+	info("\n\n");
+	important("############################################################\n");
+	important("# Adjusting library paths\n");
+	important("############################################################\n");
+	info("\n");
+
+
+	chdir("$inst_dir/build");
+	find(\&search_func, "$inst_dir/build");
+
+}
+
+sub search_func {
+	my $abspath = $File::Find::name;
+	my $relpath = File::Spec->abs2rel($abspath, "$inst_dir/build");
+
+
+	# Don't touch cmake things
+	return if ( $relpath =~ /CMakeFiles/ );
+
+	if ( -f $abspath && -x $abspath && is_elf($abspath) )  {
+		patch_rpath($abspath, $File::Find::dir);
+	}
+}
+
+sub patch_rpath {
+	my ($abs_binpath, $basedir) = @_;
+
+	my $rel_binpath = File::Spec->abs2rel($abs_binpath, "$inst_dir/build");
+
+
+
+	info("Adjusting $rel_binpath... ");
+
+	my $cur_rpath = read_from_cmd("patchelf", "--print-rpath", $abs_binpath);
+	my $new_rpath;
+
+	chomp $cur_rpath;
+
+	my @paths = split(/:/, $cur_rpath);
+	my @result;
+
+	my $changes = 0;
+	my $failures = 0;
+	my $kept = 0;
+
+
+	foreach my $p (@paths) {
+		if ( $p =~ /^\// ) {
+			my $new_rel = File::Spec->abs2rel($p, $basedir);
+			my $new_val = '$ORIGIN/' . $new_rel;
+
+			debug("\t$p => $new_val\n");
+
+			if ( -e $p && ! -e "$basedir/$new_rel" ) {
+				# Sanity check: verify that if the previous path existed,
+				# the new one does too.
+				warning("Verification failed for $p => $new_val!\n");
+				$failures++;
+			}
+
+			$changes++;
+			push @result, $new_val;
+		} else {
+			$kept++;
+			push @result, $p;
+		}
+	}
+
+
+	$new_rpath = join(':', @result);
+
+	if ( !$changes ) {
+		info_ok("no change needed\n");
+	} else {
+		if ( !$failures ) {
+			info_ok("$changes changed, $kept kept");
+			run("patchelf", "--set-rpath", $new_rpath, $abs_binpath);
+			info_ok(", done\n");
+		} else {
+			error("$changes changed, $kept kept, $failures failures\n");
+		}
+	}
+}
+
+sub is_elf {
+	my ($file)  = @_;
+	my $buf;
+	open(my $fh, '<', $file) or die "Can't open '$file' for reading: $!";
+	sysread($fh, $buf, 4);
+	close $fh;
+
+	return $buf eq "\x7fELF";
+}
 
 sub install_qt {
 
@@ -1372,12 +1471,14 @@ sub create_script {
 	open(my $script, ">", "$inst_dir/build/run_$name") or fatal("Can't create $inst_dir/build/run_$name: $!");
 
 	print $script "#!/bin/bash\n";
-	print $script "export QT_DIR=$inst_dir/qt5-install\n";
+	print $script 'SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"' . "\n";
+
+	print $script "export QT_DIR=\$SCRIPT_DIR/../qt5-install\n";
 	print $script "export QT_QPA_PLATFORM_PLUGIN_PATH=\$QT_DIR/plugins\n";
 	print $script "export LD_LIBRARY_PATH=\$QT_DIR/lib:\$LD_LIBRARY_PATH\n";
 	print $script "export PATH=\$QT_DIR/bin:\$QT_DIR/libexec:\$PATH\n";
 	print $script "export QTWEBENGINEPROCESS_PATH=\$QT_DIR/libexec/QtWebEngineProcess\n";
-	print $script "\"$inst_dir/build/$command\" \"\$@\" 2>&1 | tee -a \"$inst_dir/build/$name.log\"\n";
+	print $script "\"\$SCRIPT_DIR/$command\" \"\$@\" 2>&1 | tee -a \"\$SCRIPT_DIR/$name.log\"\n";
 	close $script;
 	chmod 0755,  "$inst_dir/build/run_$name";
 
