@@ -8,6 +8,8 @@ use IPC::Open3;
 use Symbol qw(gensym);
 use File::Find;
 use File::Spec;
+use File::Copy qw(cp);
+use File::Basename;
 
 
 $| = 1;
@@ -16,7 +18,11 @@ my $timestamp = make_timestamp();
 my $logdir    = "$ENV{HOME}/.athena-builder/logs/$timestamp";
 my $collect_system_info;
 my $log_fh;
-
+my $prev_len = 0;
+my $inst_copied = 0;
+my $inst_skipped = 0;
+my $inst_deleted = 0;
+my %installed;
 
 
 sub info {
@@ -883,14 +889,19 @@ my $mem_per_core_qt     = 1.2 * 1024 * 1024;
 my $repo         = "https://github.com/kasenvr/project-athena";
 my $qt_repo      = "git://code.qt.io/qt/qt5.git";
 my $repo_tag     = "kasen/core";
-my $inst_dir     = "$ENV{HOME}/Athena";
+my $repo_tag_path = "";
+
+my $root_dir     = "$ENV{HOME}/Athena";
+my $inst_dir     = "$root_dir/install"; # Where files will be installed
+my $binary_dir   = $inst_dir;           # Where the final binaries are found
+
 my $build_cores;
 my $build_cores_qt;
 
 my $desktop;
 my $distro;
 
-my ($opt_keep_source, $opt_auto, $opt_build_qt, $opt_build, $opt_sys_qt, $opt_skip_build, $opt_no_modify_rpath);
+my ($opt_keep_source, $opt_auto, $opt_build_qt, $opt_build, $opt_sys_qt, $opt_skip_build, $opt_no_modify_rpath, $opt_skip_install);
 my ($cmd_help, $cmd_get_supported, $cmd_get_source_deps, $cmd_get_qt_deps, $cmd_get_qt_version, $cmd_get_qt_patches, $cmd_make_pkglist);
 
 $opt_build = "interface";
@@ -903,7 +914,7 @@ GetOptions(
 	"auto|y"                 => \$opt_auto,
 	"repo|r=s"               => \$repo,
 	"tag|t=s"                => \$repo_tag,
-        "destdir|d=s"            => \$inst_dir,
+        "destdir|d=s"            => \$root_dir,
         "cores|j=i"              => \$build_cores,
 	"qt-cores|J=i"           => \$build_cores_qt,
 	"collect-info|C"         => \$collect_system_info,
@@ -918,6 +929,7 @@ GetOptions(
 	"make-pkglist"           => \$cmd_make_pkglist,
 	"use-system-qt|S"        => \$opt_sys_qt,
 	"skip-build"             => \$opt_skip_build,
+        "skip-install"           => \$opt_skip_install,
 	"no-modify-rpath"        => \$opt_no_modify_rpath,
 ) or help(1);
 
@@ -963,12 +975,14 @@ collect_info();
 unless($opt_skip_build) {
 	get_source();
 	install_qt() if (!$DD->{has_binary_qt_package} || $opt_build_qt);
-	install();
+	build();
 }
 
 setup_qt();
 adjust_library_paths() unless ($opt_no_modify_rpath);
-setup_files();
+
+#setup_files();
+install() unless ($opt_skip_install);
 setup_scripts();
 setup_services();
 setup_desktop();
@@ -1110,7 +1124,7 @@ sub collect_info {
 	while($ok ne "yes") {
 		$repo            = $rl->readline("Git repository             : ", $repo);
 		$repo_tag        = $rl->readline("Git tag                    : ", $repo_tag);
-		$inst_dir        = $rl->readline("Installation dir           : ", $inst_dir);
+		$root_dir        = $rl->readline("Installation dir           : ", $root_dir);
 		$build_cores     = $rl->readline("CPU cores to use for Athena: ", $build_cores);
 		$build_cores_qt  = $rl->readline("CPU cores to use for Qt5   : ", $build_cores_qt);
 
@@ -1119,6 +1133,11 @@ sub collect_info {
 	}
 
 
+	$repo_tag_path = $repo_tag;
+	$repo_tag_path =~ s/\W/_/g;
+
+	$inst_dir = "$root_dir/install_$repo_tag_path";
+	$binary_dir = $opt_skip_install ? "$root_dir/build" : $inst_dir;
 }
 
 
@@ -1129,19 +1148,19 @@ sub get_source {
 	important("############################################################\n");
 	info("\n");
 
-	mkdir($inst_dir);
+	mkdir($root_dir);
 	
 	get_source_from_git($repo, "source", $repo_tag);
 
 	if ( $opt_sys_qt ) {
 		info("Applying System Qt patch... ");
-		chdir("$inst_dir/source");
+		chdir("$root_dir/source");
 		run("patch", "-p1", "-i", "debian/patches/hifi_use_system_qt.diff");
 		info_ok("done.\n");
 	}
 }
 
-sub install {
+sub build {
 	info("\n\n");
 	important("############################################################\n");
 	important("# Building\n");
@@ -1151,18 +1170,18 @@ sub install {
 
 	if ( check_qt_install() ) {
 		important("Using compiled Qt\n");
-		$ENV{QT_CMAKE_PREFIX_PATH}="$inst_dir/qt5-install/lib/cmake";
+		$ENV{QT_CMAKE_PREFIX_PATH}="$root_dir/qt5-install/lib/cmake";
 	}	
 
 
-	$ENV{HIFI_VCPKG_BASE} = "$inst_dir/vcpkg";
+	$ENV{HIFI_VCPKG_BASE} = "$root_dir/vcpkg";
 
-	if ( -d "$inst_dir/build" ) {
-		run("rm", "-rf", "$inst_dir/build");
+	if ( -d "$root_dir/build" ) {
+		run("rm", "-rf", "$root_dir/build");
 	}
 
-	mkdir("$inst_dir/build");
-	chdir("$inst_dir/build");
+	mkdir("$root_dir/build");
+	chdir("$root_dir/build");
 
 	run("cmake", "../source");
 	foreach my $target (@build_list) {
@@ -1181,14 +1200,109 @@ sub adjust_library_paths {
 	info("\n");
 
 
-	chdir("$inst_dir/build");
-	find(\&search_func, "$inst_dir/build");
+	chdir("$root_dir/build");
+	find(\&adjust_libs_search_func, "$root_dir/build");
 
 }
 
-sub search_func {
+sub install {
+	info("\n\n");
+	important("############################################################\n");
+	important("# Installing\n");
+	important("############################################################\n");
+	info("\n");
+
+	info("Copying files to install directory...\n");
+
+
+	find({ follow => 1, follow_skip => 2, wanted => \&install_search_func }, "$root_dir/build");
+
+	# Clear line
+	info( "\r" . (" " x $prev_len) . "\r");
+
+
+	info("Cleaning up install directory...");
+	find(\&install_clean_func, $inst_dir);
+	info_ok("done\n");
+
+	info("Copied : "); info_ok("$inst_copied\n");
+	info("Skipped: "); info_ok("$inst_skipped\n");
+	info("Deleted: "); info_ok("$inst_deleted\n");
+
+
+
+
+}
+
+
+sub  install_search_func {
 	my $abspath = $File::Find::name;
-	my $relpath = File::Spec->abs2rel($abspath, "$inst_dir/build");
+	my $relpath = File::Spec->abs2rel($abspath, "$root_dir/build");
+	my $file = $_;
+
+	info( "\r" . (" " x $prev_len) . "\r". $relpath );
+	$prev_len = length($relpath);
+
+
+	my $keep;
+	my $skip;
+
+
+	# All libraries are to be kept
+	$keep = 1 if ( $file =~ /\.so$/ || $file =~ /\.so\.\d+$/ || $file =~ /\.so\.\d+\.\d+/ || $file =~ /\.so\.\d+\.\d+\.\d+/ );
+
+
+	# Otherwise, nothing from the ext directory is to be kept
+	$skip = 1 if ( $relpath =~ /^ext\// );
+
+	$skip = 1 if ( $relpath =~ /.cmake$/ || $relpath =~ /CMake/ || $relpath =~ /_CPack_Packages/ );
+
+	$skip = 1 if ( $relpath =~ "Makefile" );
+
+	$skip = 1 if ( $relpath =~ /_autogen/ );
+
+	$skip = 1 if ( $relpath =~ /\.h$/ || $relpath =~ /\.cpp$/ );
+
+	$skip = 1 if ( $relpath =~ /_env/ );
+
+	$skip = 1 if ( $relpath =~ /interface_manifest.txt/ );
+
+
+	if ( $keep || !$skip) {
+		if ( -f $abspath ) {
+			my $reldir  = dirname($relpath);
+			debug("COPY: '$abspath' => '$inst_dir/$relpath'\n");
+
+			mkdir_path("$inst_dir/$reldir");
+                        unlink("$inst_dir/$relpath") if ( -e "$inst_dir/$relpath" );
+			link($abspath, "$inst_dir/$relpath") or die "Can't link $abspath to $inst_dir/$relpath: $!";
+
+			$installed{$relpath} = 1;
+			$inst_copied++;
+		}
+	} else {
+		debug("SKIP: '$abspath'\n");
+		$inst_skipped++;
+	}
+}
+
+
+sub install_clean_func {
+	my $abspath = $File::Find::name;
+	my $relpath = File::Spec->abs2rel($abspath, $inst_dir);
+	my $file = $_;
+
+	if ( -f $abspath && !exists $installed{$relpath} ) {
+		debug("DEL: '$abspath'\n");
+		unlink($abspath);
+		$inst_deleted++;
+	}
+
+}
+
+sub adjust_libs_search_func {
+	my $abspath = $File::Find::name;
+	my $relpath = File::Spec->abs2rel($abspath, "$root_dir/build");
 
 
 	# Don't touch cmake things
@@ -1202,7 +1316,7 @@ sub search_func {
 sub patch_rpath {
 	my ($abs_binpath, $basedir) = @_;
 
-	my $rel_binpath = File::Spec->abs2rel($abs_binpath, "$inst_dir/build");
+	my $rel_binpath = File::Spec->abs2rel($abs_binpath, "$root_dir/build");
 
 
 
@@ -1272,7 +1386,7 @@ sub is_elf {
 sub install_qt {
 
 	if ( check_qt_install() ) {
-		important("Skipping Qt5 build. You can remove $inst_dir/qt5-install if you want to force it to be rebuilt.\n");
+		important("Skipping Qt5 build. You can remove $root_dir/qt5-install if you want to force it to be rebuilt.\n");
 		return;
 	}
 
@@ -1284,17 +1398,17 @@ sub install_qt {
 	info("\n");
 
 
-	mkdir($inst_dir);
-	chdir($inst_dir);
+	mkdir($root_dir);
+	chdir($root_dir);
 #	run("git", "clone", "--recursive", $qt_repo
 	get_source_from_git($qt_repo, "qt5",  $DD->{qt_version});
 
 
 	info("Applying patches...\n");
-	chdir("$inst_dir/qt5");
+	chdir("$root_dir/qt5");
 
 	foreach my $patch ( @{ $DD->{qt_patches} } ) {
-		run("patch", "-p1", "-i", "$inst_dir/source/tools/qt-builder/patches/$patch");
+		run("patch", "-p1", "-i", "$root_dir/source/tools/qt-builder/patches/$patch");
 	}
 
 	info("Configuring paths...\n");
@@ -1302,20 +1416,20 @@ sub install_qt {
 	my $gllib_path = find_lib_dir('libGL.so', @x11_lib_paths);
 
 	edit_qt_conf(
-		"$inst_dir/qt5/qtbase/mkspecs/linux-g++-64/qmake.conf",
+		"$root_dir/qt5/qtbase/mkspecs/linux-g++-64/qmake.conf",
 		QMAKE_LIBDIR_X11    => $xlib_path,
 		QMAKE_LIBDIR_OPENGL => $gllib_path
 	);
 		
 
 
-	del_dir("$inst_dir/qt5-install");
-	del_dir("$inst_dir/qt5-build");
+	del_dir("$root_dir/qt5-install");
+	del_dir("$root_dir/qt5-build");
 
-	mkdir("$inst_dir/qt5-install");
-	mkdir("$inst_dir/qt5-build");
+	mkdir("$root_dir/qt5-install");
+	mkdir("$root_dir/qt5-build");
 
-	chdir("$inst_dir/qt5-build");
+	chdir("$root_dir/qt5-build");
 
 	# The build process calls Ninja for QtWebEngine, which calculates the number of processes
 	# on its own. Fortunately there's an environment variable we can use to rein it in.
@@ -1361,41 +1475,26 @@ sub verify_system_qt {
 
 sub setup_qt {
 	if (!check_qt_install()) {
-		my $qt_dir = read_from_cmd("find", "$inst_dir/vcpkg", "-type", "d", "-name", "qt5-install");
+		my $qt_dir = read_from_cmd("find", "$root_dir/vcpkg", "-type", "d", "-name", "qt5-install");
 		chomp $qt_dir;
 
 		if ( -d "$qt_dir" ) {
 			info("Creating permanent qt dir... ");
-			if ( -d "$inst_dir/qt5-install" ) {
-				run("rm", "-rf", "$inst_dir/qt5-install");
+			if ( -d "$root_dir/qt5-install" ) {
+				run("rm", "-rf", "$root_dir/qt5-install");
 			}
-			run("cp", "-Rdp", $qt_dir, "$inst_dir/qt5-install");
+			run("cp", "-Rdp", $qt_dir, "$root_dir/qt5-install");
 		
 			info_ok("done.\n");
 		} else {
-			fatal("Failed to find Qt dir in $inst_dir/vcpkg!");
+			fatal("Failed to find Qt dir in $root_dir/vcpkg!");
 		}
 	}
 }
 
-
-sub setup_files {
-	my $settings_file = "$inst_dir/build/domain-server/resources/describe-settings.json";
-
-	info("Checking describe-settings.json... ");
-
-	if ( -l $settings_file ) {
-		my $target = readlink($settings_file);
-		unlink($settings_file);
-		run("cp", $target, $settings_file);
-		info_ok("un-symlinked\n");
-	} else {
-		info_ok("ok");
-	}
-}
 sub setup_scripts {
 	foreach my $target (keys %$all_targets) {
-		if ( -x "$inst_dir/build/$target/$target" ) {
+		if ( -x "$root_dir/build/$target/$target" ) {
 			info("Creating script for $target...");
 			create_script($target, "$target/$target");
 			info_ok("done.\n");
@@ -1410,7 +1509,7 @@ sub setup_services {
 		my $t = $all_targets->{$target};
 		next unless ($t->{service});
 
-		if ( -x "$inst_dir/build/$target/$target" ) {
+		if ( -x "$root_dir/build/$target/$target" ) {
 			info("Creating service for $target...");
 			create_service( user => 1, name => $target, args => $t->{service_args}, desc => $t->{service_desc} );
 			info_ok("done.\n");
@@ -1428,9 +1527,14 @@ sub setup_services {
 
 
 sub setup_desktop {
+	info("\n\n");
+	important("############################################################\n");
+	important("# Setting up desktop\n");
+	important("############################################################\n");
+	info("\n");
 
 
-	if ( ! -x "$inst_dir/build/interface/interface" ) {
+	if ( ! -x "$root_dir/build/interface/interface" ) {
 		info("interface not built, skipping desktop setup\n");
 		return;
 	}
@@ -1438,16 +1542,8 @@ sub setup_desktop {
 	info("Creating desktop icon for interface... ");
 	mkdir($desktop);
 
-	open(my $script, ">", "$inst_dir/build/run_interface") or fatal("Can't create $inst_dir/build/interface: $!");
-	print $script "#!/bin/bash\n";
-	print $script "export QT_DIR=$inst_dir/qt5-install\n";
-	print $script "export QT_QPA_PLATFORM_PLUGIN_PATH=\$QT_DIR/plugins\n";
-	print $script "export LD_LIBRARY_PATH=\$QT_DIR/lib:\$LD_LIBRARY_PATH\n";
-	print $script "export PATH=\$QT_DIR/bin:\$QT_DIR/libexec:\$PATH\n";
-	print $script "export QTWEBENGINEPROCESS_PATH=\$QT_DIR/libexec/QtWebEngineProcess\n";
-	print $script "\"$inst_dir/build/interface/interface\" \"\$@\" 2>&1 | tee -a \"$inst_dir/build/interface.log\"\n";
-	close $script;
-	chmod 0755,  "$inst_dir/build/run_interface";
+        create_script("interface", "interface/interface");
+
 
 
 	mkdir("$ENV{HOME}/.local");
@@ -1455,14 +1551,16 @@ sub setup_desktop {
 	mkdir("$ENV{HOME}/.local/share/applications");
 	my $desktop_file = "$ENV{HOME}/.local/share/applications/Athena.desktop";
 
+	link("$root_dir/source/interface/interface/icon/interface.ico", "$binary_dir/interface.ico");
+
 	open(my $dsk, ">", $desktop_file) or fatal("Can't create $desktop_file: $!");
 	print $dsk "[Desktop Entry]\n";
 	print $dsk "Version=1.0\n";
 	print $dsk "Name=Athena VR\n";
 	print $dsk "Terminal=false\n";
 	print $dsk "Type=Application\n";
-	print $dsk "Exec=$inst_dir/build/run_interface\n";
-	print $dsk "Icon=$inst_dir/source/interface/icon/interface.ico\n";
+	print $dsk "Exec=$binary_dir/run_interface\n";
+	print $dsk "Icon=$binary_dir/interface.ico\n";
 	print $dsk "Categories=Graphics;AudioVideo;Network\n";
 	close $dsk;
 	info_ok("done.\n");
@@ -1489,7 +1587,12 @@ sub setup_desktop {
 sub create_script {
 	my ($name, $command) = @_;
 
-	open(my $script, ">", "$inst_dir/build/run_$name") or fatal("Can't create $inst_dir/build/run_$name: $!");
+	open(my $script, ">", "$root_dir/build/run_$name") or fatal("Can't create $root_dir/build/run_$name: $!");
+	my $args = "";
+
+	if ( $command =~ /assignment/ ) {
+		$args = "-n 6"
+	}
 
 	print $script "#!/bin/bash\n";
 	print $script 'SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"' . "\n";
@@ -1499,12 +1602,13 @@ sub create_script {
 	print $script "export LD_LIBRARY_PATH=\$QT_DIR/lib:\$LD_LIBRARY_PATH\n";
 	print $script "export PATH=\$QT_DIR/bin:\$QT_DIR/libexec:\$PATH\n";
 	print $script "export QTWEBENGINEPROCESS_PATH=\$QT_DIR/libexec/QtWebEngineProcess\n";
-	print $script "\"\$SCRIPT_DIR/$command\" \"\$@\" 2>&1 | tee -a \"\$SCRIPT_DIR/$name.log\"\n";
+	print $script "\"\$SCRIPT_DIR/$command\" $args \"\$@\" 2>&1 | tee -a \"\$SCRIPT_DIR/$name.log\"\n";
 	close $script;
-	chmod 0755,  "$inst_dir/build/run_$name";
+	chmod 0755,  "$root_dir/build/run_$name";
 
-
+	link("$root_dir/build/run_$name", "$inst_dir/run_$name") if (!$opt_skip_install);
 }
+
 
 sub create_service {
 	my (%args) = @_;
@@ -1526,10 +1630,10 @@ sub create_service {
 	print $serv "\n";
 	print $serv "[Service]\n";
 	print $serv "Restart=always\n";
-	print $serv "WorkingDirectory=$inst_dir/build/$args{name}\n";
-	print $serv "Environment=\"LD_LIBRARY_PATH=$inst_dir/build/$args{name}\"\n";
+	print $serv "WorkingDirectory=$root_dir/build/$args{name}\n";
+	print $serv "Environment=\"LD_LIBRARY_PATH=$root_dir/build/$args{name}\"\n";
 	print $serv "Environment=\"HIFI_ENVIRONMENT=production\"\n";
-	print $serv "ExecStart=$inst_dir/build/$args{name}/$args{name} " . join(' ', @{$args{args}}) . "\n";
+	print $serv "ExecStart=$root_dir/build/$args{name}/$args{name} " . join(' ', @{$args{args}}) . "\n";
 	print $serv "\n";
 	print $serv "[Install]\n";
 
@@ -1545,13 +1649,19 @@ sub create_service {
 
 sub mkdir_path {
 	my (@parts) = @_;
+
+	if (scalar @parts == 1) {
+		# If we only have one argument, assume it's a concatenated path
+		@parts = File::Spec->splitdir($parts[0]);
+	}
+
 	my $path = "";
 
 	while(@parts) {
-		$path .= "/" if ($path);
+		$path .= "/" if ($path || $parts[0] eq "");
 		$path .= shift(@parts);
 		if ( ! mkdir($path) ) {
-			fatal("Can't create $path: $!") unless ($!{EEXIST});
+			fatal("Can't create '$path': $! (mkpath " . join(';', @parts) . ")" ) unless ($!{EEXIST});
 		}
 	}
 }
@@ -1763,12 +1873,12 @@ sub get_source_from_git {
 
 	info("Getting source from git $url ($tag)...\n");
 
-	if ( ! -d "$inst_dir/$destdir/.git" ) {
+	if ( ! -d "$root_dir/$destdir/.git" ) {
 		clone_repo($url, $destdir, $tag, %opts);
 	} else {
 		info("Checking if updating the existing source is possible... ");
 
-		chdir("$inst_dir/$destdir") or fatal("Can't chdir into $inst_dir/$destdir: $!");
+		chdir("$root_dir/$destdir") or fatal("Can't chdir into $root_dir/$destdir: $!");
 		my @remotes = read_from_cmd("git", "remote", "-v");
 		my $no_update;
 
@@ -1787,7 +1897,7 @@ sub get_source_from_git {
 			}
 		}
 
-		chdir($inst_dir);
+		chdir($root_dir);
 
 		if ( $no_update ) {
 			clone_repo($url, $destdir, $tag, %opts);
@@ -1802,9 +1912,9 @@ sub clone_repo {
 	my ($url, $destdir, $tag, %opts) = @_;
 	my @git_extra_args;
 
-	info("Checking $inst_dir/$destdir... ");
-	if ( -d "$inst_dir/$destdir" ) {
-		run("rm", "-rf", "$inst_dir/$destdir");
+	info("Checking $root_dir/$destdir... ");
+	if ( -d "$root_dir/$destdir" ) {
+		run("rm", "-rf", "$root_dir/$destdir");
 		info_ok("deleted for a clean clone.\n");
 	} else {
 		info_ok("ok.\n");
@@ -1814,20 +1924,20 @@ sub clone_repo {
 		@git_extra_args = @{$opts{git_args}};
 	}
 
-	run("git", "clone", "--progress", "--recursive", $url, "$inst_dir/$destdir", "-b", $tag, "--single-branch"); # "@git_extra_args);
+	run("git", "clone", "--progress", "--recursive", $url, "$root_dir/$destdir", "-b", $tag, "--single-branch"); # "@git_extra_args);
 }
 
 sub update_repo {
 	my ($url, $destdir, $tag, %opts) = @_;
 
-	if ( ! -d "$inst_dir/$destdir/.git" ) {
-		fatal("Can't update $inst_dir/$destdir: there doesn't seem to be a git repo there!");
+	if ( ! -d "$root_dir/$destdir/.git" ) {
+		fatal("Can't update $root_dir/$destdir: there doesn't seem to be a git repo there!");
 	}
 
 	info_ok("Already cloned, updating...\n");
 
 	if ( !$opt_keep_source ) {
-		chdir("$inst_dir/$destdir");
+		chdir("$root_dir/$destdir");
 		run("git", "fetch", "origin", "$tag:refs/remotes/origin/$tag");
 		run("git", "submodule", "update", "-f", "--init");
 		run("git", "clean", "-f");
@@ -1906,7 +2016,7 @@ sub del_dir {
 sub check_qt_install {
 	info("Checking whether Qt is already installed... ");
 
-	if ( -f "$inst_dir/qt5-install/lib/libQt5Widgets.so" || -l "$inst_dir/qt5-install/lib/libQt5Widgets.so" ) {
+	if ( -f "$root_dir/qt5-install/lib/libQt5Widgets.so" || -l "$root_dir/qt5-install/lib/libQt5Widgets.so" ) {
 		info_ok("yes.\n");
 		return 1;
 	} else {
@@ -1926,8 +2036,8 @@ sub check_qt_webengine {
 
 	info("Checking QtWebEngine configuration... ");
 
-	open(my $fh, '<', "$inst_dir/qt5-build/config.summary")
-		or fatal("Can't open $inst_dir/qt5-build/config.summary: $!");
+	open(my $fh, '<', "$root_dir/qt5-build/config.summary")
+		or fatal("Can't open $root_dir/qt5-build/config.summary: $!");
 
 
 
@@ -1979,7 +2089,7 @@ sub check_qt_webengine {
 					push @missing, $dep;
 				}
 			} else {
-				fatal("Failed to parse line '$line' in $inst_dir/qt5-build/config.summary");
+				fatal("Failed to parse line '$line' in $root_dir/qt5-build/config.summary");
 			}
 		}
 
@@ -1987,13 +2097,13 @@ sub check_qt_webengine {
 	close $fh;
 
 	if ($sections_found < 3) {
-		fatal("Failed to parse $inst_dir/qt5-build/config.summary: only $sections_found of 3 sections were found");
+		fatal("Failed to parse $root_dir/qt5-build/config.summary: only $sections_found of 3 sections were found");
 	}
 
 	if ($lines_found < 5) {
 		# There are 11 lines in Qt 5.12.6.
 		# We don't care about the exact amount, just that something matched and the result is plausible.
-		fatal("Failed to parse $inst_dir/qt5-build/config.summary: only $lines_found lines were found inside the sections");
+		fatal("Failed to parse $root_dir/qt5-build/config.summary: only $lines_found lines were found inside the sections");
 	}
 
 
