@@ -1275,7 +1275,12 @@ sub  install_search_func {
 
 			mkdir_path("$inst_dir/$reldir");
                         unlink("$inst_dir/$relpath") if ( -e "$inst_dir/$relpath" );
-			link($abspath, "$inst_dir/$relpath") or die "Can't link $abspath to $inst_dir/$relpath: $!";
+			if ( -l $abspath ) {
+				# Turns out that trying to make a hardlink of a symlink copies the symlink
+				link(readlink($abspath), "$inst_dir/$relpath") or die "Can't link " . readlink($abspath) . " to $inst_dir/$relpath: $!";
+			} else {
+				link($abspath, "$inst_dir/$relpath") or die "Can't link $abspath to $inst_dir/$relpath: $!";
+			}
 
 			$installed{$relpath} = 1;
 			$inst_copied++;
