@@ -20,7 +20,7 @@ sub fatal($) {
 
 
 my $required_packages = {
-	'ubuntu18.04' => [
+	'ubuntu' => [
 		'libterm-readline-gnu-perl',
 		'build-essential',
 		'git',
@@ -45,7 +45,7 @@ my $required_packages = {
 		'nodejs'
 
 	],
-	'fedora31' => [
+	'fedora' => [
 		'git',
 		'perl-Term-ReadLine-Gnu',
 		'cmake',
@@ -73,30 +73,29 @@ setup_desktop();
 sub detect_distro {
 	info "Detecting distribution... ";
 
-	my %os=();
-
-	unless ( open(OS,"cat /etc/os-release|") ){
-		die "Failed to detect distribution!";
+	if ( -f "/etc/fedora-release" ) {
+		info "Fedora\n";
+		return "fedora";
 	}
 
-	while (<OS>){
-		my @os_param = split /=/, $_;
-		@os_param[1] =~ tr/"//d;
-		@os_param[1] =~ tr/\n//d;
-		$os{$os_param[0]} = $os_param[1];
+	if ( -f "/etc/lsb-release" ) {
+		my @lsb = readfile("/etc/lsb-release");
+		my ($dist) = grep { /^DISTRIB_ID/ } @lsb;
+		my ($f, $v) = split(/=/, $dist);
+		return lc($v);
 	}
 
-	return $os{ID}.$os{VERSION_ID};
+	die "Failed to detect distribution!";
 }
 
 
 
 sub get_package_list {
-	info "Getting the package list... ";
+	info "Getting the package list... ";	
 	my @packages;
-	if ( $DISTRO eq "fedora31" ) {
+	if ( $DISTRO eq "fedora" ) {
 		@packages = `rpm -qa --qf "%{NAME}\\n"`
-	} elsif ( $DISTRO eq "ubuntu18.04" ) {
+	} elsif ( $DISTRO eq "ubuntu" ) {
 		@packages = `dpkg-query --show -f "\\\${Package}\n"`
 	}
 
@@ -114,9 +113,9 @@ sub install_missing_packages {
 	if ( @missing ) {
 		print scalar(@missing) . " additional packages needed: " . join(", ", @missing) . "\n";
 
-		if ( $DISTRO eq "fedora31" ) {
+		if ( $DISTRO eq "fedora" ) {
 			sudo_run("dnf", "install", "-y", @missing);
-		} elsif ( $DISTRO eq "ubuntu18.04" ) {
+		} elsif ( $DISTRO eq "ubuntu" ) {
 			sudo_run("apt-get", "install", "-y", @missing);
 		}
 
