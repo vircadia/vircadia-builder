@@ -507,6 +507,7 @@ my $data = {
                         'patchelf',
 			'python3',
 			'python2',
+			'python-is-python2',
 			'libdrm-dev',
 			'mesa-common-dev',
 			'mesa-utils',
