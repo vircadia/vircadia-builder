@@ -14,8 +14,8 @@ Builds Vircadia (formerly known as "Project Athena"), an Open Source fork of the
 
 ## Instructions:
 
-    git clone https://github.com/daleglass/athena-builder.git
-    cd athena-builder
+    git clone https://github.com/kasenvr/vircadia-builder.git
+    cd vircadia-builder
     chmod +x vircadia-builder
     ./vircadia-builder
 
