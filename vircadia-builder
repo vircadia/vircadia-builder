@@ -15,7 +15,7 @@ use File::Basename;
 $| = 1;
 
 my $timestamp = make_timestamp();
-my $logdir    = "$ENV{HOME}/.athena-builder/logs/$timestamp";
+my $logdir    = "$ENV{HOME}/.vircadia-builder/logs/$timestamp";
 my $collect_system_info;
 my $log_fh;
 my $prev_len = 0;
@@ -87,7 +87,7 @@ sub fatal {
 	close $log_fh;
 
 	
-	my $compressed = "athena-builder-error-$timestamp.tar.gz";
+	my $compressed = "vircadia-builder-error-$timestamp.tar.gz";
 	run( { fail_ok => 1, no_log => 1, quiet => 1 }, "tar", "-czf", $compressed, $logdir);
 
 
@@ -495,6 +495,173 @@ my $data = {
 			]
 
 	},
+	'ubuntu-20.04' => {
+		has_binary_qt_package => 0,
+		package_manager => 'apt',
+		source_dependencies => [
+			'libterm-readline-gnu-perl',
+			'build-essential',
+			'git',
+			'make',
+			'cmake',
+                        'patchelf',
+			'python3',
+			'python2',
+			'python-is-python2',
+			'libdrm-dev',
+			'mesa-common-dev',
+			'mesa-utils',
+			'libglvnd-dev',
+			'libgl1-mesa-dev',
+			'xdg-user-dirs',
+			'python3-distro',
+			'libharfbuzz-dev',
+			# Qt
+			'libdouble-conversion-dev', 'libxcb-xinerama0-dev', 'libpcre2-16-0', 'libxcb-xinput0',
+			# Interface
+			'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1', 'libsdl2-dev',
+			# Misc
+			'libasound2', 'libxmu-dev', 'libxi-dev', 'freeglut3-dev', 'libasound2-dev', 'libjack0', 'libjack-dev', 'libxrandr-dev', 'libudev-dev', 'libssl-dev', 'zlib1g-dev',
+			# Server
+			'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
+			# Docs
+			'nodejs'
+		],
+		qt_version => '5.12.6',
+		qt_patches => [
+			'aec.patch',
+			'mac-web-video.patch',
+#			'qfloat16.patch',  # Doesn't apply against 5.12.6
+			'qtscript-crash-fix.patch'
+		],
+		qt_source_dependencies => [
+			'autoconf',
+			'automake',
+			'autopoint',
+			'autotools-dev',
+			'debhelper',
+			'default-libmysqlclient-dev',
+			'dh-autoreconf',
+			'dh-exec',
+			'dh-strip-nondeterminism',
+			'firebird-dev',
+			'firebird3.0-common',
+			'firebird3.0-common-doc',
+			'freetds-common',
+			'freetds-dev',
+			'gir1.2-harfbuzz-0.0',
+			'icu-devtools',
+			'libatk-bridge2.0-dev',
+			'libatk1.0-dev',
+			'libatspi2.0-dev',
+			'libcairo-script-interpreter2',
+			'libcairo2-dev',
+			'libct4',
+			'libcups2-dev',
+			'libcupsimage2-dev',
+			'libdbus-1-dev',
+			'libegl1-mesa-dev',
+			'libepoxy-dev',
+			'libevdev-dev',
+			'libexpat1-dev',
+			'libfbclient2',
+			'libfile-stripnondeterminism-perl',
+			'libfontconfig1-dev',
+			'libfreetype6-dev',
+			'libgbm-dev',
+			'libgdk-pixbuf2.0-dev',
+			'libgles2-mesa-dev',
+			'libglib2.0-dev',
+			'libglib2.0-dev-bin',
+			'libgraphite2-dev',
+			'libgtk-3-dev',
+			'libharfbuzz-dev',
+			'libharfbuzz-gobject0',
+			'libib-util',
+			'libicu-dev',
+			'libinput-dev',
+			'libjbig-dev',
+			'libjpeg-dev',
+			'libjpeg-turbo8-dev',
+			'libjpeg8-dev',
+			'libltdl-dev',
+			'liblzma-dev',
+			'libmtdev-dev',
+			'libmysqlclient-dev',
+			'libodbc1',
+			'libpango1.0-dev',
+			'libpcre16-3',
+			'libpcre3-dev',
+			'libpcre32-3',
+			'libpcrecpp0v5',
+			'libpixman-1-dev',
+			'libpng-dev',
+			'libpq-dev',
+			'libpq5',
+			'libproxy-dev',
+			'libpulse-dev',
+			'libqt5designer5',
+			'libqt5designercomponents5',
+			'libqt5help5',
+			'libqt5positioning5',
+			'libqt5printsupport5',
+			'libqt5qml5',
+			'libqt5quick5',
+			'libqt5quickwidgets5',
+			'libqt5sensors5',
+			'libqt5sql5',
+			'libqt5sql5-sqlite',
+			'libqt5webchannel5',
+			'libqt5webkit5',
+			'libqt5xml5',
+			'libsqlite3-dev',
+			'libsybdb5',
+			'libtiff-dev',
+			'libtiff5-dev',
+			'libtiffxx5',
+			'libtommath1',
+			'libtool',
+			'libwacom-dev',
+			'libwayland-bin',
+			'libwayland-dev',
+			'libxcb-icccm4-dev',
+			'libxcb-image0-dev',
+			'libxcb-keysyms1-dev',
+			'libxcb-render-util0-dev',
+			'libxcb-shm0-dev',
+			'libxcb-xkb-dev',
+			'libxcomposite-dev',
+			'libxcursor-dev',
+			'libxft-dev',
+			'libxinerama-dev',
+			'libxkbcommon-dev',
+			'libxkbcommon-x11-dev',
+			'libxtst-dev',
+			'mysql-common',
+			'odbcinst',
+			'odbcinst1debian2',
+			'pkg-kde-tools',
+			'po-debconf',
+			'qt5-assistant',
+			'qtchooser',
+			'qttools5-dev-tools',
+			'unixodbc-dev',
+			'wayland-protocols',
+			'x11proto-composite-dev',
+			'x11proto-record-dev',
+			'libx11-xcb-dev',
+			# Also required
+			'gperf',
+			'bison',
+			'flex',
+			# Extra
+			'libjsoncpp-dev',
+			'libnss3-dev',
+			'libvpx-dev',
+			'libopus-dev'
+			]
+
+	},
 	'linuxmint-19.3' => {
 		# Based on Ubuntu 18.04 (bionic)
 		has_binary_qt_package => 0,
@@ -861,9 +1028,9 @@ my $data = {
 
 # Valid build targets for the makefile
 my $all_targets = {
-	'domain-server'       => { service => 1, service_desc => "Athena Domain Server"    , service_args => [] },
-	'assignment-client'   => { service => 1, service_desc => "Athena Assignment Client", service_args => ["-n", "6"] },
-	'ice-server'          => { service => 1, service_desc => "Athena ICE Server"       , service_args => [] },
+	'domain-server'       => { service => 1, service_desc => "Vircadia Domain Server"    , service_args => [] },
+	'assignment-client'   => { service => 1, service_desc => "Vircadia Assignment Client", service_args => ["-n", "6"] },
+	'ice-server'          => { service => 1, service_desc => "Vircadia ICE Server"       , service_args => [] },
 	'interface'           => { service => 0 },
 	'atp-client'          => { service => 0 },
 	'oven'                => { service => 0 },
@@ -880,8 +1047,8 @@ my $all_targets = {
 my @x11_lib_paths = ("/usr/lib64", "/usr/X11R6/lib64", "/usr/lib/x86_64-linux-gnu", "/usr/lib");
 my @system_qt_paths = ('/usr/lib64/cmake', '/usr/lib/x86_64-linux-gnu/cmake');
 
-# Amount of RAM needed to build Athena, per compiler process.
-my $mem_per_core_athena = 1 * 1024 * 1024;
+# Amount of RAM needed to build Vircadia, per compiler process.
+my $mem_per_core_vircadia = 1 * 1024 * 1024;
 
 # Qt has a build stage that consumes a huge amount of RAM. Be a bit conservative here.
 my $mem_per_core_qt     = 1.2 * 1024 * 1024;
@@ -891,7 +1058,7 @@ my $qt_repo      = "git://code.qt.io/qt/qt5.git";
 my $repo_tag     = "kasen/core";
 my $repo_tag_path = "";
 
-my $root_dir     = "$ENV{HOME}/Athena";
+my $root_dir     = "$ENV{HOME}/Vircadia";
 my $inst_dir     = "$root_dir/install"; # Where files will be installed
 my $binary_dir   = $inst_dir;           # Where the final binaries are found
 
@@ -948,13 +1115,13 @@ make_pkglist()                                          if ( $cmd_make_pkglist )
 
 
 
-mkdir("$ENV{HOME}/.athena-builder");
-mkdir("$ENV{HOME}/.athena-builder/logs");
+mkdir("$ENV{HOME}/.vircadia-builder");
+mkdir("$ENV{HOME}/.vircadia-builder/logs");
 mkdir($logdir);
 
 open($log_fh, ">", "$logdir/log.txt") or warn("Couldn't create log '$logdir/log.txt': $!");
 
-$build_cores    //= calculate_cores("Athena", $mem_per_core_athena);
+$build_cores    //= calculate_cores("Vircadia", $mem_per_core_vircadia);
 $build_cores_qt //= calculate_cores("Qt", $mem_per_core_qt);
 $desktop        //= get_desktop();
 $distro         //= detect_distro();
@@ -1097,7 +1264,9 @@ sub install_missing_packages {
 		} elsif ( $DD->{package_manager} eq "yum" ) {
 			sudo_run("yum", "install", "-y", @missing);
 		} elsif ( $DD->{package_manager} eq "apt" ) {
-			sudo_run("apt-get", "install", "-y", @missing);
+			$ENV{DEBIAN_FRONTEND} = 'noninteractive';
+			sudo_run("apt-get", "update");
+			sudo_run("--preserve-env=DEBIAN_FRONTEND", "apt-get", "install", "-y", @missing);
 		} elsif ( $DD->{package_manager} eq "none" ) {
 			# Nothing
 		} else {
@@ -1118,14 +1287,14 @@ sub collect_info {
 	important("The defaults should be just fine. Simply press ENTER to accept the suggested\n");
 	important("value.\n\n");
 
-	my $rl = Term::ReadLine->new('athena_setup');
+	my $rl = Term::ReadLine->new('vircadia_setup');
 	my $ok = $opt_auto ? "yes" : "no";
 
 	while($ok ne "yes") {
 		$repo            = $rl->readline("Git repository             : ", $repo);
 		$repo_tag        = $rl->readline("Git tag                    : ", $repo_tag);
 		$root_dir        = $rl->readline("Installation dir           : ", $root_dir);
-		$build_cores     = $rl->readline("CPU cores to use for Athena: ", $build_cores);
+		$build_cores     = $rl->readline("CPU cores to use for Vircadia: ", $build_cores);
 		$build_cores_qt  = $rl->readline("CPU cores to use for Qt5   : ", $build_cores_qt);
 
 		info("\n");
@@ -1171,6 +1340,20 @@ sub build {
 	if ( check_qt_install() ) {
 		important("Using compiled Qt\n");
 		$ENV{QT_CMAKE_PREFIX_PATH}="$root_dir/qt5-install/lib/cmake";
+
+		# hifi_qt.py in the master merge branch looks for Qt in:
+		# $HIFI_QT_BASE/$VIRCADIA_USE_QT_VERSION/qt5-install
+		#
+		# We do a horrid hack here, where $VIRCADIA_USE_QT_VERSION is
+		# an empty string, but still has a value, and $HIFI_QT_BASE
+		# points to the root dir, where a qt5-install directory happens
+		# to exist.
+		#
+		# This will be redone later, once the merge is complete and a
+		# less ugly way of specifying an external Qt can be introduced.
+		$ENV{VIRCADIA_USE_PREBUILT_QT}=1;
+		$ENV{VIRCADIA_USE_QT_VERSION}="";
+		$ENV{HIFI_QT_BASE} = "$root_dir";
 	}	
 
 
@@ -1554,14 +1737,14 @@ sub setup_desktop {
 	mkdir("$ENV{HOME}/.local");
 	mkdir("$ENV{HOME}/.local/share");
 	mkdir("$ENV{HOME}/.local/share/applications");
-	my $desktop_file = "$ENV{HOME}/.local/share/applications/Athena.desktop";
+	my $desktop_file = "$ENV{HOME}/.local/share/applications/Vircadia.desktop";
 
 	link("$root_dir/source/interface/interface/icon/interface.ico", "$binary_dir/interface.ico");
 
 	open(my $dsk, ">", $desktop_file) or fatal("Can't create $desktop_file: $!");
 	print $dsk "[Desktop Entry]\n";
 	print $dsk "Version=1.0\n";
-	print $dsk "Name=Athena VR\n";
+	print $dsk "Name=Vircadia VR\n";
 	print $dsk "Terminal=false\n";
 	print $dsk "Type=Application\n";
 	print $dsk "Exec=$binary_dir/run_interface\n";
@@ -1572,9 +1755,9 @@ sub setup_desktop {
 
 	info("Creating a link in the user's desktop... ");
 	mkdir($desktop);
-	unlink("$desktop/Athena.desktop") if ( -e "$desktop/Athena.desktop" );
+	unlink("$desktop/Vircadia.desktop") if ( -e "$desktop/Vircadia.desktop" );
 
-	if ( symlink($desktop_file, "$desktop/Athena.desktop") ) {
+	if ( symlink($desktop_file, "$desktop/Vircadia.desktop") ) {
 		info_ok("done.\n");
 	} else {
 		warning("failed: $!\n");
@@ -2232,7 +2415,7 @@ sub help {
 	print <<HELP;
 
 $0 [options]
-Downloads, compiles and installs the Athena Project
+Downloads, compiles and installs Vircadia.
 
 Options:
 	-B, --build-qt          Built Qt even if there's a binery package
