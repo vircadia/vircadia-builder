@@ -1340,6 +1340,20 @@ sub build {
 	if ( check_qt_install() ) {
 		important("Using compiled Qt\n");
 		$ENV{QT_CMAKE_PREFIX_PATH}="$root_dir/qt5-install/lib/cmake";
+
+		# hifi_qt.py in the master merge branch looks for Qt in:
+		# $HIFI_QT_BASE/$VIRCADIA_USE_QT_VERSION/qt5-install
+		#
+		# We do a horrid hack here, where $VIRCADIA_USE_QT_VERSION is
+		# an empty string, but still has a value, and $HIFI_QT_BASE
+		# points to the root dir, where a qt5-install directory happens
+		# to exist.
+		#
+		# This will be redone later, once the merge is complete and a
+		# less ugly way of specifying an external Qt can be introduced.
+		$ENV{VIRCADIA_USE_PREBUILT_QT}=1;
+		$ENV{VIRCADIA_USE_QT_VERSION}="";
+		$ENV{HIFI_QT_BASE} = "$root_dir";
 	}	
 
 
