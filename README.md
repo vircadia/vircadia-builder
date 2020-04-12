@@ -6,6 +6,7 @@ Builds Project Athena, an Open Source fork of the High Fidelity codebase.
 * Ubuntu 16.04
 * Ubuntu 18.04
 * Ubuntu 19.10 (experimental)
+* Ubuntu 20.04 (experimental)
 * Linux Mint 19.3 (experimental)
 * Fedora 31 (experimental, needs to build Qt)
 * Amazon Linux 2 (experimental, needs newer cmake)
