@@ -1097,7 +1097,9 @@ sub install_missing_packages {
 		} elsif ( $DD->{package_manager} eq "yum" ) {
 			sudo_run("yum", "install", "-y", @missing);
 		} elsif ( $DD->{package_manager} eq "apt" ) {
-			sudo_run("apt-get", "install", "-y", @missing);
+			$ENV{DEBIAN_FRONTEND} = 'noninteractive';
+			sudo_run("apt-get", "update");
+			sudo_run("--preserve-env=DEBIAN_FRONTEND", "apt-get", "install", "-y", @missing);
 		} elsif ( $DD->{package_manager} eq "none" ) {
 			# Nothing
 		} else {
