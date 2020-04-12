@@ -1,5 +1,5 @@
-# Project Athena builder
-Builds Project Athena, an Open Source fork of the High Fidelity codebase.
+# Project Vircadia builder
+Builds Vircadia (formerly known as "Project Athena"), an Open Source fork of the High Fidelity codebase.
 
 ## Supported platforms
 
@@ -16,15 +16,15 @@ Builds Project Athena, an Open Source fork of the High Fidelity codebase.
 
     git clone https://github.com/daleglass/athena-builder.git
     cd athena-builder
-    chmod +x athena_builder
-    ./athena_builder
+    chmod +x vircadia-builder
+    ./vircadia-builder
 
 ## What it does
 
 * Installs all required packages
-* Downloads the Athena source from github
+* Downloads the Vircadia source from github
 * Downloads and compiles Qt if required
-* Compiles the Athena source
+* Compiles the Vircadia source
 * Creates a wrapper script to make it run correctly
 * Creates a desktop icon
 * Adds it to the menu
@@ -37,29 +37,29 @@ It will detect the system's core count and amount of available memory, and do a 
 
 The script by default builds the GUI ('interface') but it can also build the server components using the --build option. For instance:
 
-    $ ./athena_builder --build server
+    $ ./vircadia-builder --build server
 
 Will build only the server components. To build both, separate entries with a comma:
 
-    $ ./athena_builder --build server,client
+    $ ./vircadia-builder --build server,client
 
 Have in mind that each build overwrites the previous one, so if you want to have both desktop and server components at the same time, you need to build them both in one command like above.
 
 
 ## Qt
 
-The Athena codebase uses a specific, patched version of Qt. Binary packages are only available for some platforms. For platforms without a package, Qt can be built from source by the script.
+The Vircadia codebase uses a specific, patched version of Qt. Binary packages are only available for some platforms. For platforms without a package, Qt can be built from source by the script.
 
 **WARNING: The Qt build uses a large amount of RAM, which can be a problem with VPSes. A minimum of 4 GB RAM + 2GB swap is recommended for building Qt with one process**. The swap usage should be tolerable, as Qt has a few very memory intensive parts in the compilation process, but the rest is much less so.
 
 In case of trouble, look at the autodetected number of cores, eg:
 
-    Checking how many cores to use for building Athena... 4 cores, memory limited to 2
+    Checking how many cores to use for building Vircadia... 4 cores, memory limited to 2
     Checking how many cores to use for building Qt... 4 cores, memory limited to 3
 
 And manually specify a lower number. For instance:
 
-    ./athena_builder --qt-cores 1
+    ./vircadia-builder --qt-cores 1
 
 
 In any case, building in low resource environments is slow and problematic. While it can be done, it might be faster and easier to do the build in Docker or a bigger VM running on a local machine, and then copy the files over.
@@ -71,7 +71,7 @@ The script is intended to be as automatic as possible, and to set it all up for 
 First, get a list of the supported distributions, and find the closest one:
 
 
-    $ ./athena_builder --get-supported
+    $ ./vircadia-builder --get-supported
     ubuntu-19.10
     linuxmint-19.3
     custom
@@ -81,9 +81,9 @@ First, get a list of the supported distributions, and find the closest one:
 
 Tell the script to dump the list of dependencies for that distro:
 
-    $ ./athena_builder --get-source-deps ubuntu-18.04
+    $ ./vircadia-builder --get-source-deps ubuntu-18.04
 	...
-	$ ./athena_builder --get-qt-deps ubuntu-18.04
+	$ ./vircadia-builder --get-qt-deps ubuntu-18.04
 	...
 
 Use those results as a starting point. Choosing a similar distribution (eg, 18.04 when running on 18.10) should mostly work, and only a few package names might need fixing. With the package list figured out, install them:
@@ -92,7 +92,7 @@ Use those results as a starting point. Choosing a similar distribution (eg, 18.0
 
 After installing the packages, you can try the script by selecting the special distro name "custom", which will perform a build without any hardcoded dependency checking:
 
-    $ ./athena_builder --distro custom
+    $ ./vircadia-builder --distro custom
 
 After that, the build process should begin. If there are problems, it's likely more packages need to be installed.
 
@@ -114,7 +114,7 @@ In addition to any packages that may be needed to do the build:
 
 It's extremely variable, depending greatly on hardware. Here are some sample numbers, only of the compilation process:
 
-| Processor                           | Qt           | CMake | Athena Client  | Athena Server |
+| Processor                           | Qt           | CMake | Vircadia Client  | Vircadia Server |
 | ------------                        | ------------ | ----- | ------------   | ----------    |
 | Ryzen 9 3950X, using 32 cores       | 19:01        | ?     | 4:07           | ?             |
 | Ryzen 9 3950X, using 16 cores in VM | 25:32        | ?     | 4:46           | ?             |
