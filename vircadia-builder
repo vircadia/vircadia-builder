@@ -1663,22 +1663,34 @@ sub verify_system_qt {
 
 
 sub setup_qt {
-	if (!check_qt_install()) {
-		my $qt_dir = read_from_cmd("find", "$root_dir/vcpkg", "-type", "d", "-name", "qt5-install");
+	if (check_qt_install()) {
+		# Already installed
+		return;
+	}
+
+	info("Looking for downloaded Qt's location... ");
+
+	for my $path ("$root_dir/vcpkg", "$ENV{HOME}/hifi") {
+		info("$path ");
+
+		my $qt_dir = read_from_cmd("find", $path, "-type", "d", "-name", "qt5-install");
 		chomp $qt_dir;
 
 		if ( -d "$qt_dir" ) {
+			info_ok("found!\n");
+
 			info("Creating permanent qt dir... ");
 			if ( -d "$root_dir/qt5-install" ) {
 				run("rm", "-rf", "$root_dir/qt5-install");
 			}
 			run("cp", "-Rdp", $qt_dir, "$root_dir/qt5-install");
-		
+
 			info_ok("done.\n");
-		} else {
-			fatal("Failed to find Qt dir in $root_dir/vcpkg!");
+			return;
 		}
 	}
+
+	fatal("Failed to find Qt dir in $root_dir/vcpkg!");
 }
 
 sub setup_scripts {
