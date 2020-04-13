@@ -1757,7 +1757,7 @@ sub setup_desktop {
 	open(my $dsk, ">", $desktop_file) or fatal("Can't create $desktop_file: $!");
 	print $dsk "[Desktop Entry]\n";
 	print $dsk "Version=1.0\n";
-	print $dsk "Name=Vircadia VR\n";
+	print $dsk "Name=Vircadia\n";
 	print $dsk "Terminal=false\n";
 	print $dsk "Type=Application\n";
 	print $dsk "Exec=$binary_dir/run_interface\n";
