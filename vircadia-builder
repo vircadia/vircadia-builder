@@ -184,6 +184,7 @@ my $data = {
 			'xdg-user-dirs',
 			'python3-distro',
 			'libharfbuzz-dev',
+			'curl',
 			# Qt runtime
 			'libdouble-conversion1', 'libxcb-xinerama0-dev',
 			# Interface
