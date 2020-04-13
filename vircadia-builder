@@ -1752,7 +1752,7 @@ sub setup_desktop {
 	mkdir("$ENV{HOME}/.local/share/applications");
 	my $desktop_file = "$ENV{HOME}/.local/share/applications/Vircadia.desktop";
 
-	link("$root_dir/source/interface/interface/icon/interface.ico", "$binary_dir/interface.ico");
+	link("$root_dir/source/interface/icon/interface.ico", "$binary_dir/interface.ico");
 
 	open(my $dsk, ">", $desktop_file) or fatal("Can't create $desktop_file: $!");
 	print $dsk "[Desktop Entry]\n";
