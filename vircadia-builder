@@ -145,7 +145,7 @@ my $data = {
 			'git',
 			'make',
 			'cmake',
-                        'patchelf',
+			'patchelf',
 			'python',
 			'libdrm-dev',
 			'mesa-common-dev',
@@ -176,7 +176,7 @@ my $data = {
 			'git',
 			'make',
 			'cmake',
-                        'patchelf',
+			'patchelf',
 			'python',
 			'libdrm-dev',
 			'mesa-common-dev',
@@ -343,7 +343,7 @@ my $data = {
 			'git',
 			'make',
 			'cmake',
-                        'patchelf',
+			'patchelf',
 			'python',
 			'libdrm-dev',
 			'mesa-common-dev',
@@ -507,7 +507,7 @@ my $data = {
 			'git',
 			'make',
 			'cmake',
-                        'patchelf',
+			'patchelf',
 			'python3',
 			'python2',
 			'python-is-python2',
@@ -682,7 +682,7 @@ my $data = {
 			'git',
 			'make',
 			'cmake',
-                        'patchelf',
+			'patchelf',
 			'python',
 			'libdrm-dev',
 			'mesa-common-dev',
@@ -847,7 +847,7 @@ my $data = {
 			'perl-Term-ReadLine-Gnu',
 			'cmake',
 			'make',
-                        'patchelf',
+			'patchelf',
 			'gcc-c++',
 			'libatomic',
 			'xdg-user-dirs',
@@ -944,7 +944,7 @@ my $data = {
 #			'perl-Term-ReadLine-Gnu',
 			'cmake',
 			'make',
-                        'patchelf',
+			'patchelf',
 			'gcc-c++',
 			'libatomic',
 			'xdg-user-dirs',
@@ -1026,7 +1026,6 @@ my $data = {
 			'MAKE' => 'make'
 		}
 	}
-
 };
 
 # Valid build targets for the makefile
@@ -1146,8 +1145,8 @@ GetOptions(
 	"auto|y"                 => \$opt_auto,
 	"repo|r=s"               => \$repo,
 	"tag|t=s"                => \$repo_tag,
-        "destdir|d=s"            => \$root_dir,
-        "cores|j=i"              => \$build_cores,
+	"destdir|d=s"            => \$root_dir,
+	"cores|j=i"              => \$build_cores,
 	"qt-cores|J=i"           => \$build_cores_qt,
 	"collect-info|C"         => \$collect_system_info,
 	"distro|D=s"             => \$distro,
@@ -1162,7 +1161,7 @@ GetOptions(
 	"make-appimage|A"        => \$opt_make_appimage,
 	"use-system-qt|S"        => \$opt_sys_qt,
 	"skip-build"             => \$opt_skip_build,
-        "skip-install"           => \$opt_skip_install,
+	"skip-install"           => \$opt_skip_install,
 	"no-modify-rpath"        => \$opt_no_modify_rpath,
 ) or help(1);
 
