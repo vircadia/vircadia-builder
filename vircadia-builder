@@ -1392,7 +1392,33 @@ sub build {
 		important("Building target $target\n");
 		run("make", $target, "-j${build_cores}");
 	}
-	
+
+	if (!$opt_sys_qt) {
+		# The one in lib/ doesn't have a rpath, which causes quazip to link against system Qt, which causes interface to link against
+		# both system Qt and custom Qt. This leads to problems.
+		#
+		# This probably needs a cmake fix. See https://github.com/kasenvr/project-athena/issues/308
+
+		info("Checking for libquazip linking issue... ");
+		my ($quazip_in_lib)   = grep { -f $_ && ! -l $_ } glob("$root_dir/build/ext/makefiles/quazip/project/lib/libquazip5.so*");
+		my ($quazip_in_build) = grep { -f $_ && ! -l $_ } glob("$root_dir/build/ext/makefiles/quazip/project/build/libquazip5.so*");
+
+		if ( $quazip_in_lib && $quazip_in_build ) {
+			my $lib_rpath   = read_from_cmd("patchelf", "--print-rpath", $quazip_in_lib); chomp $lib_rpath;
+			my $build_rpath = read_from_cmd("patchelf", "--print-rpath", $quazip_in_build); chomp $build_rpath;
+
+			if ( $lib_rpath eq "" && $build_rpath ne "" ) {
+				cp($quazip_in_build, $quazip_in_lib) or fatal("Can't copy $quazip_in_build to $quazip_in_lib");
+				info_ok("issue found, corrected\n");
+			} else {
+				info_ok("everything looks okay\n");
+			}
+		} else {
+			warning("lib/libquazip5.so* not found; ") unless ($quazip_in_lib);
+			warning("build/libquazip5.so* not found; ") unless ($quazip_in_build);
+			info_ok("skipping\n");
+		}
+	}
 
 }
 
@@ -1477,7 +1503,6 @@ sub  install_search_func {
 	$skip = 1 if ( $relpath =~ /_env/ );
 
 	$skip = 1 if ( $relpath =~ /interface_manifest.txt/ );
-
 
 	if ( $keep || !$skip) {
 		if ( -f $abspath ) {
@@ -2614,6 +2639,19 @@ sub install_into_appimage {
 		} else {
 			cp($dep, "$appimage_base/usr/lib64/");
 		}
+	}
+
+	if (!$opt_sys_qt && glob("$appimage_base/usr/lib64/libQt*")) {
+		# If anything gets compiled against system qt, the likely outcome
+		# is weird issues, such as the binary hanging on startup, probably due to multiple
+		# incompatible versions of Qt being loaded by interface.
+		#
+		# So far this has been a possible issue with libquazip
+		my $msg = "Sanity check failed: something has been built against system Qt, even though system Qt is not enabled.\n";
+		$msg   .= "The following incorrect libraries have been found as dependencies:\n";
+		$msg   .= join(', ', glob("$appimage_base/usr/lib64/libQt*"));
+
+		fatal($msg);
 	}
 
 	chmod(0755, glob("$appimage_base/usr/lib64/*"));
