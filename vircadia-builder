@@ -2677,6 +2677,13 @@ sub install_into_appimage {
 
 	info_ok("done.\n");
 
+	# Qt needs to be pointed to where its own files are
+	info("Creating qt.conf...");
+	open(my $qtconf, '>', "$appimage_base/vircadia/interface/qt.conf") or fatal("Can't create qt.conf: $!");
+	print $qtconf "[Paths]\n";
+	print $qtconf "Prefix=../../qt5-install/\n";
+	close $qtconf;
+
 	info("Creating AppRun... ");
 	symlink("vircadia/interface/interface", "$appimage_base/AppRun");
 	info_ok("done.\n");
