@@ -991,6 +991,11 @@ my $all_targets = {
 
 # Libraries that don't go into an AppImage.
 # Taken from https://github.com/AppImage/pkg2appimage/blob/master/excludelist
+# Trimmed down a bit, as I want a minimum of requirements for installation.
+#
+# libnss3.so and libnssutil3.so weren't part of the original list and added
+# to fix "Error initializing NSS with a persistent database"
+
 my @excluded_system_libs = (
 	qr/^ld-linux\.so\.2/,
 	qr/^ld-linux-x86-64\.so\.2/,
@@ -1030,13 +1035,15 @@ my @excluded_system_libs = (
 	qr/^libnss_hesiod\.so\.2/,
 	qr/^libnss_nisplus\.so\.2/,
 	qr/^libnss_nis\.so\.2/,
+	qr/^libnss3\.so/, #added - fixes crash in libsoftokn3.so
+	qr/^libnssutil3\.so/, #added
 #	qr/^libp11-kit\.so\.0/,
 #	qr/^libpango-1\.0\.so\.0/,
 #	qr/^libpangocairo-1\.0\.so\.0/,
 #	qr/^libpangoft2-1\.0\.so\.0/,
 	qr/^libpthread\.so\.0/,
 	qr/^libresolv\.so\.2/,
-#	qr/^librt\.so\.1/,
+	qr/^librt\.so\.1/,
 #	qr/^libSM\.so\.6/,
 	qr/^libstdc++\.so\.6/,
 #	qr/^libthai\.so\.0/,
