@@ -315,10 +315,11 @@ my $data = {
 			'libnss3-dev',
 			'libvpx-dev',
 			'libopus-dev',
-			]
-
-
-
+			],
+		appimage_dependencies => [
+			'imagemagick',
+			'curl'
+		]
 	},
 	'ubuntu-19.10' => {
 		has_binary_qt_package => 1,
@@ -467,8 +468,11 @@ my $data = {
 			'libnss3-dev',
 			'libvpx-dev',
 			'libopus-dev',
-			]
-
+			],
+		appimage_dependencies => [
+			'imagemagick',
+			'curl'
+		]
 	},
 	'ubuntu-20.04' => {
 		has_binary_qt_package => 0,
@@ -620,8 +624,11 @@ my $data = {
 			'libnss3-dev',
 			'libvpx-dev',
 			'libopus-dev'
-			]
-
+			],
+		appimage_dependencies => [
+			'imagemagick',
+			'curl'
+		]
 	},
 	'linuxmint-19.3' => {
 		# Based on Ubuntu 18.04 (bionic)
@@ -774,6 +781,10 @@ my $data = {
 			'libnss3-dev',
 			'libvpx-dev',
 			'libopus-dev',
+		],
+		appimage_dependencies => [
+			'imagemagick',
+			'curl'
 		]
 	},
 	'fedora-31' => {
@@ -871,6 +882,10 @@ my $data = {
 			"opus-devel",
 			"libicu-devel",
 			"libwebp-devel"
+		],
+		appimage_dependencies => [
+			'ImageMagick',
+			'curl'
 		]
 	},
 	'amzn-2' => {
@@ -1058,6 +1073,9 @@ my @excluded_system_libs = (
 #	qr/^libz\.so\.1/
 );
 
+my $appimagetool_release = 12;
+my $appimagetool_url = "https://github.com/AppImage/AppImageKit/releases/download/${appimagetool_release}/appimagetool-x86_64.AppImage";
+
 
 my @x11_lib_paths = ("/usr/lib64", "/usr/X11R6/lib64", "/usr/lib/x86_64-linux-gnu", "/usr/lib");
 my @system_qt_paths = ('/usr/lib64/cmake', '/usr/lib/x86_64-linux-gnu/cmake');
@@ -1166,6 +1184,7 @@ adjust_library_paths() unless ($opt_no_modify_rpath);
 
 #setup_files();
 if ( $opt_make_appimage ) {
+	download_appimage_tool();
 	install_into_appimage();
 } else {
 	install() unless ($opt_skip_install);
@@ -1269,7 +1288,9 @@ sub install_missing_packages {
 		}
 	}
 
-
+	if ( $opt_make_appimage ) {
+		push @required_packages, @{ $DD->{appimage_dependencies} };
+	}
 
 	info("Checking if any packages need installing... ");
 
@@ -2510,6 +2531,15 @@ sub parse_build_option {
 #	return $ret;
 #}
 
+sub download_appimage_tool {
+	my $tool_path = "$root_dir/appimagetool.${appimagetool_release}";
+
+	if (!-f $tool_path) {
+		run("curl", "-L", $appimagetool_url, "-o", $tool_path);
+		chmod 0755, $tool_path;
+	}
+}
+
 sub install_into_appimage {
 	# This is a bit of a mess. The AppImage tools want a normal, well-behaved
 	# application, and choke on all this qt5-install and vcpkg weirdness.
@@ -2543,6 +2573,7 @@ sub install_into_appimage {
 	my $appimage_base    = "$root_dir/Vircadia.AppImage";
 	my $appimage_instdir = "$appimage_base/vircadia";
 	my $appimage_qtdir   = "$appimage_base/qt5-install";
+	my $tool_path        = "$root_dir/appimagetool.${appimagetool_release}";
 
 	# We want to start from scratch every time
 	if ( -d "$appimage_base" ) {
