@@ -2707,9 +2707,75 @@ sub install_into_appimage {
 	info("Creating AppRun... ");
 	symlink("vircadia/interface/interface", "$appimage_base/AppRun");
 	info_ok("done.\n");
+
+#	create_appimage_metadata("$appimage_base/usr/share/metainfo/Vircadia.appdata.xml");
+
+	info("Creating AppImage...");
+	run($tool_path, $appimage_base);
 }
 
+sub create_appimage_metadata {
+	my ($filename) = @_;
 
+	info("Creating metadata... ");
+
+	my $dir = dirname($filename);
+	mkdir_path($dir);
+
+	open(my $fh, '>', $filename) or fatal("Can't create $filename: $!");
+	print $fh <<METADATA;
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2020 Dale Glass <dale\@daleglass.net> -->
+<component type="desktop-application">
+  <id>com.vircadia.interface</id>
+  <metadata_license>FSFAP</metadata_license>
+  <project_license>Apache-2.0</project_license>
+  <name>Vircadia</name>
+  <summary>Vircadia Metaverse client</summary>
+
+  <description>
+    <p>
+      Vircadia is the Open Source continuation of the High Fidelity metaverse.
+    </p>
+  </description>
+  <categories>
+      <category>Graphics</category>
+      <category>Network</category>
+      <category>AudioVideo</category>
+  </categories>
+<!--
+  <screenshots>
+    <screenshot type="default">
+      <caption></caption>
+      <image></image>
+    </screenshot>
+  </screenshots>
+-->
+
+  <url type="homepage">https://vircadia.com/</url>
+  <url type="bugtracker">https://github.com/kasenvr/project-athena/issues</url>
+  <project_group>Internet</project_group>
+
+  <provides>
+    <binary>Vircadia</binary>
+  </provides>
+
+<!--
+  <releases>
+    <release version="3.12.2" date="2013-04-12">
+      <description>
+        <p>Fixes issues X, Y and Z</p>
+      </description>
+    </release>
+  </releases>
+  <developer_name>Vircadia</developer_name>
+-->
+</component>
+METADATA
+	close $fh;
+
+	info_ok("done.\n");
+}
 
 
 sub ldd {
