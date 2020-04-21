@@ -2711,6 +2711,7 @@ sub install_into_appimage {
 #	create_appimage_metadata("$appimage_base/usr/share/metainfo/Vircadia.appdata.xml");
 
 	info("Creating AppImage...");
+	chdir($root_dir);
 	run($tool_path, $appimage_base);
 }
 
