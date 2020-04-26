@@ -10,6 +10,8 @@ use File::Find;
 use File::Spec;
 use File::Copy qw(cp);
 use File::Basename;
+use Cwd qw(abs_path);
+
 
 
 $| = 1;
@@ -143,7 +145,7 @@ my $data = {
 			'git',
 			'make',
 			'cmake',
-                        'patchelf',
+			'patchelf',
 			'python',
 			'libdrm-dev',
 			'mesa-common-dev',
@@ -174,7 +176,7 @@ my $data = {
 			'git',
 			'make',
 			'cmake',
-                        'patchelf',
+			'patchelf',
 			'python',
 			'libdrm-dev',
 			'mesa-common-dev',
@@ -184,6 +186,7 @@ my $data = {
 			'xdg-user-dirs',
 			'python3-distro',
 			'libharfbuzz-dev',
+			'curl',
 			# Qt runtime
 			'libdouble-conversion1', 'libxcb-xinerama0-dev',
 			# Interface
@@ -268,20 +271,6 @@ my $data = {
 			'libpq5',
 			'libproxy-dev',
 			'libpulse-dev',
-			'libqt5designer5',
-			'libqt5designercomponents5',
-			'libqt5help5',
-			'libqt5positioning5',
-			'libqt5printsupport5',
-			'libqt5qml5',
-			'libqt5quick5',
-			'libqt5quickwidgets5',
-			'libqt5sensors5',
-			'libqt5sql5',
-			'libqt5sql5-sqlite',
-			'libqt5webchannel5',
-			'libqt5webkit5',
-			'libqt5xml5',
 			'libsqlite3-dev',
 			'libsybdb5',
 			'libtiff-dev',
@@ -326,10 +315,11 @@ my $data = {
 			'libnss3-dev',
 			'libvpx-dev',
 			'libopus-dev',
-			]
-
-
-
+			],
+		appimage_dependencies => [
+			'imagemagick',
+			'curl'
+		]
 	},
 	'ubuntu-19.10' => {
 		has_binary_qt_package => 1,
@@ -340,7 +330,7 @@ my $data = {
 			'git',
 			'make',
 			'cmake',
-                        'patchelf',
+			'patchelf',
 			'python',
 			'libdrm-dev',
 			'mesa-common-dev',
@@ -434,20 +424,6 @@ my $data = {
 			'libpq5',
 			'libproxy-dev',
 			'libpulse-dev',
-			'libqt5designer5',
-			'libqt5designercomponents5',
-			'libqt5help5',
-			'libqt5positioning5',
-			'libqt5printsupport5',
-			'libqt5qml5',
-			'libqt5quick5',
-			'libqt5quickwidgets5',
-			'libqt5sensors5',
-			'libqt5sql5',
-			'libqt5sql5-sqlite',
-			'libqt5webchannel5',
-			'libqt5webkit5',
-			'libqt5xml5',
 			'libsqlite3-dev',
 			'libsybdb5',
 			'libtiff-dev',
@@ -492,8 +468,11 @@ my $data = {
 			'libnss3-dev',
 			'libvpx-dev',
 			'libopus-dev',
-			]
-
+			],
+		appimage_dependencies => [
+			'imagemagick',
+			'curl'
+		]
 	},
 	'ubuntu-20.04' => {
 		has_binary_qt_package => 0,
@@ -504,7 +483,7 @@ my $data = {
 			'git',
 			'make',
 			'cmake',
-                        'patchelf',
+			'patchelf',
 			'python3',
 			'python2',
 			'python-is-python2',
@@ -600,20 +579,6 @@ my $data = {
 			'libpq5',
 			'libproxy-dev',
 			'libpulse-dev',
-			'libqt5designer5',
-			'libqt5designercomponents5',
-			'libqt5help5',
-			'libqt5positioning5',
-			'libqt5printsupport5',
-			'libqt5qml5',
-			'libqt5quick5',
-			'libqt5quickwidgets5',
-			'libqt5sensors5',
-			'libqt5sql5',
-			'libqt5sql5-sqlite',
-			'libqt5webchannel5',
-			'libqt5webkit5',
-			'libqt5xml5',
 			'libsqlite3-dev',
 			'libsybdb5',
 			'libtiff-dev',
@@ -659,8 +624,11 @@ my $data = {
 			'libnss3-dev',
 			'libvpx-dev',
 			'libopus-dev'
-			]
-
+			],
+		appimage_dependencies => [
+			'imagemagick',
+			'curl'
+		]
 	},
 	'linuxmint-19.3' => {
 		# Based on Ubuntu 18.04 (bionic)
@@ -679,7 +647,7 @@ my $data = {
 			'git',
 			'make',
 			'cmake',
-                        'patchelf',
+			'patchelf',
 			'python',
 			'libdrm-dev',
 			'mesa-common-dev',
@@ -771,20 +739,6 @@ my $data = {
 			'libpq5',
 			'libproxy-dev',
 			'libpulse-dev',
-			'libqt5designer5',
-			'libqt5designercomponents5',
-			'libqt5help5',
-			'libqt5positioning5',
-			'libqt5printsupport5',
-			'libqt5qml5',
-			'libqt5quick5',
-			'libqt5quickwidgets5',
-			'libqt5sensors5',
-			'libqt5sql5',
-			'libqt5sql5-sqlite',
-			'libqt5webchannel5',
-			'libqt5webkit5',
-			'libqt5xml5',
 			'libsqlite3-dev',
 			'libsybdb5',
 			'libtiff-dev',
@@ -827,6 +781,10 @@ my $data = {
 			'libnss3-dev',
 			'libvpx-dev',
 			'libopus-dev',
+		],
+		appimage_dependencies => [
+			'imagemagick',
+			'curl'
 		]
 	},
 	'fedora-31' => {
@@ -844,7 +802,7 @@ my $data = {
 			'perl-Term-ReadLine-Gnu',
 			'cmake',
 			'make',
-                        'patchelf',
+			'patchelf',
 			'gcc-c++',
 			'libatomic',
 			'xdg-user-dirs',
@@ -924,6 +882,10 @@ my $data = {
 			"opus-devel",
 			"libicu-devel",
 			"libwebp-devel"
+		],
+		appimage_dependencies => [
+			'ImageMagick',
+			'curl'
 		]
 	},
 	'amzn-2' => {
@@ -941,7 +903,7 @@ my $data = {
 #			'perl-Term-ReadLine-Gnu',
 			'cmake',
 			'make',
-                        'patchelf',
+			'patchelf',
 			'gcc-c++',
 			'libatomic',
 			'xdg-user-dirs',
@@ -1023,7 +985,6 @@ my $data = {
 			'MAKE' => 'make'
 		}
 	}
-
 };
 
 # Valid build targets for the makefile
@@ -1042,6 +1003,78 @@ my $all_targets = {
 	'gpu-frame-player'    => { service => 0 },
 	'vhacd-util'          => { service => 0 }
 };
+
+# Libraries that don't go into an AppImage.
+# Taken from https://github.com/AppImage/pkg2appimage/blob/master/excludelist
+# Trimmed down a bit, as I want a minimum of requirements for installation.
+#
+# libnss3.so and libnssutil3.so weren't part of the original list and added
+# to fix "Error initializing NSS with a persistent database"
+
+my @excluded_system_libs = (
+	qr/^ld-linux\.so\.2/,
+	qr/^ld-linux-x86-64\.so\.2/,
+#	qr/^libanl\.so\.1/,
+#	qr/^libasound\.so\.2/,
+#	qr/^libBrokenLocale\.so\.1/,
+#	qr/^libcidn\.so\.1/,
+#	qr/^libcom_err\.so\.2/,
+	qr/^libc\.so\.6/,
+	qr/^libdl\.so\.2/,
+	qr/^libdrm\.so\.2/,
+	qr/^libEGL\.so\.1/,
+#	qr/^libexpat\.so\.1/,
+#	qr/^libfontconfig\.so\.1/,
+#	qr/^libfreetype\.so\.6/,
+#	qr/^libfribidi\.so\.0/,
+#	qr/^libgbm\.so\.1/,
+	qr/^libgcc_s\.so\.1/,
+#	qr/^libgdk_pixbuf-2\.0\.so\.0/,
+#	qr/^libgio-2\.0\.so\.0/,
+	qr/^libglapi\.so\.0/,
+	qr/^libGLdispatch\.so\.0/,
+#	qr/^libglib-2\.0\.so\.0/,
+	qr/^libGL\.so\.1/,
+	qr/^libGLX\.so\.0/,
+#	qr/^libgmp\.so\.10/,
+#	qr/^libgobject-2\.0\.so\.0/,
+#	qr/^libgpg-error\.so\.0/,
+#	qr/^libharfbuzz\.so\.0/,
+#	qr/^libICE\.so\.6/,
+#	qr/^libjack\.so\.0/,
+	qr/^libm\.so\.6/,
+	qr/^libmvec\.so\.1/,
+	qr/^libnss_compat\.so\.2/,
+	qr/^libnss_dns\.so\.2/,
+	qr/^libnss_files\.so\.2/,
+	qr/^libnss_hesiod\.so\.2/,
+	qr/^libnss_nisplus\.so\.2/,
+	qr/^libnss_nis\.so\.2/,
+	qr/^libnss3\.so/, #added - fixes crash in libsoftokn3.so
+	qr/^libnssutil3\.so/, #added
+#	qr/^libp11-kit\.so\.0/,
+#	qr/^libpango-1\.0\.so\.0/,
+#	qr/^libpangocairo-1\.0\.so\.0/,
+#	qr/^libpangoft2-1\.0\.so\.0/,
+	qr/^libpthread\.so\.0/,
+	qr/^libresolv\.so\.2/,
+	qr/^librt\.so\.1/,
+#	qr/^libSM\.so\.6/,
+	qr/^libstdc++\.so\.6/,
+#	qr/^libthai\.so\.0/,
+	qr/^libthread_db\.so\.1/,
+#	qr/^libusb-1\.0\.so\.0/,
+	qr/^libutil\.so\.1/,
+#	qr/^libuuid\.so\.1/,
+#	qr/^libX11\.so\.6/,
+#	qr/^libxcb-dri2\.so\.0/,
+#	qr/^libxcb-dri3\.so\.0/,
+#	qr/^libxcb\.so\.1/,
+#	qr/^libz\.so\.1/
+);
+
+my $appimagetool_release = 12;
+my $appimagetool_url = "https://github.com/AppImage/AppImageKit/releases/download/${appimagetool_release}/appimagetool-x86_64.AppImage";
 
 
 my @x11_lib_paths = ("/usr/lib64", "/usr/X11R6/lib64", "/usr/lib/x86_64-linux-gnu", "/usr/lib");
@@ -1068,7 +1101,7 @@ my $build_cores_qt;
 my $desktop;
 my $distro;
 
-my ($opt_keep_source, $opt_auto, $opt_build_qt, $opt_build, $opt_sys_qt, $opt_skip_build, $opt_no_modify_rpath, $opt_skip_install);
+my ($opt_keep_source, $opt_auto, $opt_build_qt, $opt_build, $opt_sys_qt, $opt_skip_build, $opt_no_modify_rpath, $opt_skip_install, $opt_make_appimage);
 my ($cmd_help, $cmd_get_supported, $cmd_get_source_deps, $cmd_get_qt_deps, $cmd_get_qt_version, $cmd_get_qt_patches, $cmd_make_pkglist);
 
 $opt_build = "interface";
@@ -1081,8 +1114,8 @@ GetOptions(
 	"auto|y"                 => \$opt_auto,
 	"repo|r=s"               => \$repo,
 	"tag|t=s"                => \$repo_tag,
-        "destdir|d=s"            => \$root_dir,
-        "cores|j=i"              => \$build_cores,
+	"destdir|d=s"            => \$root_dir,
+	"cores|j=i"              => \$build_cores,
 	"qt-cores|J=i"           => \$build_cores_qt,
 	"collect-info|C"         => \$collect_system_info,
 	"distro|D=s"             => \$distro,
@@ -1094,9 +1127,10 @@ GetOptions(
 	"get-qt-version=s"       => \$cmd_get_qt_version,
 	"get-qt-patches=s"       => \$cmd_get_qt_patches,
 	"make-pkglist"           => \$cmd_make_pkglist,
+	"make-appimage|A"        => \$opt_make_appimage,
 	"use-system-qt|S"        => \$opt_sys_qt,
 	"skip-build"             => \$opt_skip_build,
-        "skip-install"           => \$opt_skip_install,
+	"skip-install"           => \$opt_skip_install,
 	"no-modify-rpath"        => \$opt_no_modify_rpath,
 ) or help(1);
 
@@ -1149,10 +1183,16 @@ setup_qt();
 adjust_library_paths() unless ($opt_no_modify_rpath);
 
 #setup_files();
-install() unless ($opt_skip_install);
-setup_scripts();
-setup_services();
-setup_desktop();
+if ( $opt_make_appimage ) {
+	download_appimage_tool();
+	install_into_appimage();
+} else {
+	install() unless ($opt_skip_install);
+	setup_scripts();
+	setup_services();
+	setup_desktop();
+}
+
 
 
 
@@ -1248,7 +1288,9 @@ sub install_missing_packages {
 		}
 	}
 
-
+	if ( $opt_make_appimage ) {
+		push @required_packages, @{ $DD->{appimage_dependencies} };
+	}
 
 	info("Checking if any packages need installing... ");
 
@@ -1371,7 +1413,33 @@ sub build {
 		important("Building target $target\n");
 		run("make", $target, "-j${build_cores}");
 	}
-	
+
+	if (!$opt_sys_qt) {
+		# The one in lib/ doesn't have a rpath, which causes quazip to link against system Qt, which causes interface to link against
+		# both system Qt and custom Qt. This leads to problems.
+		#
+		# This probably needs a cmake fix. See https://github.com/kasenvr/project-athena/issues/308
+
+		info("Checking for libquazip linking issue... ");
+		my ($quazip_in_lib)   = grep { -f $_ && ! -l $_ } glob("$root_dir/build/ext/makefiles/quazip/project/lib/libquazip5.so*");
+		my ($quazip_in_build) = grep { -f $_ && ! -l $_ } glob("$root_dir/build/ext/makefiles/quazip/project/build/libquazip5.so*");
+
+		if ( $quazip_in_lib && $quazip_in_build ) {
+			my $lib_rpath   = read_from_cmd("patchelf", "--print-rpath", $quazip_in_lib); chomp $lib_rpath;
+			my $build_rpath = read_from_cmd("patchelf", "--print-rpath", $quazip_in_build); chomp $build_rpath;
+
+			if ( $lib_rpath eq "" && $build_rpath ne "" ) {
+				cp($quazip_in_build, $quazip_in_lib) or fatal("Can't copy $quazip_in_build to $quazip_in_lib");
+				info_ok("issue found, corrected\n");
+			} else {
+				info_ok("everything looks okay\n");
+			}
+		} else {
+			warning("lib/libquazip5.so* not found; ") unless ($quazip_in_lib);
+			warning("build/libquazip5.so* not found; ") unless ($quazip_in_build);
+			info_ok("skipping\n");
+		}
+	}
 
 }
 
@@ -1398,7 +1466,12 @@ sub install {
 	info("Copying files to install directory...\n");
 
 
-	find({ follow => 1, follow_skip => 2, wanted => \&install_search_func }, "$root_dir/build");
+	find({ follow       => 1,
+	       follow_skip  => 2, 
+	       wanted       => sub { install_search_func("$root_dir/build", $inst_dir, "link") }},
+	       "$root_dir/build");
+
+	#find({ follow => 1, follow_skip => 2, wanted => \&install_search_func }, "$root_dir/build");
 
 	# Clear line
 	info( "\r" . (" " x $prev_len) . "\r");
@@ -1419,8 +1492,10 @@ sub install {
 
 
 sub  install_search_func {
+	my ($source, $destination, $method) = @_;
+
 	my $abspath = $File::Find::name;
-	my $relpath = File::Spec->abs2rel($abspath, "$root_dir/build");
+	my $relpath = File::Spec->abs2rel($abspath, $source);
 	my $file = $_;
 
 	info( "\r" . (" " x $prev_len) . "\r". $relpath );
@@ -1450,19 +1525,30 @@ sub  install_search_func {
 
 	$skip = 1 if ( $relpath =~ /interface_manifest.txt/ );
 
-
 	if ( $keep || !$skip) {
 		if ( -f $abspath ) {
 			my $reldir  = dirname($relpath);
-			debug("COPY: '$abspath' => '$inst_dir/$relpath'\n");
+			debug("COPY: '$abspath' => '$destination/$relpath'\n");
 
-			mkdir_path("$inst_dir/$reldir");
-                        unlink("$inst_dir/$relpath") if ( -e "$inst_dir/$relpath" );
+			mkdir_path("$destination/$reldir");
+                        unlink("$destination/$relpath") if ( -e "$destination/$relpath" );
 			if ( -l $abspath ) {
 				# Turns out that trying to make a hardlink of a symlink copies the symlink
-				link(readlink($abspath), "$inst_dir/$relpath") or die "Can't link " . readlink($abspath) . " to $inst_dir/$relpath: $!";
+				if ( $method eq "copy" ) {
+					symlink(readlink($abspath), "$destination/$relpath");
+				} elsif ( $method eq "link" ) {
+					link(readlink($abspath), "$destination/$relpath") or die "Can't link " . readlink($abspath) . " to $destination/$relpath: $!";
+				} else {
+					fatal("Unrecognized install method: $method");
+				}
 			} else {
-				link($abspath, "$inst_dir/$relpath") or die "Can't link $abspath to $inst_dir/$relpath: $!";
+				if ( $method eq "copy" ) {
+					cp($abspath, "$destination/$relpath") or die "Can't copy $abspath to $destination/$relpath: $!";
+				} elsif ( $method eq "link" ) {
+					link($abspath, "$destination/$relpath") or die "Can't link $abspath to $destination/$relpath: $!";
+				} else {
+					fatal("Unrecognized install method: $method");
+				}
 			}
 
 			$installed{$relpath} = 1;
@@ -1662,22 +1748,34 @@ sub verify_system_qt {
 
 
 sub setup_qt {
-	if (!check_qt_install()) {
-		my $qt_dir = read_from_cmd("find", "$root_dir/vcpkg", "-type", "d", "-name", "qt5-install");
+	if (check_qt_install()) {
+		# Already installed
+		return;
+	}
+
+	info("Looking for downloaded Qt's location... ");
+
+	for my $path ("$root_dir/vcpkg", "$ENV{HOME}/hifi") {
+		info("$path ");
+
+		my $qt_dir = read_from_cmd("find", $path, "-type", "d", "-name", "qt5-install");
 		chomp $qt_dir;
 
 		if ( -d "$qt_dir" ) {
+			info_ok("found!\n");
+
 			info("Creating permanent qt dir... ");
 			if ( -d "$root_dir/qt5-install" ) {
 				run("rm", "-rf", "$root_dir/qt5-install");
 			}
 			run("cp", "-Rdp", $qt_dir, "$root_dir/qt5-install");
-		
+
 			info_ok("done.\n");
-		} else {
-			fatal("Failed to find Qt dir in $root_dir/vcpkg!");
+			return;
 		}
 	}
+
+	fatal("Failed to find Qt dir in $root_dir/vcpkg!");
 }
 
 sub setup_scripts {
@@ -1727,31 +1825,17 @@ sub setup_desktop {
 		return;
 	}
 
-	info("Creating desktop icon for interface... ");
+
 	mkdir($desktop);
-
-        create_script("interface", "interface/interface");
-
-
+	create_script("interface", "interface/interface");
 
 	mkdir("$ENV{HOME}/.local");
 	mkdir("$ENV{HOME}/.local/share");
 	mkdir("$ENV{HOME}/.local/share/applications");
 	my $desktop_file = "$ENV{HOME}/.local/share/applications/Vircadia.desktop";
 
-	link("$root_dir/source/interface/interface/icon/interface.ico", "$binary_dir/interface.ico");
-
-	open(my $dsk, ">", $desktop_file) or fatal("Can't create $desktop_file: $!");
-	print $dsk "[Desktop Entry]\n";
-	print $dsk "Version=1.0\n";
-	print $dsk "Name=Vircadia VR\n";
-	print $dsk "Terminal=false\n";
-	print $dsk "Type=Application\n";
-	print $dsk "Exec=$binary_dir/run_interface\n";
-	print $dsk "Icon=$binary_dir/interface.ico\n";
-	print $dsk "Categories=Graphics;AudioVideo;Network\n";
-	close $dsk;
-	info_ok("done.\n");
+	link("$root_dir/source/interface/icon/interface.ico", "$binary_dir/interface.ico");
+	create_desktop_file($desktop_file, "$binary_dir/run_interface", "$binary_dir/interface.ico");
 
 	info("Creating a link in the user's desktop... ");
 	mkdir($desktop);
@@ -1771,6 +1855,24 @@ sub setup_desktop {
 
 	info_ok("All done!\n");
 }
+
+sub create_desktop_file {
+	my ($desktop_file, $application, $icon) = @_;
+
+	info("Creating desktop icon for $application... ");
+	open(my $dsk, ">", $desktop_file) or fatal("Can't create $desktop_file: $!");
+	print $dsk "[Desktop Entry]\n";
+	print $dsk "Version=1.0\n";
+	print $dsk "Name=Vircadia\n";
+	print $dsk "Terminal=false\n";
+	print $dsk "Type=Application\n";
+	print $dsk "Exec=$application\n";
+	print $dsk "Icon=$icon\n" if ($icon);
+	print $dsk "Categories=Graphics;AudioVideo;Network;\n";
+	close $dsk;
+	info_ok("done.\n");
+}
+
 
 sub create_script {
 	my ($name, $command) = @_;
@@ -2409,6 +2511,391 @@ sub parse_build_option {
 	return @out;
 }
 
+
+##########################################################################
+# AppImage
+##########################################################################
+
+#sub get_library_paths {
+#	my $ret;
+#
+#	foreach my $dir (@ext_lib_paths) {
+#		$ret .= ":" if ($ret);
+#		$ret .= "$root/$dir";
+#
+#		if ( ! -d "$root/$dir" ) {
+#			fatal("Can't find library path: $root/$dir");
+#		}
+#	}
+#
+#	return $ret;
+#}
+
+sub download_appimage_tool {
+	my $tool_path = "$root_dir/appimagetool.${appimagetool_release}";
+
+	if (!-f $tool_path) {
+		run("curl", "-L", $appimagetool_url, "-o", $tool_path);
+		chmod 0755, $tool_path;
+	}
+}
+
+sub install_into_appimage {
+	# This is a bit of a mess. The AppImage tools want a normal, well-behaved
+	# application, and choke on all this qt5-install and vcpkg weirdness.
+	#
+	# They also want the binary to be in usr/bin, rather than where we have it.
+	#
+	# So we skip all of that, generate a non-standard layout by hand, and just
+	# package it up.
+	#
+	# This should get a lot nicer once the Vircadia tree gets a better packaging
+	# process that makes things go in the places they're supposed to on a normal
+	# Linux system. But meanwhile, we have this.
+
+	info("\n\n");
+	important("############################################################\n");
+	important("# Installing into AppImage\n");
+	important("############################################################\n");
+	info("\n");
+
+	if ( scalar(@build_list) > 1 ) {
+		error("Can't create AppImage of more than one target, skipping\n");
+		return;
+	}
+
+	my ($target) = @build_list;
+	if ( $all_targets->{$target}->{is_service} ) {
+		error("Can't create AppImage for a systemd service, skipping\n");
+		return;
+	}
+
+	my $appimage_base    = "$root_dir/Vircadia.AppImage";
+	my $appimage_instdir = "$appimage_base/vircadia";
+	my $appimage_qtdir   = "$appimage_base/qt5-install";
+	my $tool_path        = "$root_dir/appimagetool.${appimagetool_release}";
+
+	# We want to start from scratch every time
+	if ( -d "$appimage_base" ) {
+		info("Cleaning $appimage_base... ");
+		run("rm", "-rf", $appimage_base);
+		info_ok("done.\n");
+	}
+
+	# We create this structure here:
+	# AppImage/qt5-install -- qt dir
+	# AppImage/vircadia/interface/interface -- binary
+	#
+	# This ensures it goes together just like it does in
+	# $VircadiaRoot/qt5-install and $VircadiaRoot/install_*
+	# and the relative paths keep working.
+	#
+	# Also, unlike with the install, for AppImage generation, we will modify the Qt libraries,
+	# so the directory must be copied rather than linked.
+
+	info("Copying Vircadia files to $appimage_instdir\n");
+	mkdir($appimage_instdir);
+
+	find({ follow      => 1,
+	       follow_skip => 2,
+	       wanted      => sub { install_search_func("$root_dir/build", $appimage_instdir, "copy") }},
+	       "$root_dir/build");
+
+	# Clear line
+	info( "\r" . (" " x $prev_len) . "\r");
+
+	info("Copying Qt5 files to $appimage_qtdir\n");
+	run("cp", "-rdp", "$root_dir/qt5-install", $appimage_qtdir);
+
+	# Clear line
+	info( "\r" . (" " x $prev_len) . "\r");
+
+	info("Copied : "); info_ok("$inst_copied\n");
+	info("Skipped: "); info_ok("$inst_skipped\n");
+	info("Deleted: "); info_ok("$inst_deleted\n");
+	info("\n");
+
+	info("Creating icons... ");
+	run("convert", "$root_dir/source/interface/icon/interface.ico", "$appimage_base/interface.png");
+	my $max_size = 0;
+	foreach my $icon (glob("$appimage_base/interface-*.png")) {
+		my $type = read_from_cmd("file", "-b", $icon);
+		chomp $type;
+		my ($png, $res, $color) = split(/\s*,\s*/, $type);
+		$res =~ s/\s*//g;
+		my $size = split(/x/, $res);
+
+		info_ok("$res, ");
+		my $icon_path     = "$appimage_base/usr/share/icons/hicolor/$res/apps";
+		my $icon_filename = "$icon_path/Vircadia.png";
+
+		mkdir_path($icon_path);
+		rename($icon, $icon_filename);
+
+		if ( $max_size < $size ) {
+			$max_size = $size;
+			symlink("usr/share/icons/hicolor/$res/apps/Vircadia.png", "$appimage_base/Vircadia.png");
+		}
+
+	}
+	info_ok("done.\n");
+
+	mkdir_path("$appimage_base/usr/bin");
+	symlink("../../vircadia/interface/interface", "$appimage_base/usr/bin/Vircadia");
+
+	create_desktop_file("$appimage_base/Vircadia.desktop",
+	                    "Vircadia", "Vircadia");
+
+	info("Finding library dependencies...\n");
+	my @dep_list = ldd("$root_dir/build/$target/$target");
+	my %deps = map { $_ => 1 } @dep_list;
+
+	info("Copying missing system libraries... ");
+	mkdir_path("$appimage_base/usr/lib64");
+
+	foreach my $dep (sort keys %deps) {
+		if ( substr($dep, 0, length($root_dir)) eq $root_dir ) {
+			info("-");
+			next;
+		}
+
+		info(".");
+
+		# The dependency list we get points to the actual filename the binary wants.
+		# If this turns out to be a symlink, then we copy the file it points to, and
+		# create a symlink at the destination.
+		if ( -l $dep ) {
+			cp($dep, "$appimage_base/usr/lib64/" . basename(readlink($dep)));
+			symlink(basename(readlink($dep)), "$appimage_base/usr/lib64/" . basename($dep));
+		} else {
+			cp($dep, "$appimage_base/usr/lib64/");
+		}
+	}
+
+	if (!$opt_sys_qt && glob("$appimage_base/usr/lib64/libQt*")) {
+		# If anything gets compiled against system qt, the likely outcome
+		# is weird issues, such as the binary hanging on startup, probably due to multiple
+		# incompatible versions of Qt being loaded by interface.
+		#
+		# So far this has been a possible issue with libquazip
+		my $msg = "Sanity check failed: something has been built against system Qt, even though system Qt is not enabled.\n";
+		$msg   .= "The following incorrect libraries have been found as dependencies:\n";
+		$msg   .= join(', ', glob("$appimage_base/usr/lib64/libQt*"));
+
+		fatal($msg);
+	}
+
+	chmod(0755, glob("$appimage_base/usr/lib64/*"));
+
+	info_ok("done.\n");
+
+	info("Adjusting rpath...");
+	find({ follow      => 1,
+	       follow_skip => 2,
+	       wanted      => sub { add_lib_path_search_func("$appimage_base/usr/lib64/") }},
+	       $appimage_base);
+
+	info_ok("done.\n");
+
+	# Qt needs to be pointed to where its own files are
+	info("Creating qt.conf...");
+	open(my $qtconf, '>', "$appimage_base/vircadia/interface/qt.conf") or fatal("Can't create qt.conf: $!");
+	print $qtconf "[Paths]\n";
+	print $qtconf "Prefix=../../qt5-install/\n";
+	close $qtconf;
+
+	info("Creating AppRun... ");
+	symlink("vircadia/interface/interface", "$appimage_base/AppRun");
+	info_ok("done.\n");
+
+#	create_appimage_metadata("$appimage_base/usr/share/metainfo/Vircadia.appdata.xml");
+
+	info("Creating AppImage...");
+	chdir($root_dir);
+	run($tool_path, $appimage_base);
+}
+
+sub create_appimage_metadata {
+	my ($filename) = @_;
+
+	info("Creating metadata... ");
+
+	my $dir = dirname($filename);
+	mkdir_path($dir);
+
+	open(my $fh, '>', $filename) or fatal("Can't create $filename: $!");
+	print $fh <<METADATA;
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2020 Dale Glass <dale\@daleglass.net> -->
+<component type="desktop-application">
+  <id>com.vircadia.interface</id>
+  <metadata_license>FSFAP</metadata_license>
+  <project_license>Apache-2.0</project_license>
+  <name>Vircadia</name>
+  <summary>Vircadia Metaverse client</summary>
+
+  <description>
+    <p>
+      Vircadia is the Open Source continuation of the High Fidelity metaverse.
+    </p>
+  </description>
+  <categories>
+      <category>Graphics</category>
+      <category>Network</category>
+      <category>AudioVideo</category>
+  </categories>
+<!--
+  <screenshots>
+    <screenshot type="default">
+      <caption></caption>
+      <image></image>
+    </screenshot>
+  </screenshots>
+-->
+
+  <url type="homepage">https://vircadia.com/</url>
+  <url type="bugtracker">https://github.com/kasenvr/project-athena/issues</url>
+  <project_group>Internet</project_group>
+
+  <provides>
+    <binary>Vircadia</binary>
+  </provides>
+
+<!--
+  <releases>
+    <release version="3.12.2" date="2013-04-12">
+      <description>
+        <p>Fixes issues X, Y and Z</p>
+      </description>
+    </release>
+  </releases>
+  <developer_name>Vircadia</developer_name>
+-->
+</component>
+METADATA
+	close $fh;
+
+	info_ok("done.\n");
+}
+
+
+sub ldd {
+	my ($binary, $seen, $depth) = @_;
+	my @deps;
+	my @rec_deps;
+	my $binary_dir;
+
+	$binary     = abs_path($binary);
+	$binary_dir = dirname($binary);
+	$seen       //= {};
+	$depth      //= 0;
+
+	return if exists $seen->{$binary};
+	if (!-e "$binary") {
+		fatal("Can't run ldd on '$binary': file not found");
+	}
+
+	info("  " x $depth);
+	info("$binary...");
+
+	# We force ldd to consider the binary's directory as a location for dependencies,
+	# even if the rpath isn't set accordingly, as we're going to add that afterwards
+	# anyway, when we copy things into the AppImage dir.
+	my $orig_ld_path = $ENV{LD_LIBRARY_PATH};
+	$ENV{LD_LIBRARY_PATH} .= ":$binary_dir";
+	my @lines = read_from_cmd("ldd", $binary);
+	$ENV{LD_LIBRARY_PATH} = $orig_ld_path;
+
+	foreach my $line (@lines) {
+		chomp $line;
+
+		next unless ($line =~ /=>/);
+		my ($soname, $path) = split(/\s*=>\s*/, $line);
+		$soname =~ s/^\s+//;
+		$soname =~ s/\s+$//;
+
+		$path =~ s/\s+\([0-9a-fA-Fx]*\)//;
+
+		if ( is_system($path) ) {
+			debug("$soname: excluded\n");
+			next;
+		}
+
+		debug("$soname => $path\n");
+
+		if ( $path eq "not found" ) {
+			fatal("Can't find library '$soname' for binary '$binary'");
+		}
+
+		if ( $path =~ /libQt5Core.so.5.13.2/ ) {
+			die "$binary uses $path";
+		}
+
+		# abs_path canonicalizes a path, but that includes resolving
+		# symlinks. We don't want that. We want the original filename
+		# the binary is referencing.
+		my $orig_filename=basename($path);
+		$path = File::Spec->catfile(dirname(abs_path($path)), $orig_filename);
+
+		if ( $path =~ /libQt5Core.so.5.13.2/ ) {
+			die "$binary uses $path";
+		}
+		push @deps, $path;
+		info(".");
+	}
+
+	$seen->{$binary}=1;
+	info_ok(" done.\n");
+
+	foreach my $dep (@deps) {
+		push @rec_deps, ldd($dep, $seen, $depth+1);
+	}
+
+	push @deps, @rec_deps;
+	return @deps;
+}
+
+sub is_system {
+	my ($path) = @_;
+
+	foreach my $re (@excluded_system_libs) {
+		my $filename = basename($path);
+		#die "$filename is excluded" if ( $filename =~ /$re/);
+		return 1 if ( $filename =~ /$re/ );
+	#	if ( $filename =~ /libc/ ) {
+	#		warn "$filename passed check $re";
+	#	}
+	}
+
+	return 0;
+}
+
+
+# For AppImage, all library paths have to be relative.
+sub add_lib_path_search_func {
+	my ($libdir) = @_;
+	my $abspath = $File::Find::name;
+	my $absdir  = $File::Find::dir;
+
+	if ( -f $abspath && -x $abspath && !-l $abspath && is_elf($abspath) )  {
+		my $rel_libpath = File::Spec->abs2rel($libdir, $absdir);
+
+		my $rpath = read_from_cmd("patchelf", "--print-rpath", $abspath);
+		chomp $rpath;
+		my %rpaths = map { $_ => 1 } split(/:/, $rpath);
+
+		$rpaths{'$ORIGIN'} = 1;
+
+		if ( $rel_libpath ne "." ) {
+			$rpaths{'$ORIGIN/' . $rel_libpath} = 1;
+		}
+
+		run("patchelf", "--set-rpath", join(':', sort keys %rpaths), $abspath);
+		info(".");
+	}
+}
+
+
 sub help {
 	my $retval = shift // 0;
 
@@ -2418,6 +2905,7 @@ $0 [options]
 Downloads, compiles and installs Vircadia.
 
 Options:
+	-A, --make-appimage     Create an AppImage
 	-B, --build-qt          Built Qt even if there's a binery package
 	-C, --collect-info      Collect additional info for debugging
 	-D, --distro DIST       Set the distribution
