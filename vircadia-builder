@@ -2023,11 +2023,12 @@ sub create_service {
 	print $serv "After=network.target\n";
 	print $serv "\n";
 	print $serv "[Service]\n";
-	print $serv "Restart=always\n";
 	print $serv "WorkingDirectory=$root_dir/build/$args{name}\n";
 	print $serv "Environment=\"LD_LIBRARY_PATH=$root_dir/build/$args{name}\"\n";
 	print $serv "Environment=\"HIFI_ENVIRONMENT=production\"\n";
 	print $serv "ExecStart=$root_dir/build/$args{name}/$args{name} " . join(' ', @{$args{args}}) . "\n";
+	print $serv "Restart=on-failure\n";
+	print $serv "RestartSec=5s\n";
 	print $serv "\n";
 	print $serv "[Install]\n";
 
