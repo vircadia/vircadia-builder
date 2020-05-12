@@ -45,6 +45,11 @@ Will build only the server components. To build both, separate entries with a co
 
 Have in mind that each build overwrites the previous one, so if you want to have both desktop and server components at the same time, you need to build them both in one command like above.
 
+## Building AppImages
+
+The latest version is also able to create an AppImage using the --make-appimage argument.
+
+This option
 
 ## Qt
 
