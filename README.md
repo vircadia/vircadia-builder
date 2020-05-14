@@ -9,6 +9,7 @@ Builds Vircadia (formerly known as "Project Athena"), an Open Source fork of the
 * Ubuntu 20.04 (experimental)
 * Linux Mint 19.3 (experimental)
 * Fedora 31 (experimental, needs to build Qt)
+* Debian 10 (experimental)
 * Amazon Linux 2 (experimental, needs newer cmake)
 * (more coming soon)
 
