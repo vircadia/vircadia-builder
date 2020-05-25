@@ -1257,7 +1257,7 @@ my $data = {
 			'python',
 			'python2',
 			'libdrm',
-			'mesa',
+			#'mesa', conflicts with mesa-git and mesa-aco-git
 			'mesa-demos',
 			'libglvnd',
 			'xdg-user-dirs',
@@ -1300,7 +1300,7 @@ my $data = {
 			'libcups',
 			'cups',
 			#'dbus-x11', 'dbus', there is two libdbus packages which are in conflict with each other and both used on different flavours
-			'mesa',
+			#'mesa', conflicts with mesa-git and mesa-aco-git from the AUR
 			'libepoxy',
 			'libevdev',
 			'expat',
