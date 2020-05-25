@@ -1244,11 +1244,10 @@ my $data = {
 			'MAKE' => 'make'
 		}
 	},
-	'Manjaro' => {
+	'manjaro' => {
 		has_binary_qt_package => 0,
 		package_manager => 'pacman',
 		source_dependencies => [
-		#'libterm-readline-gnu-perl', no idea what this is
 			'gcc',
 			'git',
 			'make',
@@ -1286,11 +1285,7 @@ my $data = {
 			'autoconf',
 			'automake',
 			'gettext',
-		#'autotools-dev', no idea
-		#'debhelper',
 			'mariadb-libs',
-		#'dh-autoreconf',
-		#'dh-exec',
 			'strip-nondeterminism',
 			'libfbclient',
 			'freetds',
@@ -1303,7 +1298,7 @@ my $data = {
 			'freetds',
 			'libcups',
 			'cups',
-			'dbus-x11',
+			#'dbus-x11', 'dbus', there is two libdbus packages which are in conflict with each other and both used on different flavours
 			'mesa',
 			'libepoxy',
 			'libevdev',
@@ -1321,7 +1316,7 @@ my $data = {
 			'jbigkit',
 			'libjpeg-turbo',
 			'libjpeg6-turbo',
-			'lib32-libltdl', # no non-lib32 available
+			'lib32-libltdl',
 			'xz',
 			'mtdev',
 			'mariadb',
@@ -1351,13 +1346,7 @@ my $data = {
 			'libxkbcommon',
 			'libxkbcommon-x11',
 			'libxtst',
-		#'mysql-common', ??
 			'unixodbc',
-		#'pkg-kde-tools', ??
-		#'po-debconf', ??
-		#'qt5-assistant', ??
-		#'qtchooser', ??
-		#'qttools5-dev-tools', ??
 			'wayland-protocols',
 			'xorgproto',
 			'libx11',
