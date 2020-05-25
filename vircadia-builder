@@ -1282,6 +1282,7 @@ my $data = {
 			'qtscript-crash-fix.patch'
 		],
 		qt_source_dependencies => [
+			'patch',
 			'autoconf',
 			'automake',
 			'gettext',
