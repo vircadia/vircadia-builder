@@ -1248,6 +1248,7 @@ my $data = {
 		has_binary_qt_package => 0,
 		package_manager => 'pacman',
 		source_dependencies => [
+			'perl-term-readline-gnu',
 			'gcc',
 			'git',
 			'make',
