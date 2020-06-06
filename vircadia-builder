@@ -154,6 +154,8 @@ my $data = {
 			'libgl1-mesa-dev',
 			'xdg-user-dirs',
 			'libharfbuzz-dev',
+			'curl',
+			'unzip',
 			# Qt runtime
 			'libdouble-conversion1', 'libxcb-xinerama0-dev',
 			# Interface
@@ -187,6 +189,7 @@ my $data = {
 			'python3-distro',
 			'libharfbuzz-dev',
 			'curl',
+			'unzip',
 			# Qt runtime
 			'libdouble-conversion1', 'libxcb-xinerama0-dev',
 			# Interface
@@ -340,6 +343,8 @@ my $data = {
 			'xdg-user-dirs',
 			'python3-distro',
 			'libharfbuzz-dev',
+			'curl',
+			'unzip',
 			# Qt
 			'libdouble-conversion-dev', 'libxcb-xinerama0-dev', 'libpcre2-16-0', 'libxcb-xinput0',
 			# Interface
@@ -495,6 +500,8 @@ my $data = {
 			'xdg-user-dirs',
 			'python3-distro',
 			'libharfbuzz-dev',
+			'curl',
+			'unzip',
 			# Qt
 			'libdouble-conversion-dev', 'libxcb-xinerama0-dev', 'libpcre2-16-0', 'libxcb-xinput0',
 			# Interface
@@ -657,6 +664,8 @@ my $data = {
 			'xdg-user-dirs',
 			'python3-distro',
 			'libharfbuzz-dev',
+			'curl',
+			'unzip',
 			# Qt
 			'libdouble-conversion-dev', 'libxcb-xinerama0-dev', 'libpcre2-16-0', 'libxcb-xinput0',
 			# Interface
@@ -963,7 +972,9 @@ my $data = {
 			'xdg-user-dirs',
 			'python3-distro',
 			'harfbuzz-devel',
-			"SDL2-devel"
+			"SDL2-devel",
+			'curl',
+			'unzip'
 		],
 		qt_binary_dependencies => [
 			'qt5-devel',
@@ -1066,7 +1077,9 @@ my $data = {
 			'xdg-user-dirs',
 			'python3-distro',
 			'harfbuzz-devel',
-			"SDL2-devel"
+			"SDL2-devel",
+			'curl',
+			'unzip'
 		],
 		qt_binary_dependencies => [
 			'qt5-devel',
@@ -1168,7 +1181,9 @@ my $data = {
 			'xdg-user-dirs',
 			"tar",
 			"python3",
-			"SDL2-devel"
+			"SDL2-devel",
+			'curl',
+			'unzip'
 		],
 		qt_binary_dependencies => [
 			'qt5-devel',
@@ -1470,7 +1485,7 @@ my $mem_per_core_qt     = 1.2 * 1024 * 1024;
 
 my $repo         = "https://github.com/kasenvr/project-athena";
 my $qt_repo      = "git://code.qt.io/qt/qt5.git";
-my $repo_tag     = "v0.86.0-k2.1";
+my $repo_tag     = "master";
 my $repo_tag_path = "";
 
 my $root_dir     = "$ENV{HOME}/Vircadia";
