@@ -1347,7 +1347,7 @@ my $mem_per_core_qt     = 1.2 * 1024 * 1024;
 
 my $repo         = "https://github.com/kasenvr/project-athena";
 my $qt_repo      = "git://code.qt.io/qt/qt5.git";
-my $repo_tag     = "kasen/core";
+my $repo_tag     = "master";
 my $repo_tag_path = "";
 
 my $root_dir     = "$ENV{HOME}/Vircadia";
