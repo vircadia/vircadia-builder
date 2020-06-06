@@ -3,15 +3,23 @@ Builds Vircadia (formerly known as "Project Athena"), an Open Source fork of the
 
 ## Supported platforms
 
-* Ubuntu 16.04
 * Ubuntu 18.04
-* Ubuntu 19.10 (experimental)
-* Ubuntu 20.04 (experimental)
-* Linux Mint 19.3 (experimental)
-* Fedora 31 (experimental, needs to build Qt)
-* Debian 10 (experimental)
-* Amazon Linux 2 (experimental, needs newer cmake)
+* Ubuntu 19.10
+* Ubuntu 20.04
+* Linux Mint 19.3
+* Fedora 31 (needs to build Qt)
+* Debian 10
+* Amazon Linux 2
 * (more coming soon)
+
+## Unsupported platforms
+
+* Ubuntu 16.04
+
+While the dependency lists remain in the code, functionality is not guaranteed with the current Vircadia code due to the distribution being too old to build the required software successfully without extra work.
+
+Given my lack of time, fixes are unlikely to happen, though contributed patches will be accepted if they're not too intrusive.
+
 
 ## Instructions:
 
