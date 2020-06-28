@@ -23,6 +23,8 @@ Given my lack of time, fixes are unlikely to happen, though contributed patches 
 
 ## Instructions:
 
+You can see the possible environment variables for building [here](https://docs.vircadia.dev/developer/build/BUILD_GENERAL.html#generating-build-files).
+
     git clone https://github.com/daleglass/vircadia-builder.git
     cd vircadia-builder
     chmod +x vircadia-builder

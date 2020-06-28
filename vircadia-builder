@@ -1369,6 +1369,10 @@ my $root_dir     = "$ENV{HOME}/Vircadia";
 my $inst_dir     = "$root_dir/install"; # Where files will be installed
 my $binary_dir   = $inst_dir;           # Where the final binaries are found
 
+my $rel_type     = "DEV"; # DEV by default.
+my $rel_no       = "";
+my $build_no     = "";
+
 my $build_cores;
 my $build_cores_qt;
 
@@ -1388,6 +1392,9 @@ GetOptions(
 	"auto|y"                 => \$opt_auto,
 	"repo|r=s"               => \$repo,
 	"tag|t=s"                => \$repo_tag,
+    "release-type=s"         => \$rel_type,
+    "release-number=s"       => \$rel_no,
+    "build-number=s"         => \$build_no,
 	"destdir|d=s"            => \$root_dir,
 	"cores|j=i"              => \$build_cores,
 	"qt-cores|J=i"           => \$build_cores_qt,
@@ -1609,6 +1616,9 @@ sub collect_info {
 	while($ok ne "yes") {
 		$repo            = $rl->readline("Git repository             : ", $repo);
 		$repo_tag        = $rl->readline("Git tag                    : ", $repo_tag);
+        $rel_type        = $rl->readline("Release type               : ", $rel_type);
+        $rel_no          = $rl->readline("Release number             : ", $rel_no);
+        $build_no        = $rl->readline("Build number               : ", $build_no);
 		$root_dir        = $rl->readline("Installation dir           : ", $root_dir);
 		$build_cores     = $rl->readline("CPU cores to use for Vircadia: ", $build_cores);
 		$build_cores_qt  = $rl->readline("CPU cores to use for Qt5   : ", $build_cores_qt);
@@ -1616,7 +1626,32 @@ sub collect_info {
 		info("\n");
 		$ok = $rl->readline("If the above is okay, say 'yes' to begin installation: ", "yes");
 	}
-
+    
+    if ( defined $rel_no ) {
+        $ENV{RELEASE_NUMBER} = $rel_no;
+    }
+    
+    if ( defined $build_no ) {
+        $ENV{BUILD_NUMBER} = $build_no;
+    }
+    
+    if ( lc($rel_type) eq "production" ) {
+        $ENV{RELEASE_TYPE} = 'PRODUCTION';
+        $ENV{PRODUCTION_BUILD} = 1;
+        $ENV{USE_STABLE_GLOBAL_SERVICES} = 1;
+        $ENV{BUILD_GLOBAL_SERVICES} = 'STABLE';
+    }
+    
+    if ( lc($rel_type) eq "pr" ) {
+        $ENV{RELEASE_TYPE} = 'PR';
+        $ENV{PR_BUILD} = 1;
+    }
+    
+    if ( lc($rel_type) eq "dev" ) {
+        $ENV{RELEASE_TYPE} = 'DEV';
+        $ENV{DEV_BUILD} = 1;
+        $ENV{BUILD_GLOBAL_SERVICES} = 'DEVELOPMENT';
+    }
 
 	$repo_tag_path = $repo_tag;
 	$repo_tag_path =~ s/\W/_/g;
