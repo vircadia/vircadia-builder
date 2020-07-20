@@ -2808,6 +2808,11 @@ sub parse_build_option {
 #	return $ret;
 #}
 
+sub file_is_under_dir {
+	my ($file, $dir) = @_;
+	return substr($file, 0, length($dir)) eq $dir;
+}
+
 sub download_appimage_tool {
 	my $tool_path = "$root_dir/appimagetool.${appimagetool_release}";
 
@@ -2931,7 +2936,13 @@ sub install_into_appimage {
 	mkdir_path("$appimage_base/usr/lib64");
 
 	foreach my $dep (sort keys %deps) {
-		if ( substr($dep, 0, length($root_dir)) eq $root_dir ) {
+
+		# We're copying dependencies that are not located inside the build directory,
+		# as those have been dealt with earlier.
+		#
+		# We make an exception here about dependencies that remain in vcpkg, because otherwise
+		# those would not be copied at all into the AppImage.
+		if ( file_is_under_dir($dep, $root_dir) && !file_is_under_dir($dep, "$root_dir/vcpkg") ) {
 			info("-");
 			next;
 		}
