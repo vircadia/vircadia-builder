@@ -1457,7 +1457,7 @@ my @excluded_system_libs = (
 	qr/^libresolv\.so\.2/,
 	qr/^librt\.so\.1/,
 #	qr/^libSM\.so\.6/,
-	qr/^libstdc++\.so\.6/,
+	qr/^libstdc\+\+\.so\.6/,
 #	qr/^libthai\.so\.0/,
 	qr/^libthread_db\.so\.1/,
 #	qr/^libusb-1\.0\.so\.0/,
