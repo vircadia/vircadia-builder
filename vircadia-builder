@@ -3011,6 +3011,9 @@ sub install_into_appimage {
 	important("############################################################\n");
 	info("\n");
 
+	# Another horrible hack for kasenvr/project-athena#513
+	@build_list = grep { !/jsdoc/ } @build_list;
+
 	if ( scalar(@build_list) > 1 ) {
 		error("Can't create AppImage of more than one target, skipping\n");
 		return;
