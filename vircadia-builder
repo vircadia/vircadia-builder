@@ -2461,7 +2461,7 @@ sub run {
 			fatal("Failed to run '$cmdstr'. Command failed to start: $errstr\n");
 		}
 	} elsif ( $@ ) {
-		fatal_error("Unrecognized error when trying to run '$cmdstr': $@\n");
+		fatal("Unrecognized error when trying to run '$cmdstr': $@\n");
 	}
 
 	debug("Program started as PID $pid\n");
@@ -3015,13 +3015,13 @@ sub install_into_appimage {
 	@build_list = grep { !/jsdoc/ } @build_list;
 
 	if ( scalar(@build_list) > 1 ) {
-		error("Can't create AppImage of more than one target, skipping\n");
+		fatal("Can't create AppImage of more than one target, skipping\n");
 		return;
 	}
 
 	my ($target) = @build_list;
 	if ( $all_targets->{$target}->{is_service} ) {
-		error("Can't create AppImage for a systemd service, skipping\n");
+		fatal("Can't create AppImage for a systemd service, skipping\n");
 		return;
 	}
 
