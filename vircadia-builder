@@ -1258,6 +1258,129 @@ my $data = {
 			# fails to find that make is installed otherwise.
 			'MAKE' => 'make'
 		}
+	},
+	'manjaro' => {
+		has_binary_qt_package => 0,
+		package_manager => 'pacman',
+		source_dependencies => [
+			'perl-term-readline-gnu',
+			'gcc',
+			'git',
+			'make',
+			'cmake',
+			'curl',
+			'patchelf',
+			'python',
+			'python2',
+			'libdrm',
+			#'mesa', conflicts with mesa-git and mesa-aco-git
+			'mesa-demos',
+			'libglvnd',
+			'xdg-user-dirs',
+			'python-distro',
+			'harfbuzz',
+			# Qt
+			'double-conversion', 'libxcb', 'pcre2',
+			# Interface
+			'libpulse', 'nss', 'nspr', 'fontconfig', 'libxcursor', 'libxcomposite', 'libxtst', 'libxslt', 'sdl2',
+			# Misc
+			'alsa-lib', 'libxmu', 'libxi', 'freeglut', 'jack', 'libxrandr', 'systemd-libs', 'openssl', 'zlib',
+			# Server
+			'libpulse', 'nss', 'nspr', 'fontconfig', 'libxcursor', 'libxcomposite', 'libxtst', 'libxslt',
+			# Docs
+			'nodejs'
+		],
+		qt_version => '5.12.6',
+		qt_patches => [
+			'aec.patch',
+			'mac-web-video.patch',
+#			'qfloat16.patch',  # Doesn't apply against 5.12.6
+			'qtscript-crash-fix.patch'
+		],
+		qt_source_dependencies => [
+			'patch',
+			'autoconf',
+			'automake',
+			'gettext',
+			'mariadb-libs',
+			'strip-nondeterminism',
+			'libfbclient',
+			'freetds',
+			'harfbuzz',
+			'icu',
+			'at-spi2-atk',
+			'atk',
+			'at-spi2-core',
+			'cairo',
+			'freetds',
+			'libcups',
+			'cups',
+			#'dbus-x11', 'dbus', there is two libdbus packages which are in conflict with each other and both used on different flavours
+			#'mesa', conflicts with mesa-git and mesa-aco-git from the AUR
+			'libepoxy',
+			'libevdev',
+			'expat',
+			'libfbclient',
+			'strip-nondeterminism',
+			'fontconfig',
+			'freetype2',
+			'gdk-pixbuf2',
+			'glib2',
+			'graphite',
+			'gtk3',
+			'icu',
+			'libinput',
+			'jbigkit',
+			'libjpeg-turbo',
+			'libjpeg6-turbo',
+			'lib32-libltdl',
+			'xz',
+			'mtdev',
+			'mariadb',
+			'unixodbc',
+			'pango',
+			'pcre',
+			'pixman',
+			'libpng',
+			'postgresql',
+			'libproxy',
+			'libpulse',
+			'sqlite',
+			'libtiff',
+			'libtommath',
+			'libtool',
+			'libwacom',
+			'wayland',
+			'xcb-util-wm',
+			'xcb-util-image',
+			'xcb-util-keysyms',
+			'xcb-util-renderutil',
+			'libxcb',
+			'libxcomposite',
+			'libxcursor',
+			'libxft',
+			'libxinerama',
+			'libxkbcommon',
+			'libxkbcommon-x11',
+			'libxtst',
+			'unixodbc',
+			'wayland-protocols',
+			'xorgproto',
+			'libx11',
+			# Also required
+			'gperf',
+			'bison',
+			'flex',
+			# Extra
+			'jsoncpp',
+			'nss',
+			'libvpx',
+			'opus'
+			],
+		appimage_dependencies => [
+			'imagemagick',
+			'curl'
+		]
 	}
 };
 
@@ -1515,6 +1638,8 @@ sub get_package_list {
 		@packages = read_from_cmd("rpm", "-qa", "--qf", "%{NAME}\\n");
 	} elsif ( $DD->{package_manager} eq "apt" ) {
 		@packages = read_from_cmd("dpkg-query", "--show", "-f", "\${Package}\n");
+	} elsif ( $DD->{package_manager} eq "pacman" ) {
+		@packages = read_from_cmd("pacman", "-Qq");
 	} elsif ( $DD->{package_manager} eq "none" ) {
 		# Nothing
 	} else {
@@ -1590,6 +1715,8 @@ sub install_missing_packages {
 			$ENV{DEBIAN_FRONTEND} = 'noninteractive';
 			sudo_run("apt-get", "update");
 			sudo_run("--preserve-env=DEBIAN_FRONTEND", "apt-get", "install", "-y", @missing);
+		} elsif ( $DD->{package_manager} eq "pacman" ) {
+			sudo_run("pacman", "-S", "--noconfirm", @missing);
 		} elsif ( $DD->{package_manager} eq "none" ) {
 			# Nothing
 		} else {
