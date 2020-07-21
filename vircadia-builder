@@ -1505,7 +1505,7 @@ my $distro;
 my ($opt_keep_source, $opt_auto, $opt_build_qt, $opt_build, $opt_sys_qt, $opt_skip_build, $opt_no_modify_rpath, $opt_skip_install, $opt_make_appimage);
 my ($cmd_help, $cmd_get_supported, $cmd_get_source_deps, $cmd_get_qt_deps, $cmd_get_qt_version, $cmd_get_qt_patches, $cmd_make_pkglist);
 
-$opt_build = "interface";
+$opt_build = "client";
 my @build_list;
 
 
@@ -2916,6 +2916,7 @@ sub parse_build_option {
 
 	if ( $split{client} ) {
 		delete $split{client};
+		$split{'jsdoc'}            = 1; # Horrible hack to deal with kasenvr/project-athena#513
 		$split{'interface'}        = 1;
 	}
 
@@ -2923,6 +2924,13 @@ sub parse_build_option {
 		delete $split{server};
 		$split{'domain-server'}     = 1;
 		$split{'assignment-client'} = 1;
+	}
+
+	if ( $split{'jsdoc'} ) {
+		# Horrible hack to deal with kasenvr/project-athena#513 -- part 2
+		# ensure we build jsdoc first
+		push @out, 'jsdoc';
+		delete $split{jsdoc};
 	}
 
 	foreach my $k ( keys %all_valid ) {
