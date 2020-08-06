@@ -87,7 +87,7 @@ Have in mind that each build overwrites the previous one, so if you want to have
 
 ## Building AppImages
 
-You can  create an AppImage using the `--make-appimage` argument.
+You can create an AppImage using the `--make-appimage` argument.
 
 When making an AppImage, you will want to create it on the oldest possible distribution in order to achieve the greatest compatibility. You will want to also ensure that your distribution is fully up to date. For example, on Ubuntu you will want to run `sudo apt-get update && sudo apt-get upgrade` prior to building.
 
