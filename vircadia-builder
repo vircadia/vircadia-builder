@@ -1258,6 +1258,129 @@ my $data = {
 			# fails to find that make is installed otherwise.
 			'MAKE' => 'make'
 		}
+	},
+	'manjaro' => {
+		has_binary_qt_package => 0,
+		package_manager => 'pacman',
+		source_dependencies => [
+			'perl-term-readline-gnu',
+			'gcc',
+			'git',
+			'make',
+			'cmake',
+			'curl',
+			'patchelf',
+			'python',
+			'python2',
+			'libdrm',
+			#'mesa', conflicts with mesa-git and mesa-aco-git
+			'mesa-demos',
+			'libglvnd',
+			'xdg-user-dirs',
+			'python-distro',
+			'harfbuzz',
+			# Qt
+			'double-conversion', 'libxcb', 'pcre2',
+			# Interface
+			'libpulse', 'nss', 'nspr', 'fontconfig', 'libxcursor', 'libxcomposite', 'libxtst', 'libxslt', 'sdl2',
+			# Misc
+			'alsa-lib', 'libxmu', 'libxi', 'freeglut', 'jack', 'libxrandr', 'systemd-libs', 'openssl', 'zlib',
+			# Server
+			'libpulse', 'nss', 'nspr', 'fontconfig', 'libxcursor', 'libxcomposite', 'libxtst', 'libxslt',
+			# Docs
+			'nodejs'
+		],
+		qt_version => '5.12.6',
+		qt_patches => [
+			'aec.patch',
+			'mac-web-video.patch',
+#			'qfloat16.patch',  # Doesn't apply against 5.12.6
+			'qtscript-crash-fix.patch'
+		],
+		qt_source_dependencies => [
+			'patch',
+			'autoconf',
+			'automake',
+			'gettext',
+			'mariadb-libs',
+			'strip-nondeterminism',
+			'libfbclient',
+			'freetds',
+			'harfbuzz',
+			'icu',
+			'at-spi2-atk',
+			'atk',
+			'at-spi2-core',
+			'cairo',
+			'freetds',
+			'libcups',
+			'cups',
+			#'dbus-x11', 'dbus', there is two libdbus packages which are in conflict with each other and both used on different flavours
+			#'mesa', conflicts with mesa-git and mesa-aco-git from the AUR
+			'libepoxy',
+			'libevdev',
+			'expat',
+			'libfbclient',
+			'strip-nondeterminism',
+			'fontconfig',
+			'freetype2',
+			'gdk-pixbuf2',
+			'glib2',
+			'graphite',
+			'gtk3',
+			'icu',
+			'libinput',
+			'jbigkit',
+			'libjpeg-turbo',
+			'libjpeg6-turbo',
+			'lib32-libltdl',
+			'xz',
+			'mtdev',
+			'mariadb',
+			'unixodbc',
+			'pango',
+			'pcre',
+			'pixman',
+			'libpng',
+			'postgresql',
+			'libproxy',
+			'libpulse',
+			'sqlite',
+			'libtiff',
+			'libtommath',
+			'libtool',
+			'libwacom',
+			'wayland',
+			'xcb-util-wm',
+			'xcb-util-image',
+			'xcb-util-keysyms',
+			'xcb-util-renderutil',
+			'libxcb',
+			'libxcomposite',
+			'libxcursor',
+			'libxft',
+			'libxinerama',
+			'libxkbcommon',
+			'libxkbcommon-x11',
+			'libxtst',
+			'unixodbc',
+			'wayland-protocols',
+			'xorgproto',
+			'libx11',
+			# Also required
+			'gperf',
+			'bison',
+			'flex',
+			# Extra
+			'jsoncpp',
+			'nss',
+			'libvpx',
+			'opus'
+			],
+		appimage_dependencies => [
+			'imagemagick',
+			'curl'
+		]
 	}
 };
 
@@ -1334,7 +1457,7 @@ my @excluded_system_libs = (
 	qr/^libresolv\.so\.2/,
 	qr/^librt\.so\.1/,
 #	qr/^libSM\.so\.6/,
-	qr/^libstdc++\.so\.6/,
+	qr/^libstdc\+\+\.so\.6/,
 #	qr/^libthai\.so\.0/,
 	qr/^libthread_db\.so\.1/,
 #	qr/^libusb-1\.0\.so\.0/,
@@ -1369,6 +1492,10 @@ my $root_dir     = "$ENV{HOME}/Vircadia";
 my $inst_dir     = "$root_dir/install"; # Where files will be installed
 my $binary_dir   = $inst_dir;           # Where the final binaries are found
 
+my $rel_type     = "DEV"; # DEV by default.
+my $rel_no       = "";
+my $build_no     = "";
+
 my $build_cores;
 my $build_cores_qt;
 
@@ -1378,7 +1505,7 @@ my $distro;
 my ($opt_keep_source, $opt_auto, $opt_build_qt, $opt_build, $opt_sys_qt, $opt_skip_build, $opt_no_modify_rpath, $opt_skip_install, $opt_make_appimage);
 my ($cmd_help, $cmd_get_supported, $cmd_get_source_deps, $cmd_get_qt_deps, $cmd_get_qt_version, $cmd_get_qt_patches, $cmd_make_pkglist);
 
-$opt_build = "interface";
+$opt_build = "client";
 my @build_list;
 
 
@@ -1388,6 +1515,9 @@ GetOptions(
 	"auto|y"                 => \$opt_auto,
 	"repo|r=s"               => \$repo,
 	"tag|t=s"                => \$repo_tag,
+    "release-type=s"         => \$rel_type,
+    "release-number=s"       => \$rel_no,
+    "build-number=s"         => \$build_no,
 	"destdir|d=s"            => \$root_dir,
 	"cores|j=i"              => \$build_cores,
 	"qt-cores|J=i"           => \$build_cores_qt,
@@ -1508,6 +1638,8 @@ sub get_package_list {
 		@packages = read_from_cmd("rpm", "-qa", "--qf", "%{NAME}\\n");
 	} elsif ( $DD->{package_manager} eq "apt" ) {
 		@packages = read_from_cmd("dpkg-query", "--show", "-f", "\${Package}\n");
+	} elsif ( $DD->{package_manager} eq "pacman" ) {
+		@packages = read_from_cmd("pacman", "-Qq");
 	} elsif ( $DD->{package_manager} eq "none" ) {
 		# Nothing
 	} else {
@@ -1583,6 +1715,8 @@ sub install_missing_packages {
 			$ENV{DEBIAN_FRONTEND} = 'noninteractive';
 			sudo_run("apt-get", "update");
 			sudo_run("--preserve-env=DEBIAN_FRONTEND", "apt-get", "install", "-y", @missing);
+		} elsif ( $DD->{package_manager} eq "pacman" ) {
+			sudo_run("pacman", "-S", "--noconfirm", @missing);
 		} elsif ( $DD->{package_manager} eq "none" ) {
 			# Nothing
 		} else {
@@ -1609,6 +1743,9 @@ sub collect_info {
 	while($ok ne "yes") {
 		$repo            = $rl->readline("Git repository             : ", $repo);
 		$repo_tag        = $rl->readline("Git tag                    : ", $repo_tag);
+        $rel_type        = $rl->readline("Release type               : ", $rel_type);
+        $rel_no          = $rl->readline("Release number             : ", $rel_no);
+        $build_no        = $rl->readline("Build number               : ", $build_no);
 		$root_dir        = $rl->readline("Installation dir           : ", $root_dir);
 		$build_cores     = $rl->readline("CPU cores to use for Vircadia: ", $build_cores);
 		$build_cores_qt  = $rl->readline("CPU cores to use for Qt5   : ", $build_cores_qt);
@@ -1616,7 +1753,32 @@ sub collect_info {
 		info("\n");
 		$ok = $rl->readline("If the above is okay, say 'yes' to begin installation: ", "yes");
 	}
-
+    
+    if ( defined $rel_no ) {
+        $ENV{RELEASE_NUMBER} = $rel_no;
+    }
+    
+    if ( defined $build_no ) {
+        $ENV{BUILD_NUMBER} = $build_no;
+    }
+    
+    if ( lc($rel_type) eq "production" ) {
+        $ENV{RELEASE_TYPE} = 'PRODUCTION';
+        $ENV{PRODUCTION_BUILD} = 1;
+        $ENV{USE_STABLE_GLOBAL_SERVICES} = 1;
+        $ENV{BUILD_GLOBAL_SERVICES} = 'STABLE';
+    }
+    
+    if ( lc($rel_type) eq "pr" ) {
+        $ENV{RELEASE_TYPE} = 'PR';
+        $ENV{PR_BUILD} = 1;
+    }
+    
+    if ( lc($rel_type) eq "dev" ) {
+        $ENV{RELEASE_TYPE} = 'DEV';
+        $ENV{DEV_BUILD} = 1;
+        $ENV{BUILD_GLOBAL_SERVICES} = 'DEVELOPMENT';
+    }
 
 	$repo_tag_path = $repo_tag;
 	$repo_tag_path =~ s/\W/_/g;
@@ -2299,7 +2461,7 @@ sub run {
 			fatal("Failed to run '$cmdstr'. Command failed to start: $errstr\n");
 		}
 	} elsif ( $@ ) {
-		fatal_error("Unrecognized error when trying to run '$cmdstr': $@\n");
+		fatal("Unrecognized error when trying to run '$cmdstr': $@\n");
 	}
 
 	debug("Program started as PID $pid\n");
@@ -2754,6 +2916,7 @@ sub parse_build_option {
 
 	if ( $split{client} ) {
 		delete $split{client};
+		$split{'jsdoc'}            = 1; # Horrible hack to deal with kasenvr/project-athena#513
 		$split{'interface'}        = 1;
 	}
 
@@ -2761,6 +2924,13 @@ sub parse_build_option {
 		delete $split{server};
 		$split{'domain-server'}     = 1;
 		$split{'assignment-client'} = 1;
+	}
+
+	if ( $split{'jsdoc'} ) {
+		# Horrible hack to deal with kasenvr/project-athena#513 -- part 2
+		# ensure we build jsdoc first
+		push @out, 'jsdoc';
+		delete $split{jsdoc};
 	}
 
 	foreach my $k ( keys %all_valid ) {
@@ -2841,14 +3011,17 @@ sub install_into_appimage {
 	important("############################################################\n");
 	info("\n");
 
+	# Another horrible hack for kasenvr/project-athena#513
+	@build_list = grep { !/jsdoc/ } @build_list;
+
 	if ( scalar(@build_list) > 1 ) {
-		error("Can't create AppImage of more than one target, skipping\n");
+		fatal("Can't create AppImage of more than one target, skipping\n");
 		return;
 	}
 
 	my ($target) = @build_list;
 	if ( $all_targets->{$target}->{is_service} ) {
-		error("Can't create AppImage for a systemd service, skipping\n");
+		fatal("Can't create AppImage for a systemd service, skipping\n");
 		return;
 	}
 

@@ -7,9 +7,10 @@ Builds Vircadia (formerly known as "Project Athena"), an Open Source fork of the
 * Ubuntu 19.10
 * Ubuntu 20.04
 * Linux Mint 19.3
-* Fedora 31 (needs to build Qt)
 * Debian 10
+* Fedora 31 (needs to build Qt)
 * Amazon Linux 2
+* Manjaro (experimental)
 * (more coming soon)
 
 ## Unsupported platforms
@@ -22,6 +23,8 @@ Given my lack of time, fixes are unlikely to happen, though contributed patches 
 
 
 ## Instructions:
+
+You can see the possible environment variables for building [here](https://docs.vircadia.dev/developer/build/BUILD_GENERAL.html#generating-build-files).
 
     git clone https://github.com/kasenvr/vircadia-builder.git
     cd vircadia-builder
