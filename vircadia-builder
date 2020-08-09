@@ -195,11 +195,12 @@ my $data = {
 			# Interface
 			'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1', 'libsdl2-dev',
 			# Misc
-			'libasound2', 'libxmu-dev', 'libxi-dev', 'freeglut3-dev', 'libasound2-dev', 'libjack0', 'libjack-dev', 'libxrandr-dev', 'libudev-dev', 'libssl-dev', 'zlib1g-dev',
+			'libasound2', 'libxmu-dev', 'libxi-dev', 'freeglut3-dev', 'libasound2-dev', 'libjack0', 'libjack-dev', 'libxrandr-dev', 'libudev-dev', 'libssl1.0-dev', 'zlib1g-dev',
 			# Server
 			'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
 			# Docs
-			'nodejs'
+			'nodejs',
+                        'npm'
 		],
 		qt_version => '5.12.6',
 		qt_patches => [
@@ -822,11 +823,13 @@ my $data = {
 			# Interface
 			'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1', 'libsdl2-dev',
 			# Misc
-			'libasound2', 'libxmu-dev', 'libxi-dev', 'freeglut3-dev', 'libasound2-dev', 'libjack0', 'libjack-dev', 'libxrandr-dev', 'libudev-dev', 'libssl-dev', 'zlib1g-dev',
+			'libasound2', 'libxmu-dev', 'libxi-dev', 'freeglut3-dev', 'libasound2-dev', 'libjack0', 'libjack-dev', 'libxrandr-dev', 'libudev-dev', 'libssl1.0-dev', 'zlib1g-dev',
 			# Server
 			'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
 			# Docs
-			'nodejs'
+			'nodejs',
+			'python3-distro',
+      'npm'
 		],
 		qt_version => '5.12.6',
 		qt_patches => [
