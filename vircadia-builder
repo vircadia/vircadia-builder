@@ -88,7 +88,7 @@ sub fatal {
 
 	close $log_fh;
 
-	
+
 	my $compressed = "vircadia-builder-error-$timestamp.tar.gz";
 	run( { fail_ok => 1, no_log => 1, quiet => 1 }, "tar", "-czf", $compressed, $logdir);
 
@@ -106,7 +106,7 @@ sub fatal {
 	} else {
 		print STDERR "$logdir\n";
 	}
-	
+
 	print STDERR "Please notify Dale Glass#8576 on Discord of this problem.\n";
 	print STDERR color('reset');
 	exit 1;
@@ -199,7 +199,8 @@ my $data = {
 			# Server
 			'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
 			# Docs
-			'nodejs'
+			'nodejs',
+                        'npm'
 		],
 		qt_version => '5.12.6',
 		qt_patches => [
@@ -676,7 +677,8 @@ my $data = {
 			'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
 			# Docs
 			'nodejs',
-			'python3-distro'
+			'python3-distro',
+                        'npm'
 		],
 		qt_source_dependencies => [
 			'autoconf',
@@ -1670,7 +1672,7 @@ sub install_missing_packages {
 
 
 
-	if ( !$opt_sys_qt ) {	
+	if ( !$opt_sys_qt ) {
 		info("Checking Qt availability...");
 
 		if ( !$DD->{has_binary_qt_package} || $opt_build_qt ) {
@@ -1753,27 +1755,27 @@ sub collect_info {
 		info("\n");
 		$ok = $rl->readline("If the above is okay, say 'yes' to begin installation: ", "yes");
 	}
-    
+
     if ( defined $rel_no ) {
         $ENV{RELEASE_NUMBER} = $rel_no;
     }
-    
+
     if ( defined $build_no ) {
         $ENV{BUILD_NUMBER} = $build_no;
     }
-    
+
     if ( lc($rel_type) eq "production" ) {
         $ENV{RELEASE_TYPE} = 'PRODUCTION';
         $ENV{PRODUCTION_BUILD} = 1;
         $ENV{USE_STABLE_GLOBAL_SERVICES} = 1;
         $ENV{BUILD_GLOBAL_SERVICES} = 'STABLE';
     }
-    
+
     if ( lc($rel_type) eq "pr" ) {
         $ENV{RELEASE_TYPE} = 'PR';
         $ENV{PR_BUILD} = 1;
     }
-    
+
     if ( lc($rel_type) eq "dev" ) {
         $ENV{RELEASE_TYPE} = 'DEV';
         $ENV{DEV_BUILD} = 1;
@@ -1796,7 +1798,7 @@ sub get_source {
 	info("\n");
 
 	mkdir($root_dir);
-	
+
 	get_source_from_git($repo, "source", $repo_tag);
 
 	if ( $opt_sys_qt ) {
@@ -1832,7 +1834,7 @@ sub build {
 		$ENV{VIRCADIA_USE_PREBUILT_QT}=1;
 		$ENV{VIRCADIA_USE_QT_VERSION}="";
 		$ENV{HIFI_QT_BASE} = "$root_dir";
-	}	
+	}
 
 
 	$ENV{HIFI_VCPKG_BASE} = "$root_dir/vcpkg";
@@ -1903,7 +1905,7 @@ sub install {
 
 
 	find({ follow       => 1,
-	       follow_skip  => 2, 
+	       follow_skip  => 2,
 	       wanted       => sub { install_search_func("$root_dir/build", $inst_dir, "link") }},
 	       "$root_dir/build");
 
@@ -2130,7 +2132,7 @@ sub install_qt {
 		QMAKE_LIBDIR_X11    => $xlib_path,
 		QMAKE_LIBDIR_OPENGL => $gllib_path
 	);
-		
+
 
 
 	del_dir("$root_dir/qt5-install");
@@ -2148,7 +2150,7 @@ sub install_qt {
 	# qtwebengine/src/core/gn_run.pro
 	$ENV{NINJAFLAGS} = "-j${build_cores_qt}";
 
-	run("../qt5/configure", "-opensource", "-confirm-license", 
+	run("../qt5/configure", "-opensource", "-confirm-license",
 		"-platform", "linux-g++-64",
 		"-nomake", "examples",
 		"-nomake", "tests",
@@ -2554,7 +2556,7 @@ sub calculate_cores {
 	$mem_avail =~ /:\s*(\d+)/;
 	$mem_avail = $1;
 
-	
+
 	my $cores = $core_count;
 	if ( $cores >= ($mem_avail / $mem_per_core )) {
 		$cores = int($mem_avail / $mem_per_core);
@@ -2670,7 +2672,7 @@ sub update_repo {
 		run("git", "clean", "-f");
 		run("git", "checkout", "origin/$tag");
 	}
-	
+
 }
 
 sub edit_qt_conf {
