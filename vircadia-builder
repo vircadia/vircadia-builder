@@ -88,7 +88,7 @@ sub fatal {
 
 	close $log_fh;
 
-	
+
 	my $compressed = "vircadia-builder-error-$timestamp.tar.gz";
 	run( { fail_ok => 1, no_log => 1, quiet => 1 }, "tar", "-czf", $compressed, $logdir);
 
@@ -106,7 +106,7 @@ sub fatal {
 	} else {
 		print STDERR "$logdir\n";
 	}
-	
+
 	print STDERR "Please notify Dale Glass#8576 on Discord of this problem.\n";
 	print STDERR color('reset');
 	exit 1;
@@ -195,11 +195,12 @@ my $data = {
 			# Interface
 			'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1', 'libsdl2-dev',
 			# Misc
-			'libasound2', 'libxmu-dev', 'libxi-dev', 'freeglut3-dev', 'libasound2-dev', 'libjack0', 'libjack-dev', 'libxrandr-dev', 'libudev-dev', 'libssl-dev', 'zlib1g-dev',
+			'libasound2', 'libxmu-dev', 'libxi-dev', 'freeglut3-dev', 'libasound2-dev', 'libjack0', 'libjack-dev', 'libxrandr-dev', 'libudev-dev', 'libssl1.0-dev', 'zlib1g-dev',
 			# Server
 			'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
 			# Docs
-			'nodejs'
+			'nodejs',
+                        'npm'
 		],
 		qt_version => '5.12.6',
 		qt_patches => [
@@ -319,6 +320,165 @@ my $data = {
 			'libvpx-dev',
 			'libopus-dev',
 			],
+		appimage_dependencies => [
+			'imagemagick',
+			'curl'
+		]
+	},
+        'linuxmint-19.3' => {
+		# Based on Ubuntu 18.04 (bionic)
+		has_binary_qt_package => 0,
+		package_manager => 'apt',
+		qt_version => '5.12.6',
+		qt_patches => [
+			'aec.patch',
+			'mac-web-video.patch',
+#			'qfloat16.patch',  # Doesn't apply against 5.12.6
+			'qtscript-crash-fix.patch'
+		],
+		source_dependencies => [
+			'libterm-readline-gnu-perl',
+			'build-essential',
+			'git',
+			'make',
+			'cmake',
+			'patchelf',
+			'python',
+			'libdrm-dev',
+			'mesa-common-dev',
+			'mesa-utils',
+			'libglvnd-dev',
+			'libgl1-mesa-dev',
+			'xdg-user-dirs',
+			'python3-distro',
+			'libharfbuzz-dev',
+			'curl',
+			'unzip',
+			# Qt
+			'libdouble-conversion-dev', 'libxcb-xinerama0-dev', 'libpcre2-16-0', 'libxcb-xinput0',
+			# Interface
+			'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1', 'libsdl2-dev',
+			# Misc
+			'libasound2', 'libxmu-dev', 'libxi-dev', 'freeglut3-dev', 'libasound2-dev', 'libjack0', 'libjack-dev', 'libxrandr-dev', 'libudev-dev', 'libssl-dev', 'zlib1g-dev',
+			# Server
+			'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
+			# Docs
+			'nodejs',
+			'python3-distro'
+		],
+		qt_source_dependencies => [
+			'autoconf',
+			'automake',
+			'autopoint',
+			'autotools-dev',
+			'debhelper',
+			'default-libmysqlclient-dev',
+			'dh-autoreconf',
+			'dh-exec',
+			'dh-strip-nondeterminism',
+			'firebird-dev',
+			'firebird3.0-common',
+			'firebird3.0-common-doc',
+			'freetds-common',
+			'freetds-dev',
+			'gir1.2-harfbuzz-0.0',
+			'icu-devtools',
+			'libatk-bridge2.0-dev',
+			'libatk1.0-dev',
+			'libatspi2.0-dev',
+			'libcairo-script-interpreter2',
+			'libcairo2-dev',
+			'libct4',
+			'libcups2-dev',
+			'libcupsimage2-dev',
+			'libdbus-1-dev',
+			'libegl1-mesa-dev',
+			'libepoxy-dev',
+			'libevdev-dev',
+			'libexpat1-dev',
+			'libfbclient2',
+			'libfile-stripnondeterminism-perl',
+			'libfontconfig1-dev',
+			'libfreetype6-dev',
+			'libgbm-dev',
+			'libgdk-pixbuf2.0-dev',
+			'libgles2-mesa-dev',
+			'libglib2.0-dev',
+			'libglib2.0-dev-bin',
+			'libgraphite2-dev',
+			'libgtk-3-dev',
+			'libharfbuzz-dev',
+			'libharfbuzz-gobject0',
+			'libib-util',
+			'libicu-dev',
+			'libicu-le-hb-dev',
+			'libicu-le-hb0',
+			'libiculx60',
+			'libinput-dev',
+			'libjbig-dev',
+			'libjpeg-dev',
+			'libjpeg-turbo8-dev',
+			'libjpeg8-dev',
+			'libltdl-dev',
+			'liblzma-dev',
+			'libmtdev-dev',
+			'libmysqlclient-dev',
+			'libmysqlclient20',
+			'libodbc1',
+			'libpango1.0-dev',
+			'libpcre16-3',
+			'libpcre3-dev',
+			'libpcre32-3',
+			'libpcrecpp0v5',
+			'libpixman-1-dev',
+			'libpng-dev',
+			'libpq-dev',
+			'libpq5',
+			'libproxy-dev',
+			'libpulse-dev',
+			'libsqlite3-dev',
+			'libsybdb5',
+			'libtiff-dev',
+			'libtiff5-dev',
+			'libtiffxx5',
+			'libtommath1',
+			'libtool',
+			'libwacom-dev',
+			'libwayland-bin',
+			'libwayland-dev',
+			'libxcb-icccm4-dev',
+			'libxcb-image0-dev',
+			'libxcb-keysyms1-dev',
+			'libxcb-render-util0-dev',
+			'libxcb-shm0-dev',
+			'libxcb-xkb-dev',
+			'libxcomposite-dev',
+			'libxcursor-dev',
+			'libxft-dev',
+			'libxinerama-dev',
+			'libxkbcommon-dev',
+			'libxkbcommon-x11-dev',
+			'libxtst-dev',
+			'mysql-common',
+			'odbcinst',
+			'odbcinst1debian2',
+			'pkg-kde-tools',
+			'po-debconf',
+			'qt5-assistant',
+			'qtchooser',
+			'qttools5-dev-tools',
+			'unixodbc-dev',
+			'wayland-protocols',
+			'x11proto-composite-dev',
+			'x11proto-record-dev',
+			# Also required
+			'gperf',
+			# Extra
+			'libjsoncpp-dev',
+			'libnss3-dev',
+			'libvpx-dev',
+			'libopus-dev',
+		],
 		appimage_dependencies => [
 			'imagemagick',
 			'curl'
@@ -637,25 +797,19 @@ my $data = {
 			'curl'
 		]
 	},
-	'linuxmint-19.3' => {
-		# Based on Ubuntu 18.04 (bionic)
+	'debian-10' => {
 		has_binary_qt_package => 0,
 		package_manager => 'apt',
-		qt_version => '5.12.6',
-		qt_patches => [
-			'aec.patch',
-			'mac-web-video.patch',
-#			'qfloat16.patch',  # Doesn't apply against 5.12.6
-			'qtscript-crash-fix.patch'
-		],
 		source_dependencies => [
 			'libterm-readline-gnu-perl',
 			'build-essential',
 			'git',
 			'make',
 			'cmake',
+			'curl',
 			'patchelf',
-			'python',
+			'python3',
+			'python2',
 			'libdrm-dev',
 			'mesa-common-dev',
 			'mesa-utils',
@@ -664,19 +818,25 @@ my $data = {
 			'xdg-user-dirs',
 			'python3-distro',
 			'libharfbuzz-dev',
-			'curl',
-			'unzip',
 			# Qt
 			'libdouble-conversion-dev', 'libxcb-xinerama0-dev', 'libpcre2-16-0', 'libxcb-xinput0',
 			# Interface
 			'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1', 'libsdl2-dev',
 			# Misc
-			'libasound2', 'libxmu-dev', 'libxi-dev', 'freeglut3-dev', 'libasound2-dev', 'libjack0', 'libjack-dev', 'libxrandr-dev', 'libudev-dev', 'libssl-dev', 'zlib1g-dev',
+			'libasound2', 'libxmu-dev', 'libxi-dev', 'freeglut3-dev', 'libasound2-dev', 'libjack0', 'libjack-dev', 'libxrandr-dev', 'libudev-dev', 'libssl1.0-dev', 'zlib1g-dev',
 			# Server
 			'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
 			# Docs
 			'nodejs',
-			'python3-distro'
+			'python3-distro',
+      'npm'
+		],
+		qt_version => '5.12.6',
+		qt_patches => [
+			'aec.patch',
+			'mac-web-video.patch',
+#			'qfloat16.patch',  # Doesn't apply against 5.12.6
+			'qtscript-crash-fix.patch'
 		],
 		qt_source_dependencies => [
 			'autoconf',
@@ -684,7 +844,7 @@ my $data = {
 			'autopoint',
 			'autotools-dev',
 			'debhelper',
-			'default-libmysqlclient-dev',
+			'default-libmysqlclient-dev', #?
 			'dh-autoreconf',
 			'dh-exec',
 			'dh-strip-nondeterminism',
@@ -723,19 +883,14 @@ my $data = {
 			'libharfbuzz-gobject0',
 			'libib-util',
 			'libicu-dev',
-			'libicu-le-hb-dev',
-			'libicu-le-hb0',
-			'libiculx60',
 			'libinput-dev',
 			'libjbig-dev',
 			'libjpeg-dev',
-			'libjpeg-turbo8-dev',
-			'libjpeg8-dev',
+			'libjpeg62-turbo-dev',
 			'libltdl-dev',
 			'liblzma-dev',
 			'libmtdev-dev',
-			'libmysqlclient-dev',
-			'libmysqlclient20',
+			'libmariadb-dev',
 			'libodbc1',
 			'libpango1.0-dev',
 			'libpcre16-3',
@@ -783,20 +938,24 @@ my $data = {
 			'wayland-protocols',
 			'x11proto-composite-dev',
 			'x11proto-record-dev',
+			'libx11-xcb-dev',
 			# Also required
 			'gperf',
+			'bison',
+			'flex',
 			# Extra
 			'libjsoncpp-dev',
 			'libnss3-dev',
 			'libvpx-dev',
-			'libopus-dev',
-		],
+			'libopus-dev'
+			],
 		appimage_dependencies => [
 			'imagemagick',
 			'curl'
 		]
 	},
-	'debian-10' => {
+        'linuxmint-4' => {
+                # Based on Debian 10 (buster)
 		has_binary_qt_package => 0,
 		package_manager => 'apt',
 		source_dependencies => [
@@ -1670,7 +1829,7 @@ sub install_missing_packages {
 
 
 
-	if ( !$opt_sys_qt ) {	
+	if ( !$opt_sys_qt ) {
 		info("Checking Qt availability...");
 
 		if ( !$DD->{has_binary_qt_package} || $opt_build_qt ) {
@@ -1753,27 +1912,27 @@ sub collect_info {
 		info("\n");
 		$ok = $rl->readline("If the above is okay, say 'yes' to begin installation: ", "yes");
 	}
-    
+
     if ( defined $rel_no ) {
         $ENV{RELEASE_NUMBER} = $rel_no;
     }
-    
+
     if ( defined $build_no ) {
         $ENV{BUILD_NUMBER} = $build_no;
     }
-    
+
     if ( lc($rel_type) eq "production" ) {
         $ENV{RELEASE_TYPE} = 'PRODUCTION';
         $ENV{PRODUCTION_BUILD} = 1;
         $ENV{USE_STABLE_GLOBAL_SERVICES} = 1;
         $ENV{BUILD_GLOBAL_SERVICES} = 'STABLE';
     }
-    
+
     if ( lc($rel_type) eq "pr" ) {
         $ENV{RELEASE_TYPE} = 'PR';
         $ENV{PR_BUILD} = 1;
     }
-    
+
     if ( lc($rel_type) eq "dev" ) {
         $ENV{RELEASE_TYPE} = 'DEV';
         $ENV{DEV_BUILD} = 1;
@@ -1796,7 +1955,7 @@ sub get_source {
 	info("\n");
 
 	mkdir($root_dir);
-	
+
 	get_source_from_git($repo, "source", $repo_tag);
 
 	if ( $opt_sys_qt ) {
@@ -1832,7 +1991,7 @@ sub build {
 		$ENV{VIRCADIA_USE_PREBUILT_QT}=1;
 		$ENV{VIRCADIA_USE_QT_VERSION}="";
 		$ENV{HIFI_QT_BASE} = "$root_dir";
-	}	
+	}
 
 
 	$ENV{HIFI_VCPKG_BASE} = "$root_dir/vcpkg";
@@ -1903,7 +2062,7 @@ sub install {
 
 
 	find({ follow       => 1,
-	       follow_skip  => 2, 
+	       follow_skip  => 2,
 	       wanted       => sub { install_search_func("$root_dir/build", $inst_dir, "link") }},
 	       "$root_dir/build");
 
@@ -2130,7 +2289,7 @@ sub install_qt {
 		QMAKE_LIBDIR_X11    => $xlib_path,
 		QMAKE_LIBDIR_OPENGL => $gllib_path
 	);
-		
+
 
 
 	del_dir("$root_dir/qt5-install");
@@ -2148,7 +2307,7 @@ sub install_qt {
 	# qtwebengine/src/core/gn_run.pro
 	$ENV{NINJAFLAGS} = "-j${build_cores_qt}";
 
-	run("../qt5/configure", "-opensource", "-confirm-license", 
+	run("../qt5/configure", "-opensource", "-confirm-license",
 		"-platform", "linux-g++-64",
 		"-nomake", "examples",
 		"-nomake", "tests",
@@ -2554,7 +2713,7 @@ sub calculate_cores {
 	$mem_avail =~ /:\s*(\d+)/;
 	$mem_avail = $1;
 
-	
+
 	my $cores = $core_count;
 	if ( $cores >= ($mem_avail / $mem_per_core )) {
 		$cores = int($mem_avail / $mem_per_core);
@@ -2670,7 +2829,7 @@ sub update_repo {
 		run("git", "clean", "-f");
 		run("git", "checkout", "origin/$tag");
 	}
-	
+
 }
 
 sub edit_qt_conf {

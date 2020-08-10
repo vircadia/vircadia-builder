@@ -4,13 +4,13 @@ Builds Vircadia (formerly known as "Project Athena"), an Open Source fork of the
 ## Supported platforms
 
 * Ubuntu 18.04
+* Linux Mint 19.3
 * Ubuntu 19.10
 * Ubuntu 20.04
-* Linux Mint 19.3
 * Debian 10
+* Linux Mint Debian Edition 4
 * Fedora 31 (needs to build Qt)
 * Amazon Linux 2
-* Manjaro (experimental)
 * (more coming soon)
 
 ## Unsupported platforms
@@ -21,6 +21,9 @@ While the dependency lists remain in the code, functionality is not guaranteed w
 
 Given my lack of time, fixes are unlikely to happen, though contributed patches will be accepted if they're not too intrusive.
 
+* Manjaro
+
+Broken completely broken by Manjaro updates shortly after implementation.
 
 ## Instructions:
 
