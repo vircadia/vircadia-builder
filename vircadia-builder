@@ -1540,7 +1540,111 @@ my $data = {
 			'imagemagick',
 			'curl'
 		]
-	}
+	},
+	'centos-8' => {
+		## Should be 100% compatible with RHEL 8 as well.
+		## This assumes basic dev tools are already install using:
+		## dnf groupinstall "Development Tools" "RPM Development Tools"
+		has_binary_qt_package => 0,
+		qt_version => '5.12.6',
+		qt_patches => [
+			'aec.patch',
+			'mac-web-video.patch',
+#			'qfloat16.patch',  # Doesn't apply against 5.12.6
+			'qtscript-crash-fix.patch'
+		],
+		package_manager => 'dnf',
+		source_dependencies => [
+			'git',
+			'perl-Term-ReadLine-Gnu',
+			'cmake',
+			'make',
+			'patchelf',
+			'gcc-c++',
+			'libatomic',
+			'xdg-user-dirs',
+			'tar',
+			'python36',
+			'SDL2-devel',
+			'curl',
+			'unzip'
+		],
+		qt_binary_dependencies => [
+			'qt5-devel',
+			'qt5-qtbase-devel',
+			'qt5-qtmultimedia-devel',
+			'qt5-qtscript-devel',
+			'qt5-qtwebkit-devel',
+			'qt5-qtwebengine-devel',
+			'qt5-qtbase-private-devel'
+		],
+		qt_source_dependencies => [
+			'alsa-lib-devel',
+			'at-spi2-core-devel',
+			'bison',
+			'clang',
+			'clang-devel',
+			'cups-devel',
+			'dbus-devel',
+			'flex',
+			'fontconfig-devel',
+			'glib2-devel',
+			'gperf',
+			'gtk3-devel',
+			'harfbuzz-devel',
+			'jasper-devel',
+			'libdrm-devel',
+			'libICE-devel',
+			'libicu-devel',
+			'libinput-devel',
+			'libjpeg-turbo-devel',
+			'libmng-devel',
+			'libpng-devel',
+			'libproxy-devel',
+			'libSM-devel',
+			'libstdc++-static',
+			'libtiff-devel',
+			'libxkbcommon-devel',
+			'libxkbcommon-x11-devel',
+			'libxcb-devel',
+			'llvm',
+			'llvm-devel',
+			'mesa-libEGL-devel',
+			'mesa-libGL-devel',
+			'mesa-libgbm-devel',
+			'nss-devel',
+			'openssl-devel',
+			'openjpeg2-devel',
+			'patch',
+			'pcre-devel',
+			'pcre2-devel',
+			'pulseaudio-libs-devel',
+			'python2',
+			'qt5-rpm-macros',
+			'sqlite-devel',
+			'systemd-devel',
+			'tar',
+			'unixODBC-devel',
+			'xcb-util-image-devel',
+			'xcb-util-keysyms-devel',
+			'xcb-util-renderutil-devel',
+			'xcb-util-wm-devel',
+			'xkeyboard-config-devel',
+			'zlib-devel',
+			# Possibly unnecessary, optional dependencies of
+			# WebEngine. Should check what's useful and what not.
+			'jsoncpp-devel',
+			'libxslt-devel',
+			'libvpx-devel',
+			'libicu-devel',
+			'libxml2-devel',
+			'opus-devel',
+			'libicu-devel',
+			'libwebp-devel',
+			'libXtst-devel',
+		],
+	},
+
 };
 
 # Valid build targets for the makefile
