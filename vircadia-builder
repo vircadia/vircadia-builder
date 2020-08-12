@@ -1568,6 +1568,7 @@ my $data = {
 			'SDL2-devel',
 			'curl',
 			'unzip'
+			'npm'
 		],
 		qt_binary_dependencies => [
 			'qt5-devel',
