@@ -671,7 +671,8 @@ my $data = {
 			# Server
 			'libpulse0', 'libnss3', 'libnspr4', 'libfontconfig1', 'libxcursor1', 'libxcomposite1', 'libxtst6', 'libxslt1.1',
 			# Docs
-			'nodejs'
+			'nodejs',
+			'npm'
 		],
 		qt_version => '5.12.6',
 		qt_patches => [
@@ -829,7 +830,7 @@ my $data = {
 			# Docs
 			'nodejs',
 			'python3-distro',
-      'npm'
+                        'npm'
 		],
 		qt_version => '5.12.6',
 		qt_patches => [
