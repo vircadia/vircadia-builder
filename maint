@@ -1,0 +1,169 @@
+#!/usr/bin/perl -w
+use strict;
+use FindBin;
+use lib "$FindBin::Bin/lib";
+
+use Getopt::Long;
+use Data::Dumper qw(Dumper);
+use VircadiaBuilder::Common;
+
+
+
+my ($cmd_help, $cmd_cleanup, $cmd_compare);
+my $confpath = "$FindBin::Bin/distros";
+
+$Data::Dumper::Sortkeys=1;
+$Data::Dumper::Terse=1;
+$| = 1;
+
+
+GetOptions(
+	"cleanup" => \$cmd_cleanup,
+	"compare" => \$cmd_compare,
+	"help"    => \$cmd_help,
+);
+
+
+
+if ( $cmd_cleanup ) {
+
+	foreach my $file (@ARGV) {
+
+		info("Processing $file... ");
+
+		info("reading... ");
+		my $orig_data = read_file($file);
+		my $d;
+
+		info("parsing... ");
+		eval {
+			$d = eval($orig_data);
+		};
+		if ( $@ ) {
+			fatal("Failed to parse $file: $@");
+		}
+
+		info("cleaning up... ");
+		$d->{appimage_dependencies}  = [sort { $a cmp $b } @{$d->{appimage_dependencies}}]   if (exists($d->{appimage_dependencies}));
+		$d->{qt_patches}             = [sort { $a cmp $b } @{$d->{qt_patches}}]              if (exists($d->{qt_patches}));
+		$d->{qt_source_dependencies} = [sort { $a cmp $b } @{$d->{qt_source_dependencies}}]  if (exists($d->{qt_source_dependencies}));
+		$d->{source_dependencies}    = [sort { $a cmp $b } @{$d->{source_dependencies}}]     if (exists($d->{source_dependencies}));
+
+		my $new_data = "#!/usr/bin/perl\n" . Dumper($d);
+
+
+		if ( $orig_data ne $new_data ) {
+			important("changes made, writing... ");
+			open(my $fh, ">", $file) or die "Can't create $file: $!";
+			print $fh "#!/usr/bin/perl\n";
+			print $fh Dumper($d);
+			close $fh;
+
+			important("done.\n");
+		} else {
+			info_ok("no cleanup needed, all good.\n");
+		}
+	}
+} elsif ( $cmd_compare ) {
+	my ($file_a, $file_b) = @ARGV;
+
+	my $file_a_content = read_file($file_a);
+	my $file_b_content = read_file($file_b);
+
+	my $d_a = eval($file_a_content);
+	my $d_b = eval($file_b_content);
+
+	# First list all scalars
+	foreach my $field (sort grep({ ref($d_a->{$_}) ne "ARRAY" } keys %$d_a)) {
+		compare($d_a, $d_b, $field);
+	}
+
+	# Then all arrays. Just for the sake of readability.
+	foreach my $field (sort grep({ ref($d_a->{$_}) eq "ARRAY" } keys %$d_a)) {
+		compare($d_a, $d_b, $field);
+	}
+
+
+} elsif ( $cmd_help ) {
+	show_help();
+}
+
+
+
+
+sub compare {
+	my ($a, $b, $field) = @_;
+
+	info("$field" . (" " x (30-length($field))) . ": ");
+
+	if ( ref($a->{$field}) eq "ARRAY" ) {
+		my @removed = missing_in_b($a->{$field}, $b->{$field});
+		my @added   = missing_in_b($b->{$field}, $a->{$field});
+
+		if ( @added || @removed ) {
+			info("\n");
+		}
+
+		if ( @added ) {
+			important("\tAdded  : ");
+			important(join(', ', @added) . "\n");
+		}
+		if ( @removed ) {
+			important("\tRemoved: ");
+			warning(join(', ', @removed) . "\n");
+		}
+
+		unless (@added || @removed) {
+			info_ok("same\n");
+		}
+
+	} else {
+		if ( $a->{$field} eq $b->{$field} ) {
+			info_ok("same\n");
+		} else {
+			important("'$a->{$field}' => '$b->{$field}'\n");
+		}
+	}
+}
+
+sub missing_in_b {
+	my ($arr_a, $arr_b) = @_;
+
+	my %map_b = map { $_ => 1 } @$arr_b;
+	my @missing;
+
+	foreach my $val (@$arr_a) {
+		push @missing, $val unless exists $map_b{$val};
+	}
+
+	return sort @missing;
+}
+
+
+sub read_file {
+	my ($file) = @_;
+	open(my $fh, "<", $file) or die "Can't open $file: $!";
+	local $/;
+	undef $/;
+	my $data = <$fh>;
+	close $fh;
+
+	return $data;
+}
+
+sub show_help {
+	print <<HELP;
+$0 [options]
+Performs maintainance operations for VircadiaBuilder distro files.
+
+This tool is intended to make it easier to develop support for new distros,
+and to make it easier to submit cleaner patches.
+
+Options:
+	--cleanup FILES         Runs cleanup on all the files, replacing
+	                        them with indented, sorted versions.
+	--compare FILEA FILEB   Compares configurations FILEA and FILEB.
+	--help                  Shows this text.
+HELP
+
+}
