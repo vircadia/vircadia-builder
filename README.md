@@ -116,7 +116,13 @@ After installing the packages, you can try the script by selecting the special d
 
 After that, the build process should begin. If there are problems, it's likely more packages need to be installed.
 
-As an optional step, if you'd like to improve the script yourself, you can use the --make-pkglist argument to produce a package list formatted for pasting into the source code.
+Once you know what packages are needed, a new configuration can be created. Configurations are stored in the `distros` subdirectory. Copy the one you used as a base, and make your modifications. The syntax for the file is that of a Perl script.
+
+Once modifications are done, you can use the `maint` script to clean it up:
+
+    $ ./maint --cleanup distros/new-distro.cfg
+
+This will verify that your config file parses correctly, will apply a standard indentation and order the contents. This makes it easier to see what changed between different releases of a distribution, and makes for better patches.
 
 ## Questions
 
