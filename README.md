@@ -3,15 +3,33 @@ Builds Vircadia (formerly known as "Project Athena"), an Open Source fork of the
 
 ## Supported platforms
 
-* Ubuntu 18.04
+* Amazon Linux 2
+* CentOS 8.x (see notes below)
+* Debian 10
+* Fedora 31 (needs to build Qt)
+* Fedora 32
+* Linux Mint Debian Edition 4
 * Linux Mint 19.3
+* Ubuntu 18.04
 * Ubuntu 19.10
 * Ubuntu 20.04
-* Debian 10
-* Linux Mint Debian Edition 4
-* Fedora 31 (needs to build Qt)
-* Amazon Linux 2
 * (more coming soon)
+
+## Notes on CentOS / RHEL 8.x builds
+
+Before starting the build
+
+- Enable PowerTools and EPEL repos
+  dnf install epel-release
+  dnf config-manager --set-enabled PowerTools
+
+- Make sure basic dev tools are installed
+  dnf groupinstall "Development Tools" "RPM Development Tools"
+
+- CentOS/RHEL has two Python version, make sure Python 2 is default
+  dnf install python2 python36
+  alternatives --set python /usr/bin/python2
+
 
 ## Unsupported platforms
 
