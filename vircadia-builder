@@ -153,7 +153,6 @@ my $desktop;
 my $distro;
 
 my ($opt_keep_source, $opt_auto, $opt_build_qt, $opt_build, $opt_sys_qt, $opt_skip_build, $opt_no_modify_rpath, $opt_skip_install, $opt_make_appimage);
-my ($cmd_dump_json);
 my ($cmd_help, $cmd_get_supported, $cmd_get_source_deps, $cmd_get_qt_deps, $cmd_get_qt_version, $cmd_get_qt_patches, $cmd_make_pkglist);
 
 $opt_build = "client";
@@ -186,8 +185,7 @@ GetOptions(
 	"use-system-qt|S"        => \$opt_sys_qt,
 	"skip-build"             => \$opt_skip_build,
 	"skip-install"           => \$opt_skip_install,
-	"no-modify-rpath"        => \$opt_no_modify_rpath,
-        "dump-json"              => \$cmd_dump_json,
+	"no-modify-rpath"        => \$opt_no_modify_rpath
 ) or help(1);
 
 
@@ -196,26 +194,6 @@ load_data();
 
 
 help(1) if ($cmd_help);
-if ( $cmd_dump_json ) {
-	foreach my $distro (keys %$data) {
-		mkdir("distros");
-		open(my $fh, ">", "distros/$distro.cfg");
-
-		my $d = $data->{$distro};
-		$d->{appimage_dependencies}  = [sort { $a cmp $b } @{$d->{appimage_dependencies}}]   if (exists($d->{appimage_dependencies}));
-		$d->{qt_patches}             = [sort { $a cmp $b } @{$d->{qt_patches}}]              if (exists($d->{qt_patches}));
-		$d->{qt_source_dependencies} = [sort { $a cmp $b } @{$d->{qt_source_dependencies}}]  if (exists($d->{qt_source_dependencies}));
-		$d->{source_dependencies}    = [sort { $a cmp $b } @{$d->{source_dependencies}}]     if (exists($d->{source_dependencies}));
-
-		print $fh "#!/usr/bin/perl\n";
-		print $fh Dumper([$d]);
-		close $fh;
-	}
-	exit(0);
-}
-
-
-
 
 get_supported() if ( $cmd_get_supported );
 get_conf( 'source_dependencies', $cmd_get_source_deps ) if ( $cmd_get_source_deps );
