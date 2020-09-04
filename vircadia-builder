@@ -271,10 +271,13 @@ if ( $opt_make_appimage ) {
 
 sub load_data {
 	my $confpath = "$FindBin::Bin/distros";
-
-	foreach my $conf ( glob("$confpath/*.cfg") ) {
-		my $distro_name = basename($conf, ".cfg");
-		$data->{$distro_name} = do($conf);
+	opendir(my $dfh, $confpath) or die "Can't find distros directory at $confpath";
+	while(my $filename = readdir($dfh)) {
+		next if ( -d "$confpath/$filename" );
+		if ( $filename =~ /.cfg$/ ) {
+			my $distro_name = basename($filename, ".cfg");
+			$data->{$distro_name} = do("$confpath/$filename");
+		}
 	}
 }
 
