@@ -1,4 +1,6 @@
 #!/usr/bin/perl -w
+package VircadiaBuilder::Common;
+
 use strict;
 use Term::ANSIColor;
 
@@ -8,12 +10,12 @@ our (@EXPORT, @ISA);
 my $timestamp = make_timestamp();
 my $logdir    = "$ENV{HOME}/.vircadia-builder/logs/$timestamp";
 my $log_fh;
-my $collect_system_info;
+our $collect_system_info;
 
 
 BEGIN {
 	@ISA = qw(Exporter);
-	@EXPORT = qw( info info_ok warning important debug fatal write_to_log init_log );
+	@EXPORT = qw( info info_ok warning important debug fatal write_to_log init_log $collect_system_info  );
 }
 
 sub info {
