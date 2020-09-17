@@ -1600,7 +1600,7 @@ sub install_into_appimage {
 	info("\n");
 
         # I have got no idea what I am doing, I just want to get libopenvr_api.so in the AppImage
-        my $appimage_libopenvr_apidir = = "$appimage_base/vcpkg/bd824a32/installed/x64-linux/lib";
+        my $appimage_libopenvr_apidir = "$appimage_base/vcpkg/bd824a32/installed/x64-linux/lib";
 	info("Copying libopenvr_api.so to $appimage_libopenvr_apidir\n");
 	run("cp", "-dp", "$root_dir/vcpkg/bd824a32/installed/x64-linux/lib/libopenvr_api.so", $appimage_libopenvr_apidir);
         info("\n");
