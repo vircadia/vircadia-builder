@@ -1594,7 +1594,8 @@ sub install_into_appimage {
 	# Clear line
 	info( "\r" . (" " x $prev_len) . "\r");
 
-        # I have got no idea what I am doing, I just want to get libopenvr_api.so in the AppImage
+        # Copy libopenvr_api.so from vcpkg into the AppImage
+        # FIXME: Find out how to get the `bd824a32` part of the path and make it change accordingly.
 	info("Copying libopenvr_api.so to $appimage_base/usr/lib64/\n");
         run("mkdir", "-p", "$appimage_base/usr/lib64/");
 	run("cp", "-dp", "$root_dir/vcpkg/bd824a32/installed/x64-linux/lib/libopenvr_api.so", "$appimage_base/usr/lib64/libopenvr_api.so");
