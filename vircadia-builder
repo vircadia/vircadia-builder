@@ -1199,7 +1199,7 @@ sub update_repo {
 	if ( !$opt_keep_source ) {
 		chdir("$root_dir/$destdir");
 		run("git", "fetch", "origin", "$tag:refs/remotes/origin/$tag");
-		run("git", "submodule", "update", "-f", "--init");
+		run("git", "submodule", "update", "-f", "--init", "--recursive");
 		run("git", "clean", "-f");
 		run("git", "checkout", "origin/$tag");
 	}
