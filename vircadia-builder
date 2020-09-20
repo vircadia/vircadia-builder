@@ -1632,6 +1632,18 @@ sub install_into_appimage {
 
 	info("Finding library dependencies...\n");
 	my @dep_list = ldd("$root_dir/build/$target/$target");
+
+	info("Finding plugins... ");
+	if ( -d "$root_dir/build/$target/plugins" ) {
+		info_ok("Plugins directory $target/plugins found, scanning...\n");
+
+		foreach my $plugin ( glob("$root_dir/build/$target/plugins/*so") ) {
+			info("Adding dependencies of $plugin... ");
+			push @dep_list, ldd($plugin);
+			info_ok("done.\n");
+		}
+	}
+
 	my %deps = map { $_ => 1 } @dep_list;
 
 	info("Copying missing system libraries... ");
