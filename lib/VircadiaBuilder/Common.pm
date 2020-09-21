@@ -1,19 +1,132 @@
 #!/usr/bin/perl -w
+package VircadiaBuilder::Common;
+
 use strict;
 use Term::ANSIColor;
-
+use Symbol qw(gensym);
 use Exporter;
+use IPC::Open3;
 our (@EXPORT, @ISA);
 
 my $timestamp = make_timestamp();
 my $logdir    = "$ENV{HOME}/.vircadia-builder/logs/$timestamp";
 my $log_fh;
-my $collect_system_info;
+our $collect_system_info;
 
 
 BEGIN {
 	@ISA = qw(Exporter);
-	@EXPORT = qw( info info_ok warning important debug fatal write_to_log init_log );
+	@EXPORT = qw( run info info_ok warning important debug fatal write_to_log init_log $collect_system_info  );
+}
+
+sub error_to_text {
+	my ($retval, $errstr, $exec_failed) = @_;
+
+	if ( $retval == -1 ) {
+		return "failed to execute: $errstr";
+	} elsif ( $retval & 127 ) {
+		return sprintf("died with signal %d, %s coredump",
+			($retval & 127), ( $retval & 128 ) ? 'with' : 'without');
+	} else {
+		if ( $exec_failed ) {
+			return "failed to start with error '$errstr'";
+		} else {
+			return sprintf("exited with value %d", $retval >> 8)
+		}
+	}
+}
+
+sub secs_to_time {
+	my ($secs) = @_;
+
+	## Avoid POSIX::floor -- maybe unnecessarily?
+	my $hours = sprintf("%d", $secs / 3600);
+	$secs -= ($hours*3600);
+
+	my $mins = sprintf("%d", $secs / 60);
+	$secs -= ($mins * 60);
+
+	return sprintf("%d:%02d:%02d", $hours, $mins, $secs);
+}
+
+sub run {
+	my (@command) = @_;
+	my %opts;
+
+	if ( ref($command[0]) eq "HASH" ) {
+		%opts = %{ shift(@command) }
+	}
+
+	my $cmdstr = join(' ', @command);
+	debug("RUN: $cmdstr\n");
+	my $out_buf = "";
+	my $start = time;
+
+
+	my ($in, $out);
+	my $err = gensym(); # Ok, this is a horrible interface
+	my $pid;
+
+	eval {
+		$pid = open3($in, $out, $err, @command);
+	};
+	if ( $@ =~ /^open3:/ ) {
+		my $errstr = $@;
+		$errstr =~ s/^open3://;
+
+		if ( $opts{fail_ok} ) {
+			warning("Failed to run '$cmdstr'. Command failed to start: $errstr\n");
+			return;
+		} else {
+			fatal("Failed to run '$cmdstr'. Command failed to start: $errstr\n");
+		}
+	} elsif ( $@ ) {
+		if (!$opts{fail_ok}) {
+			fatal("Unrecognized error when trying to run '$cmdstr': $@\n");
+		}
+	}
+
+	debug("Program started as PID $pid\n");
+
+	close $in if ($in);
+	my $select = IO::Select->new();
+	$select->add($out);
+	$select->add($err);
+
+	CMDLOOP: while(my @ready = $select->can_read()) {
+		foreach my $fh (@ready) {
+			my $data = "";
+			my $bytes = sysread($fh, $data, 16384);
+			last CMDLOOP if ( $bytes == 0 );
+
+			debug($data) unless $opts{no_log};
+
+			if ( $fh == $out && $opts{keep_buf} ) {
+				$out_buf .= $data;
+			}
+
+			if (!$opts{quiet}) {
+				print $data        if ( $fh == $out && !$opts{keep_buf});
+				print STDERR $data if ( $fh == $err );
+			}
+		}
+	}
+
+	waitpid($pid, 0);
+	my $retval = $?;
+	my $errstr = $!;
+
+	debug("\nCommand '$cmdstr' " . error_to_text($retval, $errstr) . "  after " . secs_to_time(time - $start) . "\n");
+
+	if ( $retval != 0 ) {
+		if ( $opts{fail_ok} ) {
+			warning( "Command '$cmdstr' " . error_to_text($?, $!) . "\n" );
+		} else {
+			fatal( "Command '$cmdstr' " . error_to_text($?, $!) . "\n" );
+		}
+	}
+
+	return  wantarray ? split(/\n/, $out_buf) : $out_buf;
 }
 
 sub info {

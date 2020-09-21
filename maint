@@ -9,15 +9,28 @@ use VircadiaBuilder::Common;
 
 
 
-my ($cmd_help, $cmd_cleanup, $cmd_compare);
+my ($cmd_help, $cmd_cleanup, $cmd_compare, $cmd_verify);
 my $confpath = "$FindBin::Bin/distros";
 
 $Data::Dumper::Sortkeys=1;
 $Data::Dumper::Terse=1;
 $| = 1;
 
+my $required_keys = {
+	'appimage_dependencies'  => 'array',
+	'has_binary_qt_package'  => 'bool',
+	'package_manager'        => qr/^(dnf|apt|yum|pacman)$/,
+	'qt_binary_dependencies' => 'array',
+	'qt_patches'             => 'array',
+	'qt_source_dependencies' => 'array',
+	'qt_configure_arguments' => 'array',
+	'qt_version'             => 'scalar',
+	'source_dependencies'    => 'array'
+};
+
 
 GetOptions(
+	"verify"  => \$cmd_verify,
 	"cleanup" => \$cmd_cleanup,
 	"compare" => \$cmd_compare,
 	"help"    => \$cmd_help,
@@ -42,6 +55,13 @@ if ( $cmd_cleanup ) {
 		if ( $@ ) {
 			fatal("Failed to parse $file: $@");
 		}
+		info("verifying... ");
+		if ( verify($d) ) {
+			info_ok("ok.\n");
+		} else {
+			# It's safe to format even if something isn't entirely right
+			warning("failed, but will proceed anyway.\n");
+		}
 
 		info("cleaning up... ");
 		$d->{appimage_dependencies}  = [sort { $a cmp $b } @{$d->{appimage_dependencies}}]   if (exists($d->{appimage_dependencies}));
@@ -62,6 +82,27 @@ if ( $cmd_cleanup ) {
 			important("done.\n");
 		} else {
 			info_ok("no cleanup needed, all good.\n");
+		}
+	}
+} elsif ( $cmd_verify ) {
+
+	foreach my $file (@ARGV) {
+
+		info("Verifying $file... ");
+		my $orig_data = read_file($file);
+		my $d;
+
+		eval {
+			$d = eval($orig_data);
+		};
+		if ( $@ ) {
+			fatal("Failed to parse $file: $@");
+		}
+
+		if ( verify($d) ) {
+			info_ok("ok.\n");
+		} else {
+			warning("failed!\n");
 		}
 	}
 } elsif ( $cmd_compare ) {
@@ -89,7 +130,53 @@ if ( $cmd_cleanup ) {
 }
 
 
+sub verify {
+	my ($data) = @_;
+	my $failed = 0;
 
+	foreach my $key (keys %$required_keys) {
+		my $t = $required_keys->{$key};
+
+		if (!exists $data->{$key}) {
+			warning("key '$key' of type '$t' missing in data; ");
+			$failed = 1;
+			next;
+		}
+
+		if ( ref($t) eq "Regexp" ) {
+			unless ($data->{$key} =~ /$t/) {
+				warning("key '$key' must pass regex $t; ");
+				$failed = 1;
+			}
+		} elsif ( $t eq "array" ) {
+			unless (ref($data->{$key}) eq "ARRAY") {
+				warning("key '$key' must be an array; ");
+				$failed = 1;
+			}
+		} elsif ( $t eq "array" ) {
+			unless (ref($data->{$key}) eq "HASH") {
+				warning("key '$key' must be a hash; ");
+				$failed = 1;
+			}
+		} elsif ( $t eq "scalar" ) {
+			unless (ref($data->{$key}) eq "") {
+				warning("key '$key' must be a scalar; ");
+				$failed = 1;
+			}
+		} elsif ( $t eq "bool" ) {
+			my $d = $data->{$key};
+			unless ( $d eq "1" || $d eq "yes" || $d eq "0" || $d eq "no") {
+				warning("key '$key' must be a scalar; ");
+				$failed = 1;
+			}
+		} else {
+			die "Internal error in \$required_keys, unrecognized type $t";
+		}
+	}
+
+
+	return !$failed;
+}
 
 sub compare {
 	my ($a, $b, $field) = @_;

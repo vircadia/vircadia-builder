@@ -10,6 +10,7 @@ Builds Vircadia (formerly known as "Project Athena"), an Open Source fork of the
 * Fedora 32
 * Linux Mint Debian Edition 4
 * Linux Mint 19.3
+* Linux Mint 20.0
 * Ubuntu 18.04
 * Ubuntu 19.10
 * Ubuntu 20.04

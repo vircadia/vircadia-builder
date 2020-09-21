@@ -7,7 +7,6 @@ use Getopt::Long;
 use Term::ANSIColor;
 use IO::Select;
 use IPC::Open3;
-use Symbol qw(gensym);
 use File::Find;
 use File::Spec;
 use File::Copy qw(cp);
@@ -153,7 +152,6 @@ my $desktop;
 my $distro;
 
 my ($opt_keep_source, $opt_auto, $opt_build_qt, $opt_build, $opt_sys_qt, $opt_skip_build, $opt_no_modify_rpath, $opt_skip_install, $opt_make_appimage);
-my ($cmd_dump_json);
 my ($cmd_help, $cmd_get_supported, $cmd_get_source_deps, $cmd_get_qt_deps, $cmd_get_qt_version, $cmd_get_qt_patches, $cmd_make_pkglist);
 
 $opt_build = "client";
@@ -186,8 +184,7 @@ GetOptions(
 	"use-system-qt|S"        => \$opt_sys_qt,
 	"skip-build"             => \$opt_skip_build,
 	"skip-install"           => \$opt_skip_install,
-	"no-modify-rpath"        => \$opt_no_modify_rpath,
-        "dump-json"              => \$cmd_dump_json,
+	"no-modify-rpath"        => \$opt_no_modify_rpath
 ) or help(1);
 
 
@@ -196,26 +193,6 @@ load_data();
 
 
 help(1) if ($cmd_help);
-if ( $cmd_dump_json ) {
-	foreach my $distro (keys %$data) {
-		mkdir("distros");
-		open(my $fh, ">", "distros/$distro.cfg");
-
-		my $d = $data->{$distro};
-		$d->{appimage_dependencies}  = [sort { $a cmp $b } @{$d->{appimage_dependencies}}]   if (exists($d->{appimage_dependencies}));
-		$d->{qt_patches}             = [sort { $a cmp $b } @{$d->{qt_patches}}]              if (exists($d->{qt_patches}));
-		$d->{qt_source_dependencies} = [sort { $a cmp $b } @{$d->{qt_source_dependencies}}]  if (exists($d->{qt_source_dependencies}));
-		$d->{source_dependencies}    = [sort { $a cmp $b } @{$d->{source_dependencies}}]     if (exists($d->{source_dependencies}));
-
-		print $fh "#!/usr/bin/perl\n";
-		print $fh Dumper([$d]);
-		close $fh;
-	}
-	exit(0);
-}
-
-
-
 
 get_supported() if ( $cmd_get_supported );
 get_conf( 'source_dependencies', $cmd_get_source_deps ) if ( $cmd_get_source_deps );
@@ -271,10 +248,13 @@ if ( $opt_make_appimage ) {
 
 sub load_data {
 	my $confpath = "$FindBin::Bin/distros";
-
-	foreach my $conf ( glob("$confpath/*.cfg") ) {
-		my $distro_name = basename($conf, ".cfg");
-		$data->{$distro_name} = do($conf);
+	opendir(my $dfh, $confpath) or die "Can't find distros directory at $confpath";
+	while(my $filename = readdir($dfh)) {
+		next if ( -d "$confpath/$filename" );
+		if ( $filename =~ /.cfg$/ ) {
+			my $distro_name = basename($filename, ".cfg");
+			$data->{$distro_name} = do("$confpath/$filename");
+		}
 	}
 }
 
@@ -827,24 +807,7 @@ sub install_qt {
 
 	run("../qt5/configure", "-opensource", "-confirm-license",
 		"-platform", "linux-g++-64",
-		"-nomake", "examples",
-		"-nomake", "tests",
-		"-skip", "qttranslations",
-		"-skip", "qtserialport",
-		"-skip", "qt3d",
-		"-skip", "qtlocation",
-		"-skip", "qtwayland",
-		"-skip", "qtsensors",
-		"-skip", "qtgamepad",
-		"-skip", "qtspeech",
-		"-skip", "qtcharts",
-		"-skip", "qtmacextras",
-		"-skip", "qtvirtualkeyboard",
-		"-skip", "qtpurchasing",
-		"-skip", "qtdatavis3d",
-		"-skip", "qtpim",
-		"-skip", "qtdocgallery",
-		"-no-warnings-are-errors", "-no-pch", "-opengl", "-xcb-xlib", "-no-egl", "-no-icu",
+		@{ $DD->{qt_configure_arguments} },
 		"-prefix", "../qt5-install");
 
 	check_qt_webengine();
@@ -1077,115 +1040,6 @@ sub join_path {
 	return join('/', @parts);
 }
 
-
-sub error_to_text {
-	my ($retval, $errstr, $exec_failed) = @_;
-
-	if ( $retval == -1 ) {
-		return "failed to execute: $errstr";
-	} elsif ( $retval & 127 ) {
-		return sprintf("died with signal %d, %s coredump",
-			($retval & 127), ( $retval & 128 ) ? 'with' : 'without');
-	} else {
-		if ( $exec_failed ) {
-			return "failed to start with error '$errstr'";
-		} else {
-			return sprintf("exited with value %d", $retval >> 8)
-		}
-	}
-}
-
-sub secs_to_time {
-	my ($secs) = @_;
-
-	## Avoid POSIX::floor -- maybe unnecessarily?
-	my $hours = sprintf("%d", $secs / 3600);
-	$secs -= ($hours*3600);
-
-	my $mins = sprintf("%d", $secs / 60);
-	$secs -= ($mins * 60);
-
-	return sprintf("%d:%02d:%02d", $hours, $mins, $secs);
-}
-
-sub run {
-	my (@command) = @_;
-	my %opts;
-
-	if ( ref($command[0]) eq "HASH" ) {
-		%opts = %{ shift(@command) }
-	}
-
-	my $cmdstr = join(' ', @command);
-	debug("RUN: $cmdstr\n");
-	my $out_buf = "";
-	my $start = time;
-
-
-	my ($in, $out);
-	my $err = gensym(); # Ok, this is a horrible interface
-	my $pid;
-
-	eval {
-		$pid = open3($in, $out, $err, @command);
-	};
-	if ( $@ =~ /^open3:/ ) {
-		my $errstr = $@;
-		$errstr =~ s/^open3://;
-
-		if ( $opts{fail_ok} ) {
-			warning("Failed to run '$cmdstr'. Command failed to start: $errstr\n");
-			return;
-		} else {
-			fatal("Failed to run '$cmdstr'. Command failed to start: $errstr\n");
-		}
-	} elsif ( $@ ) {
-		fatal("Unrecognized error when trying to run '$cmdstr': $@\n");
-	}
-
-	debug("Program started as PID $pid\n");
-
-	close $in;
-	my $select = IO::Select->new();
-	$select->add($out);
-	$select->add($err);
-
-	CMDLOOP: while(my @ready = $select->can_read()) {
-		foreach my $fh (@ready) {
-			my $data = "";
-			my $bytes = sysread($fh, $data, 16384);
-			last CMDLOOP if ( $bytes == 0 );
-
-			debug($data) unless $opts{no_log};
-
-			if ( $fh == $out && $opts{keep_buf} ) {
-				$out_buf .= $data;
-			}
-
-			if (!$opts{quiet}) {
-				print $data        if ( $fh == $out && !$opts{keep_buf});
-				print STDERR $data if ( $fh == $err );
-			}
-		}
-	}
-
-	waitpid($pid, 0);
-	my $retval = $?;
-	my $errstr = $!;
-
-	debug("\nCommand '$cmdstr' " . error_to_text($retval, $errstr) . "  after " . secs_to_time(time - $start) . "\n");
-
-	if ( $retval != 0 ) {
-		if ( $opts{fail_ok} ) {
-			warning( "Command '$cmdstr' " . error_to_text($?, $!) . "\n" );
-		} else {
-			fatal( "Command '$cmdstr' " . error_to_text($?, $!) . "\n" );
-		}
-	}
-
-	return  wantarray ? split(/\n/, $out_buf) : $out_buf;
-}
-
 sub sudo_run {
 	my (@command) = @_;
 
@@ -1345,7 +1199,7 @@ sub update_repo {
 	if ( !$opt_keep_source ) {
 		chdir("$root_dir/$destdir");
 		run("git", "fetch", "origin", "$tag:refs/remotes/origin/$tag");
-		run("git", "submodule", "update", "-f", "--init");
+		run("git", "submodule", "update", "-f", "--init", "--recursive");
 		run("git", "clean", "-f");
 		run("git", "checkout", "origin/$tag");
 	}
@@ -1778,6 +1632,18 @@ sub install_into_appimage {
 
 	info("Finding library dependencies...\n");
 	my @dep_list = ldd("$root_dir/build/$target/$target");
+
+	info("Finding plugins... ");
+	if ( -d "$root_dir/build/$target/plugins" ) {
+		info_ok("Plugins directory $target/plugins found, scanning...\n");
+
+		foreach my $plugin ( glob("$root_dir/build/$target/plugins/*so") ) {
+			info("Adding dependencies of $plugin... ");
+			push @dep_list, ldd($plugin);
+			info_ok("done.\n");
+		}
+	}
+
 	my %deps = map { $_ => 1 } @dep_list;
 
 	info("Copying missing system libraries... ");
