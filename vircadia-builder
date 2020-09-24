@@ -151,7 +151,7 @@ my $build_cores_qt;
 my $desktop;
 my $distro;
 
-my ($opt_keep_source, $opt_auto, $opt_build_qt, $opt_build, $opt_sys_qt, $opt_skip_build, $opt_no_modify_rpath, $opt_skip_install, $opt_make_appimage);
+my ($opt_keep_source, $opt_auto, $opt_build_qt, $opt_build, $opt_sys_qt, $opt_skip_build, $opt_skip_systemd_restart, $opt_no_modify_rpath, $opt_skip_install, $opt_make_appimage);
 my ($cmd_help, $cmd_get_supported, $cmd_get_source_deps, $cmd_get_qt_deps, $cmd_get_qt_version, $cmd_get_qt_patches, $cmd_make_pkglist);
 
 $opt_build = "client";
@@ -184,6 +184,7 @@ GetOptions(
 	"use-system-qt|S"        => \$opt_sys_qt,
 	"skip-build"             => \$opt_skip_build,
 	"skip-install"           => \$opt_skip_install,
+	"skip-systemd-restart"   => \$opt_skip_systemd_restart,
 	"no-modify-rpath"        => \$opt_no_modify_rpath
 ) or help(1);
 
@@ -882,10 +883,12 @@ sub setup_services {
 		}
 	}
 
-	if ( $services_created ) {
-		info("Reloading systemd config... ");
-		run("systemctl", "--user", "daemon-reload");
-		info_ok("done.\n");
+    unless($opt_skip_systemd_restart) {
+        if ( $services_created ) {
+            info("Reloading systemd config... ");
+            run("systemctl", "--user", "daemon-reload");
+            info_ok("done.\n");
+        }
 	}
 }
 
