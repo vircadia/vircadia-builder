@@ -883,12 +883,12 @@ sub setup_services {
 		}
 	}
 
-    unless($opt_skip_systemd_restart) {
-        if ( $services_created ) {
-            info("Reloading systemd config... ");
-            run("systemctl", "--user", "daemon-reload");
-            info_ok("done.\n");
-        }
+	unless($opt_skip_systemd_restart) {
+		if ( $services_created ) {
+			info("Reloading systemd config... ");
+			run("systemctl", "--user", "daemon-reload");
+			info_ok("done.\n");
+		}
 	}
 }
 
