@@ -12,14 +12,10 @@ use File::Spec;
 use File::Copy qw(cp);
 use File::Basename;
 use Cwd qw(abs_path);
-use Data::Dumper qw(Dumper);
 use VircadiaBuilder::Common;
 
 
 $| = 1;
-$Data::Dumper::Sortkeys=1;
-$Data::Dumper::Terse=1;
-
 
 my $prev_len = 0;
 my $inst_copied = 0;
