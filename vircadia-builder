@@ -974,7 +974,7 @@ sub create_script {
 	print $script "export LD_LIBRARY_PATH=\$QT_DIR/lib:\$LD_LIBRARY_PATH\n";
 	print $script "export PATH=\$QT_DIR/bin:\$QT_DIR/libexec:\$PATH\n";
 	print $script "export QTWEBENGINEPROCESS_PATH=\$QT_DIR/libexec/QtWebEngineProcess\n";
-	print $script "\"\$SCRIPT_DIR/$command\" $args \"\$@\" 2>&1 | tee -a \"\$SCRIPT_DIR/$name.log\"\n";
+	print $script "exec \"\$SCRIPT_DIR/$command\" $args \"\$@\"\n";
 	close $script;
 	chmod 0755,  "$root_dir/build/run_$name";
 
@@ -1637,14 +1637,20 @@ sub install_into_appimage {
 	info("Finding library dependencies...\n");
 	my @dep_list = ldd("$root_dir/build/$target/$target");
 
-	info("Finding plugins... ");
-	if ( -d "$root_dir/build/$target/plugins" ) {
-		info_ok("Plugins directory $target/plugins found, scanning...\n");
+	info("Finding plugins...\n");
+	foreach my $plugin_dir ("$root_dir/qt5-install/plugins/platforms", "$root_dir/build/$target/plugins") {
+		info("Trying $plugin_dir... ");
+		if ( -d "$plugin_dir" ) {
+			info_ok("found, scanning...\n");
 
-		foreach my $plugin ( glob("$root_dir/build/$target/plugins/*so") ) {
-			info("Adding dependencies of $plugin... ");
-			push @dep_list, ldd($plugin);
+			find(sub {
+				my $file = $File::Find::name;
+				return unless $file =~ /\.so$/;
+				push @dep_list, ldd($File::Find::name);
+				}, $plugin_dir);
 			info_ok("done.\n");
+		} else {
+			warning("not found, skipping\n");
 		}
 	}
 
