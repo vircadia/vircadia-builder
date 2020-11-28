@@ -8,7 +8,7 @@ Builds Vircadia (formerly known as "Project Athena"), an Open Source fork of the
 * Debian 10
 * Fedora 31 (needs to build Qt)
 * Fedora 32
-* Fedora 33 (needs PR kasenvr/project-athena#863 )
+* Fedora 33
 * Linux Mint Debian Edition 4
 * Linux Mint 19.3
 * Linux Mint 20.0
