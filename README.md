@@ -6,14 +6,14 @@ Builds Vircadia (formerly known as "Project Athena"), an Open Source fork of the
 * Amazon Linux 2
 * CentOS 8.x (see notes below)
 * Debian 10
-* Fedora 31 (needs to build Qt)
+* Fedora 31
 * Fedora 32
-* Fedora 33 (needs PR kasenvr/project-athena#863 )
+* Fedora 33
 * Linux Mint Debian Edition 4
 * Linux Mint 19.3
 * Linux Mint 20.0
-* Ubuntu 18.04
-* Ubuntu 19.10
+* Ubuntu 18.04 (has pre-built Qt)
+* Ubuntu 19.10 (has pre-built Qt)
 * Ubuntu 20.04
 * (more coming soon)
 
