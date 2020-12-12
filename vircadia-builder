@@ -128,7 +128,7 @@ my $mem_per_core_vircadia = 1 * 1024 * 1024;
 # Qt has a build stage that consumes a huge amount of RAM. Be a bit conservative here.
 my $mem_per_core_qt     = 1.2 * 1024 * 1024;
 
-my $repo         = "https://github.com/kasenvr/project-athena";
+my $repo         = "https://github.com/vircadia/vircadia";
 my $qt_repo      = "git://code.qt.io/qt/qt5.git";
 my $repo_tag     = "master";
 my $repo_tag_path = "";
