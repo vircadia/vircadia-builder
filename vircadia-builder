@@ -1766,7 +1766,7 @@ sub create_appimage_metadata {
 -->
 
   <url type="homepage">https://vircadia.com/</url>
-  <url type="bugtracker">https://github.com/kasenvr/project-athena/issues</url>
+  <url type="bugtracker">https://github.com/vircadia/vircadia/issues</url>
   <project_group>Internet</project_group>
 
   <provides>
