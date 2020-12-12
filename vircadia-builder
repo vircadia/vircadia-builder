@@ -511,7 +511,7 @@ sub build {
 		# The one in lib/ doesn't have a rpath, which causes quazip to link against system Qt, which causes interface to link against
 		# both system Qt and custom Qt. This leads to problems.
 		#
-		# This probably needs a cmake fix. See https://github.com/kasenvr/project-athena/issues/308
+		# This probably needs a cmake fix. See https://github.com/vircadia/vircadia/issues/308
 
 		info("Checking for libquazip linking issue... ");
 		my ($quazip_in_lib)   = grep { -f $_ && ! -l $_ } glob("$root_dir/build/ext/makefiles/quazip/project/lib/libquazip5.so*");
@@ -1449,7 +1449,7 @@ sub parse_build_option {
 
 	if ( $split{client} ) {
 		delete $split{client};
-		$split{'jsdoc'}            = 1; # Horrible hack to deal with kasenvr/project-athena#513
+		$split{'jsdoc'}            = 1; # Horrible hack to deal with vircadia/vircadia#513
 		$split{'interface'}        = 1;
 	}
 
@@ -1460,7 +1460,7 @@ sub parse_build_option {
 	}
 
 	if ( $split{'jsdoc'} ) {
-		# Horrible hack to deal with kasenvr/project-athena#513 -- part 2
+		# Horrible hack to deal with vircadia/vircadia#513 -- part 2
 		# ensure we build jsdoc first
 		push @out, 'jsdoc';
 		delete $split{jsdoc};
@@ -1544,7 +1544,7 @@ sub install_into_appimage {
 	important("############################################################\n");
 	info("\n");
 
-	# Another horrible hack for kasenvr/project-athena#513
+	# Another horrible hack for vircadia/vircadia#513
 	@build_list = grep { !/jsdoc/ } @build_list;
 
 	if ( scalar(@build_list) > 1 ) {
