@@ -1,5 +1,5 @@
 # Project Vircadia builder
-Builds Vircadia (formerly known as "Project Athena"), an Open Source fork of the High Fidelity codebase.
+Builds Vircadia (codename "Project Athena"), an Open Source fork of the High Fidelity codebase.
 
 ## Supported platforms
 
@@ -49,7 +49,7 @@ Broken completely broken by Manjaro updates shortly after implementation.
 
 You can see the possible environment variables for building [here](https://docs.vircadia.dev/developer/build/BUILD_GENERAL.html#generating-build-files).
 
-    git clone https://github.com/kasenvr/vircadia-builder.git
+    git clone https://github.com/vircadia/vircadia-builder.git
     cd vircadia-builder
     chmod +x vircadia-builder
     ./vircadia-builder
