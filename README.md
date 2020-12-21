@@ -1,5 +1,5 @@
 # Project Vircadia builder
-Builds Vircadia (formerly known as "Project Athena"), an Open Source fork of the High Fidelity codebase.
+Builds Vircadia (codename "Project Athena"), an Open Source fork of the High Fidelity codebase.
 
 ## Supported platforms
 
