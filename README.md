@@ -15,6 +15,7 @@ Builds Vircadia (formerly known as "Project Athena"), an Open Source fork of the
 * Ubuntu 18.04 (has pre-built Qt)
 * Ubuntu 19.10 (has pre-built Qt)
 * Ubuntu 20.04
+* OpenSuSE Tumbleweed
 * (more coming soon)
 
 ## Notes on CentOS / RHEL 8.x builds
