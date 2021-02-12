@@ -279,6 +279,14 @@ sub detect_distro {
 		my $id          = $release_data{ID} . "-" . $release_data{VERSION_ID};
 		my $pretty_name = $release_data{PRETTY_NAME} // ( $release_data{NAME} . " " . $release_data{VERSION} );
 
+		if ( $release_data{ID} eq "opensuse-tumbleweed" ) {
+			$id = $release_data{ID};
+
+			# Opensuse Tumbleweed is a rolling release, and VERSION_ID is a timestamp, so it changes
+			# far too often. For now we're just going to assume that people stay up to date and only
+			# supporting the latest is needed.
+		}
+
 		info_ok("$pretty_name ($id)\n");
 		return $id;
 	}
@@ -291,7 +299,7 @@ sub detect_distro {
 sub get_package_list {
 	info("Getting the package list... ");
 	my @packages;
-	if ( $DD->{package_manager} eq "dnf" || $DD->{package_manager} eq "yum" ) {
+	if ( $DD->{package_manager} eq "dnf" || $DD->{package_manager} eq "yum" || $DD->{package_manager} eq "zypper" ) {
 		@packages = read_from_cmd("rpm", "-qa", "--qf", "%{NAME}\\n");
 	} elsif ( $DD->{package_manager} eq "apt" ) {
 		@packages = read_from_cmd("dpkg-query", "--show", "-f", "\${Package}\n");
@@ -374,6 +382,8 @@ sub install_missing_packages {
 			sudo_run("--preserve-env=DEBIAN_FRONTEND", "apt-get", "install", "-y", @missing);
 		} elsif ( $DD->{package_manager} eq "pacman" ) {
 			sudo_run("pacman", "-S", "--noconfirm", @missing);
+		} elsif ( $DD->{package_manager} eq "zypper" ) {
+			sudo_run("zypper", "--non-interactive", "install", @missing);
 		} elsif ( $DD->{package_manager} eq "none" ) {
 			# Nothing
 		} else {
