@@ -128,7 +128,7 @@ my $mem_per_core_vircadia = 1 * 1024 * 1024;
 # Qt has a build stage that consumes a huge amount of RAM. Be a bit conservative here.
 my $mem_per_core_qt     = 1.2 * 1024 * 1024;
 
-my $repo         = "https://github.com/vircadia/vircadia";
+my $repo         = "https://github.com/kasenvr/project-athena";
 my $qt_repo      = "git://code.qt.io/qt/qt5.git";
 my $repo_tag     = "master";
 my $repo_tag_path = "";
@@ -148,7 +148,6 @@ my $desktop;
 my $distro;
 
 my ($opt_keep_source, $opt_auto, $opt_build_qt, $opt_build, $opt_sys_qt, $opt_skip_build, $opt_skip_systemd_restart, $opt_no_modify_rpath, $opt_skip_install, $opt_make_appimage);
-my ($opt_qt_debug, $opt_qt_debug_info);
 my ($cmd_help, $cmd_get_supported, $cmd_get_source_deps, $cmd_get_qt_deps, $cmd_get_qt_version, $cmd_get_qt_patches, $cmd_make_pkglist);
 
 $opt_build = "client";
@@ -161,9 +160,9 @@ GetOptions(
 	"auto|y"                 => \$opt_auto,
 	"repo|r=s"               => \$repo,
 	"tag|t=s"                => \$repo_tag,
-	"release-type=s"         => \$rel_type,
-	"release-number=s"       => \$rel_no,
-	"build-number=s"         => \$build_no,
+    "release-type=s"         => \$rel_type,
+    "release-number=s"       => \$rel_no,
+    "build-number=s"         => \$build_no,
 	"destdir|d=s"            => \$root_dir,
 	"cores|j=i"              => \$build_cores,
 	"qt-cores|J=i"           => \$build_cores_qt,
@@ -182,9 +181,7 @@ GetOptions(
 	"skip-build"             => \$opt_skip_build,
 	"skip-install"           => \$opt_skip_install,
 	"skip-systemd-restart"   => \$opt_skip_systemd_restart,
-	"no-modify-rpath"        => \$opt_no_modify_rpath,
-	"qt-debug"               => \$opt_qt_debug,
-	"qt-debug-info"          => \$opt_qt_debug_info
+	"no-modify-rpath"        => \$opt_no_modify_rpath
 ) or help(1);
 
 
@@ -511,7 +508,7 @@ sub build {
 	mkdir("$root_dir/build");
 	chdir("$root_dir/build");
 
-	run("cmake", "../source");
+	run("cmake3", "../source");
 	foreach my $target (@build_list) {
 		important("Building target $target\n");
 		run("make", $target, "-j${build_cores}");
@@ -521,7 +518,7 @@ sub build {
 		# The one in lib/ doesn't have a rpath, which causes quazip to link against system Qt, which causes interface to link against
 		# both system Qt and custom Qt. This leads to problems.
 		#
-		# This probably needs a cmake fix. See https://github.com/vircadia/vircadia/issues/308
+		# This probably needs a cmake fix. See https://github.com/kasenvr/project-athena/issues/308
 
 		info("Checking for libquazip linking issue... ");
 		my ($quazip_in_lib)   = grep { -f $_ && ! -l $_ } glob("$root_dir/build/ext/makefiles/quazip/project/lib/libquazip5.so*");
@@ -815,19 +812,17 @@ sub install_qt {
 	# qtwebengine/src/core/gn_run.pro
 	$ENV{NINJAFLAGS} = "-j${build_cores_qt}";
 
-	my @extra_qt_arguments = ();
-	push @extra_qt_arguments, "-debug"            if ( $opt_qt_debug );
-	push @extra_qt_arguments, "-force-debug-info" if ( $opt_qt_debug_info );
-
 	run("../qt5/configure", "-opensource", "-confirm-license",
 		"-platform", "linux-g++-64",
 		@{ $DD->{qt_configure_arguments} },
-	        @extra_qt_arguments,
 		"-prefix", "../qt5-install");
 
 	check_qt_webengine();
 	run("make", "-j${build_cores_qt}");
 	run("make", "-j${build_cores_qt}", "install");
+
+
+
 }
 
 sub verify_system_qt {
@@ -984,7 +979,7 @@ sub create_script {
 	print $script "export LD_LIBRARY_PATH=\$QT_DIR/lib:\$LD_LIBRARY_PATH\n";
 	print $script "export PATH=\$QT_DIR/bin:\$QT_DIR/libexec:\$PATH\n";
 	print $script "export QTWEBENGINEPROCESS_PATH=\$QT_DIR/libexec/QtWebEngineProcess\n";
-	print $script "exec \"\$SCRIPT_DIR/$command\" $args \"\$@\"\n";
+	print $script "\"\$SCRIPT_DIR/$command\" $args \"\$@\" 2>&1 | tee -a \"\$SCRIPT_DIR/$name.log\"\n";
 	close $script;
 	chmod 0755,  "$root_dir/build/run_$name";
 
@@ -1459,7 +1454,7 @@ sub parse_build_option {
 
 	if ( $split{client} ) {
 		delete $split{client};
-		$split{'jsdoc'}            = 1; # Horrible hack to deal with vircadia/vircadia#513
+		$split{'jsdoc'}            = 1; # Horrible hack to deal with kasenvr/project-athena#513
 		$split{'interface'}        = 1;
 	}
 
@@ -1470,7 +1465,7 @@ sub parse_build_option {
 	}
 
 	if ( $split{'jsdoc'} ) {
-		# Horrible hack to deal with vircadia/vircadia#513 -- part 2
+		# Horrible hack to deal with kasenvr/project-athena#513 -- part 2
 		# ensure we build jsdoc first
 		push @out, 'jsdoc';
 		delete $split{jsdoc};
@@ -1554,7 +1549,7 @@ sub install_into_appimage {
 	important("############################################################\n");
 	info("\n");
 
-	# Another horrible hack for vircadia/vircadia#513
+	# Another horrible hack for kasenvr/project-athena#513
 	@build_list = grep { !/jsdoc/ } @build_list;
 
 	if ( scalar(@build_list) > 1 ) {
@@ -1647,20 +1642,14 @@ sub install_into_appimage {
 	info("Finding library dependencies...\n");
 	my @dep_list = ldd("$root_dir/build/$target/$target");
 
-	info("Finding plugins...\n");
-	foreach my $plugin_dir ("$root_dir/qt5-install/plugins/platforms", "$root_dir/build/$target/plugins") {
-		info("Trying $plugin_dir... ");
-		if ( -d "$plugin_dir" ) {
-			info_ok("found, scanning...\n");
+	info("Finding plugins... ");
+	if ( -d "$root_dir/build/$target/plugins" ) {
+		info_ok("Plugins directory $target/plugins found, scanning...\n");
 
-			find(sub {
-				my $file = $File::Find::name;
-				return unless $file =~ /\.so$/;
-				push @dep_list, ldd($File::Find::name);
-				}, $plugin_dir);
+		foreach my $plugin ( glob("$root_dir/build/$target/plugins/*so") ) {
+			info("Adding dependencies of $plugin... ");
+			push @dep_list, ldd($plugin);
 			info_ok("done.\n");
-		} else {
-			warning("not found, skipping\n");
 		}
 	}
 
@@ -1776,7 +1765,7 @@ sub create_appimage_metadata {
 -->
 
   <url type="homepage">https://vircadia.com/</url>
-  <url type="bugtracker">https://github.com/vircadia/vircadia/issues</url>
+  <url type="bugtracker">https://github.com/kasenvr/project-athena/issues</url>
   <project_group>Internet</project_group>
 
   <provides>
@@ -1939,8 +1928,6 @@ Options:
 	-r, --repo REPO         Set the repository to REPO
 	-t, --tag TAG           Set the tag to TAG
 	-y, --auto              Run without asking any questions
-            --qt-debug          Build Qt in debug mode
-            --qt-debug-info     Build Qt with debug symbols in release mode
 
 Custom mode options:
 
