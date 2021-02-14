@@ -511,7 +511,13 @@ sub build {
 	mkdir("$root_dir/build");
 	chdir("$root_dir/build");
 
-	run("cmake", "../source");
+    # Use cmake3 on Amazon Linux 2 as cmake always links to cmake version 2
+    if ( $distro eq "amzn-2" ) {
+    	run("cmake3", "../source");
+    } else {
+        run("cmake", "../source");
+    }
+
 	foreach my $target (@build_list) {
 		important("Building target $target\n");
 		run("make", $target, "-j${build_cores}");
@@ -685,7 +691,8 @@ sub adjust_libs_search_func {
 	# Don't touch cmake things
 	return if ( $relpath =~ /CMakeFiles/ );
 
-	if ( -f $abspath && -x $abspath && is_elf($abspath) )  {
+    # Do not run on Amazon Linux 2 as it does not have patchelf
+	if ( -f $abspath && -x $abspath && is_elf($abspath) && $distro ne "amzn-2" )  {
 		patch_rpath($abspath, $File::Find::dir);
 	}
 }
@@ -897,7 +904,11 @@ sub setup_services {
 	unless($opt_skip_systemd_restart) {
 		if ( $services_created ) {
 			info("Reloading systemd config... ");
-			run("systemctl", "--user", "daemon-reload");
+            if ( $distro eq "amzn-2" ) {
+                info("\nAmazon Linux 2 does not support user services. Skipping daemon reload.\n");
+			} else {
+                run("systemctl", "--user", "daemon-reload");
+            }
 			info_ok("done.\n");
 		}
 	}
