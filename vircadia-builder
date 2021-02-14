@@ -221,6 +221,7 @@ my $DD = $data->{$distro};
 my %PACKAGES = get_package_list();
 set_environment();
 install_missing_packages();
+import_nvm_environment();
 verify_system_qt() if ($opt_sys_qt);
 collect_info();
 
@@ -328,6 +329,7 @@ sub set_environment {
 
 		info_ok("\n");
 	}
+
 }
 
 sub install_missing_packages {
@@ -396,6 +398,49 @@ sub install_missing_packages {
 		info_ok("no.\n");
 	}
 }
+
+sub import_nvm_environment {
+	# Amazon Linux 2 is a huge pain to deal with. The official instructions as per:
+	# https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/setting-up-node-on-ec2-instance.html
+	# require running a random shell script off the web, and sourcing a script to get the environment vars.
+	#
+	# For the sake of user friendliness we'd like to avoid making the user modify their profile.
+	#
+	# So we're counting on that install_amazon_linux_deps.sh did the installation work, and then we'll try
+	# and import the environment into our process by calling nvm.sh, env, and parsing that.
+
+	info("Checking for NPM... ");
+	if (!-x "/usr/bin/npm" && !-x "/usr/local/bin/npm") {
+		if ( -f "$ENV{HOME}/.nvm/nvm.sh" ) {
+			info_ok("NVM found, importing environment... ");
+
+			my $var_data = run({keep_buf => 1}, "source \"$ENV{HOME}/.nvm/nvm.sh\" && env --null");
+			foreach my $var_line (split(/\0/, $var_data)) {
+				chomp $var_line;
+				my ($k, $v) = split(/=/, $var_line);
+
+				if ( $k =~ /^NVM/ || $k eq "PATH" ) {
+					# Import NVM_* and PATH variables to our local environment
+					info_ok("$k ");
+					debug("$k => $v");
+					$ENV{$k} = $v;
+				}
+			}
+
+			if ( $ENV{PATH} =~ /\.nvm/ ) {
+				# Sanity check
+				info_ok("imported, looks good.\n");
+			} else {
+				warning("imported, may not have worked.\n");
+			}
+		} else {
+			warning("Not found installed, NVM not found. Build may fail.\n");
+		}
+	} else {
+		info_ok("Found installed, all good.\n");
+	}
+}
+
 
 sub collect_info {
 	require Term::ReadLine;
@@ -511,12 +556,7 @@ sub build {
 	mkdir("$root_dir/build");
 	chdir("$root_dir/build");
 
-	# Use cmake3 on Amazon Linux 2 as cmake always links to cmake version 2
-	if ( $distro eq "amzn-2" ) {
-		run("cmake3", "../source");
-	} else {
-		run("cmake", "../source");
-	}
+	run($DD->{cmake}, "../source");
 
 	foreach my $target (@build_list) {
 		important("Building target $target\n");
@@ -693,7 +733,7 @@ sub adjust_libs_search_func {
 	return if ( $relpath =~ /CMakeFiles/ );
 
 	# Do not run on Amazon Linux 2 as it does not have patchelf
-	if ( -f $abspath && -x $abspath && is_elf($abspath) && $distro ne "amzn-2" )  {
+	if ( -f $abspath && -x $abspath && is_elf($abspath) )  {
 		patch_rpath($abspath, $File::Find::dir);
 	}
 }
@@ -905,11 +945,8 @@ sub setup_services {
 	unless($opt_skip_systemd_restart) {
 		if ( $services_created ) {
 			info("Reloading systemd config... ");
-			if ( $distro eq "amzn-2" ) {
-				info("\nAmazon Linux 2 does not support user services. Skipping daemon reload.\n");
-			} else {
-					run("systemctl", "--user", "daemon-reload");
-			}
+			run({ fail_ok => 1 }, "systemctl", "--user", "daemon-reload");
+
 			info_ok("done.\n");
 		}
 	}

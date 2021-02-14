@@ -33,6 +33,11 @@ Before starting the build
   dnf install python2 python36
   alternatives --set python /usr/bin/python2
 
+## Notes on Amazon Linux 2
+
+Amazon Linux is a very trimmed-down distribution that lacks some packages that are present in other distributions. Unfortunately it even lacks Perl by default, which means `vircadia-builder` can't run on a default installation.
+
+To deal with this issue, run the `install_amazon_linux_deps.sh` script before running `vircadia-builder`.
 
 ## Unsupported platforms
 
