@@ -410,9 +410,9 @@ sub collect_info {
 	while($ok ne "yes") {
 		$repo            = $rl->readline("Git repository             : ", $repo);
 		$repo_tag        = $rl->readline("Git tag                    : ", $repo_tag);
-        $rel_type        = $rl->readline("Release type               : ", $rel_type);
-        $rel_no          = $rl->readline("Release number             : ", $rel_no);
-        $build_no        = $rl->readline("Build number               : ", $build_no);
+		$rel_type        = $rl->readline("Release type               : ", $rel_type);
+		$rel_no          = $rl->readline("Release number             : ", $rel_no);
+		$build_no        = $rl->readline("Build number               : ", $build_no);
 		$root_dir        = $rl->readline("Installation dir           : ", $root_dir);
 		$build_cores     = $rl->readline("CPU cores to use for Vircadia: ", $build_cores);
 		$build_cores_qt  = $rl->readline("CPU cores to use for Qt5   : ", $build_cores_qt);
@@ -421,31 +421,31 @@ sub collect_info {
 		$ok = $rl->readline("If the above is okay, say 'yes' to begin installation: ", "yes");
 	}
 
-    if ( defined $rel_no ) {
-        $ENV{RELEASE_NUMBER} = $rel_no;
-    }
+	if ( defined $rel_no ) {
+		$ENV{RELEASE_NUMBER} = $rel_no;
+	}
 
-    if ( defined $build_no ) {
-        $ENV{BUILD_NUMBER} = $build_no;
-    }
+	if ( defined $build_no ) {
+		$ENV{BUILD_NUMBER} = $build_no;
+	}
 
-    if ( lc($rel_type) eq "production" ) {
-        $ENV{RELEASE_TYPE} = 'PRODUCTION';
-        $ENV{PRODUCTION_BUILD} = 1;
-        $ENV{USE_STABLE_GLOBAL_SERVICES} = 1;
-        $ENV{BUILD_GLOBAL_SERVICES} = 'STABLE';
-    }
+	if ( lc($rel_type) eq "production" ) {
+		$ENV{RELEASE_TYPE} = 'PRODUCTION';
+		$ENV{PRODUCTION_BUILD} = 1;
+		$ENV{USE_STABLE_GLOBAL_SERVICES} = 1;
+		$ENV{BUILD_GLOBAL_SERVICES} = 'STABLE';
+	}
 
-    if ( lc($rel_type) eq "pr" ) {
-        $ENV{RELEASE_TYPE} = 'PR';
-        $ENV{PR_BUILD} = 1;
-    }
+	if ( lc($rel_type) eq "pr" ) {
+		$ENV{RELEASE_TYPE} = 'PR';
+		$ENV{PR_BUILD} = 1;
+	}
 
-    if ( lc($rel_type) eq "dev" ) {
-        $ENV{RELEASE_TYPE} = 'DEV';
-        $ENV{DEV_BUILD} = 1;
-        $ENV{BUILD_GLOBAL_SERVICES} = 'DEVELOPMENT';
-    }
+	if ( lc($rel_type) eq "dev" ) {
+		$ENV{RELEASE_TYPE} = 'DEV';
+		$ENV{DEV_BUILD} = 1;
+		$ENV{BUILD_GLOBAL_SERVICES} = 'DEVELOPMENT';
+	}
 
 	$repo_tag_path = $repo_tag;
 	$repo_tag_path =~ s/\W/_/g;
@@ -511,12 +511,12 @@ sub build {
 	mkdir("$root_dir/build");
 	chdir("$root_dir/build");
 
-    # Use cmake3 on Amazon Linux 2 as cmake always links to cmake version 2
-    if ( $distro eq "amzn-2" ) {
-    	run("cmake3", "../source");
-    } else {
-        run("cmake", "../source");
-    }
+	# Use cmake3 on Amazon Linux 2 as cmake always links to cmake version 2
+	if ( $distro eq "amzn-2" ) {
+		run("cmake3", "../source");
+	} else {
+		run("cmake", "../source");
+	}
 
 	foreach my $target (@build_list) {
 		important("Building target $target\n");
@@ -640,7 +640,8 @@ sub  install_search_func {
 			debug("COPY: '$abspath' => '$destination/$relpath'\n");
 
 			mkdir_path("$destination/$reldir");
-                        unlink("$destination/$relpath") if ( -e "$destination/$relpath" );
+			unlink("$destination/$relpath") if ( -e "$destination/$relpath" );
+
 			if ( -l $abspath ) {
 				# Turns out that trying to make a hardlink of a symlink copies the symlink
 				if ( $method eq "copy" ) {
@@ -691,7 +692,7 @@ sub adjust_libs_search_func {
 	# Don't touch cmake things
 	return if ( $relpath =~ /CMakeFiles/ );
 
-    # Do not run on Amazon Linux 2 as it does not have patchelf
+	# Do not run on Amazon Linux 2 as it does not have patchelf
 	if ( -f $abspath && -x $abspath && is_elf($abspath) && $distro ne "amzn-2" )  {
 		patch_rpath($abspath, $File::Find::dir);
 	}
@@ -904,11 +905,11 @@ sub setup_services {
 	unless($opt_skip_systemd_restart) {
 		if ( $services_created ) {
 			info("Reloading systemd config... ");
-            if ( $distro eq "amzn-2" ) {
-                info("\nAmazon Linux 2 does not support user services. Skipping daemon reload.\n");
+			if ( $distro eq "amzn-2" ) {
+				info("\nAmazon Linux 2 does not support user services. Skipping daemon reload.\n");
 			} else {
-                run("systemctl", "--user", "daemon-reload");
-            }
+					run("systemctl", "--user", "daemon-reload");
+			}
 			info_ok("done.\n");
 		}
 	}
@@ -1950,8 +1951,8 @@ Options:
 	-r, --repo REPO         Set the repository to REPO
 	-t, --tag TAG           Set the tag to TAG
 	-y, --auto              Run without asking any questions
-            --qt-debug          Build Qt in debug mode
-            --qt-debug-info     Build Qt with debug symbols in release mode
+	--qt-debug              Build Qt in debug mode
+	--qt-debug-info         Build Qt with debug symbols in release mode
 
 Custom mode options:
 
