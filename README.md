@@ -3,18 +3,17 @@ Builds Vircadia (formerly known as "Project Athena"), an Open Source fork of the
 
 ## Supported platforms
 
-* Amazon Linux 2
+* Amazon Linux 2 (see notes below)
 * CentOS 8.x (see notes below)
-* Debian 10
+* Debian 10 (codename Buster)
+    * Linux Mint Debian Edition 4
 * Fedora 31
 * Fedora 32
 * Fedora 33
-* Linux Mint Debian Edition 4
-* Linux Mint 19.3
-* Linux Mint 20.0
-* Ubuntu 18.04 (has pre-built Qt)
-* Ubuntu 19.10 (has pre-built Qt)
-* Ubuntu 20.04
+* Ubuntu 18.04.x (codename Bionic, has pre-built Qt)
+    * Linux Mint 19.x
+* Ubuntu 20.04.x (codename Focal)
+    * Linux Mint 20.x
 * OpenSuSE Tumbleweed
 * (more coming soon)
 
