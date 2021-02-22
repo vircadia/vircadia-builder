@@ -868,7 +868,7 @@ sub install_qt {
 	push @extra_qt_arguments, "-debug"            if ( $opt_qt_debug );
 	push @extra_qt_arguments, "-force-debug-info" if ( $opt_qt_debug_info );
 
-    if ( x86_64 eq (POSIX::uname)[4] ) {
+    if ( "x86_64" eq (POSIX::uname)[4] ) {
 	    run("../qt5/configure", "-opensource", "-confirm-license",
 	    	"-platform", "linux-g++-64",
 		    @{ $DD->{qt_configure_arguments} },
@@ -876,7 +876,7 @@ sub install_qt {
 		    "-prefix", "../qt5-install");
         return;
     }
-    elsif ( aarch64 eq (POSIX::uname)[4] ) {
+    elsif ( "aarch64" eq (POSIX::uname)[4] ) {
 	    run("../qt5/configure", "-opensource", "-confirm-license",
 	    	"-platform", "linux-g++",
 		    @{ $DD->{qt_configure_arguments} },
@@ -884,7 +884,7 @@ sub install_qt {
 		    "-prefix", "../qt5-install");
         return;
     }
-    else
+    else {
         fatal("Unknown machine architecture!\n")
     }
 
