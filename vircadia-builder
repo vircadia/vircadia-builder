@@ -13,6 +13,7 @@ use File::Copy qw(cp);
 use File::Basename;
 use Cwd qw(abs_path);
 use VircadiaBuilder::Common;
+use POSIX ();
 
 
 $| = 1;
@@ -867,11 +868,26 @@ sub install_qt {
 	push @extra_qt_arguments, "-debug"            if ( $opt_qt_debug );
 	push @extra_qt_arguments, "-force-debug-info" if ( $opt_qt_debug_info );
 
-	run("../qt5/configure", "-opensource", "-confirm-license",
-		"-platform", "linux-g++-64",
-		@{ $DD->{qt_configure_arguments} },
-	        @extra_qt_arguments,
-		"-prefix", "../qt5-install");
+    if ( "x86_64" eq (POSIX::uname)[4] ) {
+	    run("../qt5/configure", "-opensource", "-confirm-license",
+	    	"-platform", "linux-g++-64",
+		    @{ $DD->{qt_configure_arguments} },
+	         @extra_qt_arguments,
+		    "-prefix", "../qt5-install");
+        return;
+    }
+    elsif ( "aarch64" eq (POSIX::uname)[4] ) {
+	    run("../qt5/configure", "-opensource", "-confirm-license",
+	    	"-platform", "linux-g++",
+		    @{ $DD->{qt_configure_arguments} },
+	         @extra_qt_arguments,
+		    "-prefix", "../qt5-install");
+        return;
+    }
+    else {
+        fatal("Unknown machine architecture!\n")
+    }
+
 
 	check_qt_webengine();
 	run("make", "-j${build_cores_qt}");

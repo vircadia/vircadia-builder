@@ -9,7 +9,9 @@ if [ ! -x "/usr/bin/patchelf" -a ! -x "/usr/local/bin/patchelf" ] ; then
 	tdir=`mktemp -d`
 	cd "$tdir"
 	git clone https://github.com/NixOS/patchelf.git
-	cd patchelf
+        cd patchelf
+	# This is a temporary fix for https://github.com/NixOS/patchelf/issues/263
+        git checkout 7695c62652317fb0d0b38956b8fc548a4c4b003e
 	./bootstrap.sh
 	./configure
 	make
