@@ -868,26 +868,21 @@ sub install_qt {
 	push @extra_qt_arguments, "-debug"            if ( $opt_qt_debug );
 	push @extra_qt_arguments, "-force-debug-info" if ( $opt_qt_debug_info );
 
-    if ( "x86_64" eq (POSIX::uname)[4] ) {
-	    run("../qt5/configure", "-opensource", "-confirm-license",
-	    	"-platform", "linux-g++-64",
-		    @{ $DD->{qt_configure_arguments} },
-	         @extra_qt_arguments,
-		    "-prefix", "../qt5-install");
-        return;
-    }
-    elsif ( "aarch64" eq (POSIX::uname)[4] ) {
-	    run("../qt5/configure", "-opensource", "-confirm-license",
-	    	"-platform", "linux-g++",
-		    @{ $DD->{qt_configure_arguments} },
-	         @extra_qt_arguments,
-		    "-prefix", "../qt5-install");
-        return;
-    }
-    else {
-        fatal("Unknown machine architecture!\n")
-    }
+	my $arch = (POSIX::uname)[4];
+	my $platform;
+    if ( $arch eq "x86_64" ) {
+		$platform = "linux-g++-64";
+	} elsif ( $arch eq "aarch64" ) {
+		$platform = "linux-g++";
+	} else {
+		fatal("Architecture $arch not supported");
+	}
 
+	run("../qt5/configure", "-opensource", "-confirm-license",
+		"-platform", $platform,
+		@{ $DD->{qt_configure_arguments} },
+		@extra_qt_arguments,
+		"-prefix", "../qt5-install");
 
 	check_qt_webengine();
 	run("make", "-j${build_cores_qt}");
