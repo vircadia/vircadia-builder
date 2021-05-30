@@ -1,0 +1,19 @@
+#!/bin/bash
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
+
+src="$SCRIPT_DIR/../../.."
+dst="$1"
+
+ls -l "$src"
+echo "SRC: $src; DST: $dst"
+
+[ -d "$dst" ] && rm -rf "$dst"
+mkdir -p "$dst" "$dst/distros" "$dst/lib"
+
+cp    "$src/vircadia-builder"              "$dst/"
+cp    "$src/install_amazon_linux_deps.sh"  "$dst/"
+cp -r "$src/lib"                           "$dst/"
+cp -r "$src/distros"                       "$dst/"
+
+
