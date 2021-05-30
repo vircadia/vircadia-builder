@@ -1,0 +1,30 @@
+#!/bin/bash
+container="$1"
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
+if [ -z "$container" ] ; then
+	echo "Syntax: $0 [container]"
+	exit 1
+else
+	shift
+fi
+
+cmd="/builder/vircadia-builder"
+
+if [ -x "$SCRIPT_DIR/test-helpers/$container" ] ; then
+	echo "Using helper script for $container"
+	cmd="/builder/test-helpers/$container"
+fi
+
+if [ -x "/usr/bin/podman" ] ; then
+	echo "Running test for $container with podman"
+	podman run -it -v .:/builder:Z "$container" "$cmd" --auto "$@"
+elif [ -x "/usr/bin/docker" ] ; then
+	echo "Running test for $container with docker"
+	docker run -it -v .:/builder "$container" "$cmd" --auto "$@"
+else
+	echo "Podman or docker is required!"
+	exit 1
+fi
+
+
