@@ -510,7 +510,7 @@ sub get_source {
 
 	mkdir($root_dir);
 
-	get_source_from_git($repo, "source", $repo_tag);
+	get_source_from_git($repo, "source", $repo_tag, no_submodules => 1);
 
 	if ( $opt_sys_qt ) {
 		info("Applying System Qt patch... ");
@@ -1273,7 +1273,7 @@ sub update_repo {
 	if ( !$opt_keep_source ) {
 		chdir("$root_dir/$destdir");
 		run("git", "fetch", "origin", "$tag:refs/remotes/origin/$tag");
-		run("git", "submodule", "update", "-f", "--init", "--recursive");
+		run("git", "submodule", "update", "-f", "--init", "--recursive") unless ($opts{'no_submodules'});
 		run("git", "clean", "-f");
 		run("git", "checkout", "origin/$tag");
 	}
@@ -1359,6 +1359,13 @@ sub check_qt_install {
 	}
 }
 
+sub ver_parse {
+	my ($ver) = @_;
+	my ($maj, $min, $rev) = split(/\./, $ver);
+	return ($maj * 1000000) + ($min*1000) + $rev;
+}
+
+
 sub check_qt_webengine {
 	# This checks if QtWebEngine is going to be built, and if any required dependencies
 	# are missing. This works by parsing config.summary, which seems very clunky.
@@ -1374,6 +1381,14 @@ sub check_qt_webengine {
 		or fatal("Can't open $root_dir/qt5-build/config.summary: $!");
 
 
+	# Number of sections we need to find in the output to make sure the
+	# config came out okay. This varies by Qt version. We find 3 for 5.14
+	# and below, and only 2 for 5.15.
+	my $sections_needed = $DD->{qt_check_sections} // 3;
+	if ( ver_parse($DD->{qt_version}) >= ver_parse('5.15.0') ) {
+		$sections_needed = 2;
+		debug("Using $sections_needed for section check for Qt 5.15");
+	}
 
 	my $sections_found = 0;
 	my $lines_found = 0;
@@ -1432,8 +1447,8 @@ sub check_qt_webengine {
 	}
 	close $fh;
 
-	if ($sections_found < 3) {
-		fatal("Failed to parse $root_dir/qt5-build/config.summary: only $sections_found of 3 sections were found");
+	if ($sections_found < $sections_needed) {
+		fatal("Failed to parse $root_dir/qt5-build/config.summary: only $sections_found of $sections_needed sections were found");
 	}
 
 	if ($lines_found < 5) {
