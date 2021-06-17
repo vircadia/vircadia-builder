@@ -17,6 +17,16 @@ Builds Vircadia (codename "Project Athena"), an Open Source fork of the High Fid
 * OpenSuSE Tumbleweed
 * (more coming soon)
 
+## Notes on Ubuntu 18.04
+
+The Node.js in Ubuntu's official repositories is severely outdated. This can lead to problems building target jsdoc.
+
+To update Node.js, manually add the 16.x repository as shown [here](https://github.com/nodesource/distributions)
+```bash
+    curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+    sudo apt-get install -y nodejs
+```
+
 ## Notes on CentOS / RHEL 8.x builds
 
 Before starting the build
