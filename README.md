@@ -25,6 +25,8 @@ To update Node.js, manually add the 16.x repository as shown [here](https://gith
 ```bash
     curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
     sudo apt-get install -y nodejs
+```
+
 ## Notes on CentOS / RHEL 8.x builds
 
 Before starting the build
