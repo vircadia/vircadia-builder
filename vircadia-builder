@@ -435,7 +435,7 @@ sub import_nvm_environment {
 				warning("imported, may not have worked.\n");
 			}
 		} else {
-			warning("Not found installed, NVM not found. Build may fail.\n");
+			warning("Not found installed, NPM not found. Build may fail.\n");
 		}
 	} else {
 		info_ok("Found installed, all good.\n");
