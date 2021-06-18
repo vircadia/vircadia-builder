@@ -116,7 +116,7 @@ my @excluded_system_libs = (
 #	qr/^libz\.so\.1/
 );
 
-my $appimagetool_release = 12;
+my $appimagetool_release = 13;
 my $appimagetool_url = "https://github.com/AppImage/AppImageKit/releases/download/${appimagetool_release}/appimagetool-x86_64.AppImage";
 
 
