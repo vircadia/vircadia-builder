@@ -1805,10 +1805,16 @@ sub install_into_appimage {
 	symlink("vircadia/interface/interface", "$appimage_base/AppRun");
 	info_ok("done.\n");
 
-    # AppStream metadata is apparently not very easy to support. See https://github.com/AppImage/AppImageKit/issues/603
-    # We should just leave this be until the issue is closed.
-	#create_appimage_metadata("$appimage_base/usr/share/metainfo/Vircadia.appdata.xml");
-
+	# AppStream metadata support is fairly broken in AppImages.
+	# We are working around this by making sure that appstream-util is NOT available to check the metadata.
+	# See https://github.com/AppImage/AppImageKit/issues/603
+	info("Checking for appstream-util... ");
+	if ( system("appstream-util") == 0 ) {
+		warning("appstream-util found. Please uninstall appstream-util to be able to include AppStream metadata. See https://github.com/AppImage/AppImageKit/issues/603");
+	} else {
+		info_ok("appstream-util not found. Adding AppStream metadata.");
+		create_appimage_metadata("$appimage_base/usr/share/metainfo/Vircadia.appdata.xml");
+	}
 	info("Creating AppImage...");
 	chdir($root_dir);
 	run($tool_path, $appimage_base);
@@ -1846,25 +1852,25 @@ sub create_appimage_metadata {
   <screenshots>
     <screenshot type="default">
       <caption>Vircadia running on Linux Mint 19.3</caption>
-      <image>https://docs.vircadia.dev/_images/29th_september_interface_linux.jpg</image>
+      <image>https://docs.vircadia.com/_images/29th_september_interface_linux.jpg</image>
     </screenshot>
     <screenshot>
       <caption>Maker Meeting on the "El Papa Viejo"</caption>
-      <image>https://docs.vircadia.dev/_images/el_papa_viejo.jpg</image>
+      <image>https://docs.vircadia.com/_images/el_papa_viejo.jpg</image>
     </screenshot>
     <screenshot>
       <caption>Dale Glass speaking at the Developer Meeting</caption>
-      <image>https://docs.vircadia.dev/_images/vircadia-snap-by-RyanLi-on-2020-09-20_02-45-59.jpg</image>
+      <image>https://docs.vircadia.com/_images/vircadia-snap-by-RyanLi-on-2020-09-20_02-45-59.jpg</image>
     </screenshot>
     <screenshot>
       <caption>Mannequin army</caption>
-      <image>https://docs.vircadia.dev/_images/vircadia-snap-by-Revofire-on-2020-08-13_17-21-43.jpg</image>
+      <image>https://docs.vircadia.com/_images/vircadia-snap-by-Revofire-on-2020-08-13_17-21-43.jpg</image>
     </screenshot>
   </screenshots>
 
   <url type="homepage">https://vircadia.com/</url>
   <url type="bugtracker">https://github.com/vircadia/vircadia/issues</url>
-  <url type="help">https://docs.vircadia.dev/</url>
+  <url type="help">https://docs.vircadia.com/</url>
   <url type="translate">https://weblate.vircadia.dev/</url>
   <project_group>Internet</project_group>
 
