@@ -148,7 +148,7 @@ my $build_cores_qt;
 my $desktop;
 my $distro;
 
-my ($opt_keep_source, $opt_auto, $opt_build_qt, $opt_build, $opt_sys_qt, $opt_skip_build, $opt_skip_systemd_restart, $opt_no_modify_rpath, $opt_skip_install, $opt_make_appimage);
+my ($opt_keep_source, $opt_auto, $opt_build_qt, $opt_build, $opt_sys_qt, $opt_skip_build, $opt_skip_systemd_restart, $opt_no_modify_rpath, $opt_skip_install, $opt_make_appimage, $opt_install_deps_only);
 my ($opt_qt_debug, $opt_qt_debug_info);
 my ($cmd_help, $cmd_get_supported, $cmd_get_source_deps, $cmd_get_qt_deps, $cmd_get_system_qt_deps, $cmd_get_qt_version, $cmd_get_qt_patches, $cmd_make_pkglist);
 
@@ -186,7 +186,8 @@ GetOptions(
 	"skip-systemd-restart"   => \$opt_skip_systemd_restart,
 	"no-modify-rpath"        => \$opt_no_modify_rpath,
 	"qt-debug"               => \$opt_qt_debug,
-	"qt-debug-info"          => \$opt_qt_debug_info
+	"qt-debug-info"          => \$opt_qt_debug_info,
+	"install-deps-only"      => \$opt_install_deps_only
 ) or help(1);
 
 
@@ -224,6 +225,9 @@ my $DD = $data->{$distro};
 my %PACKAGES = get_package_list();
 set_environment();
 install_missing_packages();
+
+exit(0) if ( $opt_install_deps_only );
+
 import_nvm_environment();
 collect_info();
 
