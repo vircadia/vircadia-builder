@@ -9,7 +9,7 @@ else
 	shift
 fi
 
-cmd="/builder/vircadia-builder"
+cmd="/builder/test-helpers/try_build"
 
 if [ -x "$SCRIPT_DIR/test-helpers/$container" ] ; then
 	echo "Using helper script for $container"
