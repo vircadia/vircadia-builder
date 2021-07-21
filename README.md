@@ -3,17 +3,18 @@ Builds Vircadia (codename "Project Athena"), an Open Source fork of the High Fid
 
 ## Supported platforms
 
-* Amazon Linux 2 (see notes below)
 * CentOS 8.x (see notes below)
 * Debian 10 (codename Buster)
     * Linux Mint Debian Edition 4
-* Fedora 31
-* Fedora 32
-* Fedora 33
+* Fedora 31 (end of life) 
+* Fedora 32 (end of life) 
+* Fedora 33 (can use system Qt) 
+* Fedora 34 (can use system Qt) 
 * Ubuntu 18.04.x (codename Bionic, has pre-built Qt)
     * Linux Mint 19.x
 * Ubuntu 20.04.x (codename Focal)
     * Linux Mint 20.x
+* Ubuntu 21.04 (codename Hirsute, can use system Qt) 
 * OpenSuSE Tumbleweed
 * (more coming soon)
 
@@ -39,6 +40,10 @@ Amazon Linux is a very trimmed-down distribution that lacks some packages that a
 To deal with this issue, run the `install_amazon_linux_deps.sh` script before running `vircadia-builder`.
 
 ## Unsupported platforms
+
+* Amazon Linux 2
+
+Currently unsupported due to it's outdated and tiny package base. 
 
 * Ubuntu 16.04
 
