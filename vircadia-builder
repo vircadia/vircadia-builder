@@ -2046,18 +2046,20 @@ This script is intended to be user friendly and as automatic as possible, so
 it has embedded presets for a number of distributions. However, it can be made
 to work without them.
 
-	--get-supported         Lists the distributions that are supported
-	--get-source-deps DIST  Lists the packages needed to build the source on
-	                        distro DIST.
-	--get-qt-deps DIST      Lists the packages needed to build Qt on distro
-	                        DIST.
-	--get-qt-version DIST   Outputs the Qt version that will be used if Qt
-	                        is built from source on disto DIST.
-	--get-qt-patches DIST   Lists the patches that will be applied if Qt
-	                        is built from source on distro DIST.
-	--make-pkglist          Reads a list of package names from STDIN and
-	                        outputs them in a format suitable for pasting
-	                        into the script's source code.
+	--get-supported            Lists the distributions that are supported
+	--get-source-deps DIST     Lists the packages needed to build the source on
+	                           distro DIST.
+	--get-system-qt-deps DIST  Lists the packages needed to build against
+                               system Qt on distro DIST
+	--get-qt-deps DIST         Lists the packages needed to build Qt on distro
+	                           DIST.
+	--get-qt-version DIST      Outputs the Qt version that will be used if Qt
+	                           is built from source on disto DIST.
+	--get-qt-patches DIST      Lists the patches that will be applied if Qt
+	                           is built from source on distro DIST.
+	--make-pkglist             Reads a list of package names from STDIN and
+	                           outputs them in a format suitable for pasting
+	                           into the script's source code.
 
 HELP
 
