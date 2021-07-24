@@ -550,6 +550,11 @@ sub build {
 		$ENV{VIRCADIA_USE_PREBUILT_QT}=1;
 		$ENV{VIRCADIA_USE_QT_VERSION}="";
 		$ENV{HIFI_QT_BASE} = "$root_dir";
+
+		# Finally, the single, clean solution to the issue, after PR #936
+		# The above is obsolete, and can be removed after a while.
+		# Suggested cleanup date: Jan 1, 2022.
+		$ENV{VIRCADIA_QT_PATH} = "$root_dir/qt5-install";
 	}
 
 
