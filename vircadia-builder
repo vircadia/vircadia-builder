@@ -353,6 +353,8 @@ sub install_missing_packages {
 	} elsif ( $DD->{has_binary_qt_package}) {
 		info_ok(" binary Qt package available.\n");
 	} else {
+		push @required_packages, @{ $DD->{qt_source_dependencies}};
+
 		warning(" no system Qt support, nor binary package\n\n");
 
 		warning("System Qt is not supported on your system, and there is no binary\n");
