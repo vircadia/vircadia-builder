@@ -2026,7 +2026,7 @@ Downloads, compiles and installs Vircadia.
 
 Options:
 	-A, --make-appimage     Create an AppImage
-	-B, --build-qt          Built Qt even if there's a binery package
+	-B, --build-qt          Built Qt even if there's a binary package
 	-C, --collect-info      Collect additional info for debugging
 	-D, --distro DIST       Set the distribution
 	-d, --destdir DIR       Set the installation directory
