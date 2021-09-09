@@ -290,12 +290,13 @@ sub detect_distro {
 		my $id          = $release_data{ID} . "-" . $release_data{VERSION_ID};
 		my $pretty_name = $release_data{PRETTY_NAME} // ( $release_data{NAME} . " " . $release_data{VERSION} );
 
-		if ( $release_data{ID} eq "opensuse-tumbleweed" ) {
+		if ( $release_data{ID} eq "opensuse-tumbleweed" || $release_data{ID} eq "manjaro" ) {
 			$id = $release_data{ID};
 
 			# Opensuse Tumbleweed is a rolling release, and VERSION_ID is a timestamp, so it changes
 			# far too often. For now we're just going to assume that people stay up to date and only
 			# supporting the latest is needed.
+			# Manjaro is a rolling release, and VERSION_ID does not exist.
 		}
 
 		if ( $release_data{ID} eq "debian" && $release_data{PRETTY_NAME} =~ m/bookworm/ ) {
@@ -2034,7 +2035,7 @@ Downloads, compiles and installs Vircadia.
 
 Options:
 	-A, --make-appimage     Create an AppImage
-	-B, --build-qt          Built Qt even if there's a binery package
+	-B, --build-qt          Built Qt even if there's a binary package
 	-C, --collect-info      Collect additional info for debugging
 	-D, --distro DIST       Set the distribution
 	-d, --destdir DIR       Set the installation directory
