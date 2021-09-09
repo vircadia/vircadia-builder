@@ -6,15 +6,17 @@ Builds Vircadia (codename "Project Athena"), an open source Interface and Server
 * CentOS 8.x (see notes below)
 * Debian 10 (codename Buster)
     * Linux Mint Debian Edition 4
-* Fedora 31 (end of life) 
-* Fedora 32 (end of life) 
-* Fedora 33 (can use system Qt) 
-* Fedora 34 (can use system Qt) 
+* Debian 11 (codename Bulleye, can use system Qt)
+* Debian 12 (codename Bookwork, can use system Qt)
+* Fedora 31 (end of life)
+* Fedora 32 (end of life)
+* Fedora 33 (can use system Qt)
+* Fedora 34 (can use system Qt)
 * Ubuntu 18.04.x (codename Bionic, has pre-built Qt)
     * Linux Mint 19.x
 * Ubuntu 20.04.x (codename Focal)
     * Linux Mint 20.x
-* Ubuntu 21.04 (codename Hirsute, can use system Qt) 
+* Ubuntu 21.04 (codename Hirsute, can use system Qt)
 * OpenSuSE Tumbleweed
 * (more coming soon)
 
