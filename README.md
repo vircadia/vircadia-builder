@@ -5,7 +5,9 @@ Builds Vircadia (codename "Project Athena"), an open source Interface and Server
 
 * CentOS 8.x (see notes below)
 * Debian 10 (codename Buster)
-    * Linux Mint Debian Edition 4
+* Debian 11 (codename Bulleye, can use system Qt)
+* Debian 12 (codename Bookwork, can use system Qt)
+* Linux Mint Debian Edition 4
 * Fedora 31 (end of life)
 * Fedora 32 (end of life)
 * Fedora 33 (can use system Qt)
