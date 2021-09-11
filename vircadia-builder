@@ -180,7 +180,6 @@ GetOptions(
 	"get-qt-patches=s"       => \$cmd_get_qt_patches,
 	"make-pkglist"           => \$cmd_make_pkglist,
 	"make-appimage|A"        => \$opt_make_appimage,
-	"use-system-qt|S"        => \$opt_sys_qt, # Obsoleted, ignored
 	"skip-build"             => \$opt_skip_build,
 	"skip-install"           => \$opt_skip_install,
 	"skip-systemd-restart"   => \$opt_skip_systemd_restart,
@@ -522,13 +521,6 @@ sub get_source {
 	mkdir($root_dir);
 
 	get_source_from_git($repo, "source", $repo_tag, no_submodules => 1);
-
-	if ( $opt_sys_qt ) {
-		info("Applying System Qt patch... ");
-		chdir("$root_dir/source");
-		run("patch", "-p1", "-i", "debian/patches/hifi_use_system_qt.diff");
-		info_ok("done.\n");
-	}
 }
 
 sub build {
