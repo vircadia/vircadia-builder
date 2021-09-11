@@ -1046,11 +1046,14 @@ sub create_script {
 	print $script "#!/bin/bash\n";
 	print $script 'SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"' . "\n";
 
-	print $script "export QT_DIR=\$SCRIPT_DIR/../qt5-install\n";
-	print $script "export QT_QPA_PLATFORM_PLUGIN_PATH=\$QT_DIR/plugins\n";
-	print $script "export LD_LIBRARY_PATH=\$QT_DIR/lib:\$LD_LIBRARY_PATH\n";
-	print $script "export PATH=\$QT_DIR/bin:\$QT_DIR/libexec:\$PATH\n";
-	print $script "export QTWEBENGINEPROCESS_PATH=\$QT_DIR/libexec/QtWebEngineProcess\n";
+	if (!$using_system_qt) {
+		print $script "export QT_DIR=\$SCRIPT_DIR/../qt5-install\n";
+		print $script "export QT_QPA_PLATFORM_PLUGIN_PATH=\$QT_DIR/plugins\n";
+		print $script "export LD_LIBRARY_PATH=\$QT_DIR/lib:\$LD_LIBRARY_PATH\n";
+		print $script "export PATH=\$QT_DIR/bin:\$QT_DIR/libexec:\$PATH\n";
+		print $script "export QTWEBENGINEPROCESS_PATH=\$QT_DIR/libexec/QtWebEngineProcess\n";
+	}
+
 	print $script "exec \"\$SCRIPT_DIR/$command\" $args \"\$@\"\n";
 	close $script;
 	chmod 0755,  "$root_dir/build/run_$name";
