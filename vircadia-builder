@@ -148,7 +148,9 @@ my $build_cores_qt;
 my $desktop;
 my $distro;
 
-my ($opt_keep_source, $opt_auto, $opt_build_qt, $opt_build, $opt_sys_qt, $opt_skip_build, $opt_skip_systemd_restart, $opt_no_modify_rpath, $opt_skip_install, $opt_make_appimage, $opt_install_deps_only);
+my $using_system_qt;
+
+my ($opt_keep_source, $opt_auto, $opt_build_qt, $opt_build, $opt_skip_build, $opt_skip_systemd_restart, $opt_no_modify_rpath, $opt_skip_install, $opt_make_appimage, $opt_install_deps_only);
 my ($opt_qt_debug, $opt_qt_debug_info);
 my ($cmd_help, $cmd_get_supported, $cmd_get_source_deps, $cmd_get_qt_deps, $cmd_get_system_qt_deps, $cmd_get_qt_version, $cmd_get_qt_patches, $cmd_make_pkglist);
 
@@ -534,6 +536,7 @@ sub build {
 	if ( $DD->{system_qt_dependencies} ) {
 		important("Using system Qt\n");
 		$ENV{VIRCADIA_USE_SYSTEM_QT} = 1;
+		$using_system_qt = 1;
 	} elsif ( check_qt_install() ) {
 		important("Using compiled Qt\n");
 		$ENV{QT_CMAKE_PREFIX_PATH}="$root_dir/qt5-install/lib/cmake";
@@ -575,7 +578,7 @@ sub build {
 		run("make", $target, "-j${build_cores}");
 	}
 
-	if (!$opt_sys_qt) {
+	if (!$using_system_qt) {
 		# The one in lib/ doesn't have a rpath, which causes quazip to link against system Qt, which causes interface to link against
 		# both system Qt and custom Qt. This leads to problems.
 		#
@@ -1773,7 +1776,7 @@ sub install_into_appimage {
 		}
 	}
 
-	if (!$opt_sys_qt && glob("$appimage_base/usr/lib64/libQt*")) {
+	if (!$using_system_qt && glob("$appimage_base/usr/lib64/libQt*")) {
 		# If anything gets compiled against system qt, the likely outcome
 		# is weird issues, such as the binary hanging on startup, probably due to multiple
 		# incompatible versions of Qt being loaded by interface.
