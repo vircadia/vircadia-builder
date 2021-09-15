@@ -2034,6 +2034,9 @@ Downloads, compiles and installs Vircadia.
 Options:
 	-A, --make-appimage     Create an AppImage
 	-B, --build-qt          Built Qt even if there's a binary package
+	--build TARGET          Selects the build target. Possible values are: server, client, all, domain-server, assignment-client, ice-server, interface, atp-client, oven, nitpick, skeleton-dump, ac-client, ktx-tool, ice-client, gpu-frame-player,vhacd-util (default is client). You can build multiple targets by separating them with a comma.
+	--build server,client   Builds server and client (only client
+                          is built by default)
 	-C, --collect-info      Collect additional info for debugging
 	-D, --distro DIST       Set the distribution
 	-d, --destdir DIR       Set the installation directory
