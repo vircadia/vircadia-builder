@@ -291,7 +291,7 @@ sub detect_distro {
 		my $id          = $release_data{ID} . "-" . $release_data{VERSION_ID};
 		my $pretty_name = $release_data{PRETTY_NAME} // ( $release_data{NAME} . " " . $release_data{VERSION} );
 
-		if ( $release_data{ID} eq "opensuse-tumbleweed" || $release_data{ID} eq "manjaro" ) {
+		if ( $release_data{ID} eq "opensuse-tumbleweed" || $release_data{ID} eq "manjaro" || $release_data{ID} eq "manjaro-arm" ) {
 			$id = $release_data{ID};
 
 			# Opensuse Tumbleweed is a rolling release, and VERSION_ID is a timestamp, so it changes

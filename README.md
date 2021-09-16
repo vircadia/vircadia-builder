@@ -13,6 +13,7 @@ Builds Vircadia (codename "Project Athena"), an open source Interface and Server
 * Fedora 33 (can use system Qt)
 * Fedora 34 (can use system Qt)
 * Manjaro (can use system Qt)
+    * Manjaro ARM
 * Ubuntu 18.04.x (codename Bionic, has pre-built Qt)
     * Linux Mint 19.x
 * Ubuntu 20.04.x (codename Focal)
