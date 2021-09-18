@@ -16,7 +16,7 @@ our $collect_system_info;
 
 BEGIN {
 	@ISA = qw(Exporter);
-	@EXPORT = qw( run info info_ok warning important debug fatal write_to_log init_log $collect_system_info  );
+	@EXPORT = qw( run info info_ok warning important debug fatal write_to_log init_log $collect_system_info read_from_cmd read_from_cmd_into_file );
 }
 
 sub error_to_text {
@@ -166,6 +166,29 @@ sub important {
 sub debug {
 	my $text = shift;
 	write_to_log($text);
+}
+
+sub read_from_cmd {
+	my (@command) = @_;
+	my $opts = {};
+
+	if ( ref($command[0]) eq "HASH" ) {
+		$opts = shift(@command);
+	}
+
+	$opts->{keep_buf} = 1;
+
+	return run($opts, @command);
+}
+
+sub read_from_cmd_into_file {
+	my ($filename, @cmd) = @_;
+	my $text = read_from_cmd(@cmd);
+
+	# die instead of fatal() here since this may be called from fatal.
+	open(my $fh, '>', $filename) or die "Failed to create $filename: $!";
+	print $fh $text;
+	close $fh;
 }
 
 sub fatal {
