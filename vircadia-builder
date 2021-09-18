@@ -95,6 +95,7 @@ my @excluded_system_libs = (
 	qr/^libnss_nis\.so\.2/,
 	qr/^libnss3\.so/, #added - fixes crash in libsoftokn3.so
 	qr/^libnssutil3\.so/, #added
+	qr/^libOpenGL\.so\.0/, #fixes GLVND on different vendor systems
 #	qr/^libp11-kit\.so\.0/,
 #	qr/^libpango-1\.0\.so\.0/,
 #	qr/^libpangocairo-1\.0\.so\.0/,
