@@ -82,7 +82,7 @@ my @excluded_system_libs = (
 #	qr/^libgmp\.so\.10/,
 #	qr/^libgobject-2\.0\.so\.0/,
 #	qr/^libgpg-error\.so\.0/,
-#	qr/^libharfbuzz\.so\.0/,
+	qr/^libharfbuzz\.so\.0/, #fixes crash with freetype 2.11 system libraries
 #	qr/^libICE\.so\.6/,
 #	qr/^libjack\.so\.0/,
 	qr/^libm\.so\.6/,
