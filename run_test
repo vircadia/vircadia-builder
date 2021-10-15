@@ -4,6 +4,10 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 if [ -z "$container" ] ; then
 	echo "Syntax: $0 [container]"
+	echo ""
+	echo "Suggested containers"
+	echo "--------------------"
+	podman image list --noheading | grep 'vircadia-builder/'
 	exit 1
 else
 	shift
