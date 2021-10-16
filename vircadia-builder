@@ -13,6 +13,8 @@ use File::Copy qw(cp);
 use File::Basename;
 use Cwd qw(abs_path);
 use VircadiaBuilder::Common;
+use VircadiaBuilder::Package;
+use VircadiaBuilder::Package::Archive;
 use POSIX ();
 
 
@@ -133,7 +135,6 @@ my $mem_per_core_qt     = 1.2 * 1024 * 1024;
 my $repo         = "https://github.com/vircadia/vircadia";
 my $qt_repo      = "git://code.qt.io/qt/qt5.git";
 my $repo_tag     = "master";
-my $repo_tag_path = "";
 
 my $root_dir     = "$ENV{HOME}/Vircadia";
 my $inst_dir     = "$root_dir/install"; # Where files will be installed
@@ -152,7 +153,7 @@ my $distro;
 my $using_system_qt;
 
 my ($opt_keep_source, $opt_auto, $opt_build_qt, $opt_build, $opt_skip_build, $opt_skip_systemd_restart, $opt_no_modify_rpath, $opt_skip_install, $opt_make_appimage, $opt_install_deps_only);
-my ($opt_qt_debug, $opt_qt_debug_info);
+my ($opt_qt_debug, $opt_qt_debug_info, $cmd_get_install_dir, $cmd_get_archive_name, $cmd_make_archive);
 my ($cmd_help, $cmd_get_supported, $cmd_get_source_deps, $cmd_get_qt_deps, $cmd_get_system_qt_deps, $cmd_get_qt_version, $cmd_get_qt_patches, $cmd_make_pkglist);
 
 $opt_build = "client";
@@ -181,8 +182,11 @@ GetOptions(
 	"get-system-qt-deps=s"   => \$cmd_get_system_qt_deps,
 	"get-qt-version=s"       => \$cmd_get_qt_version,
 	"get-qt-patches=s"       => \$cmd_get_qt_patches,
+	"get-install-dir"        => \$cmd_get_install_dir,
+	"get-archive"            => \$cmd_get_archive_name,
 	"make-pkglist"           => \$cmd_make_pkglist,
 	"make-appimage|A"        => \$opt_make_appimage,
+	"make-archive"           => \$cmd_make_archive,
 	"skip-build"             => \$opt_skip_build,
 	"skip-install"           => \$opt_skip_install,
 	"skip-systemd-restart"   => \$opt_skip_systemd_restart,
@@ -242,9 +246,16 @@ my $need_to_buld_qt = $opt_build_qt || (!$DD->{has_binary_qt_package}  && !$DD->
 
 unless($opt_skip_build) {
 	get_source();
+	$inst_dir = get_install_dir_path();
+	$binary_dir = $opt_skip_install ? "$root_dir/build" : $inst_dir;
+
 	install_qt() if ($need_to_buld_qt);
 	build();
 }
+
+# Ensure the paths are set if we didn't build
+$inst_dir = get_install_dir_path();
+$binary_dir = $opt_skip_install ? "$root_dir/build" : $inst_dir;
 
 setup_qt() if ($need_to_buld_qt);
 adjust_library_paths() unless ($opt_no_modify_rpath);
@@ -252,6 +263,10 @@ adjust_library_paths() unless ($opt_no_modify_rpath);
 if ( $opt_make_appimage ) {
 	download_appimage_tool();
 	install_into_appimage();
+} elsif ($cmd_make_archive) {
+	install();
+	setup_scripts();
+	create_archive();
 } else {
 	install() unless ($opt_skip_install);
 	setup_scripts();
@@ -505,12 +520,6 @@ sub collect_info {
 		$ENV{DEV_BUILD} = 1;
 		$ENV{BUILD_GLOBAL_SERVICES} = 'DEVELOPMENT';
 	}
-
-	$repo_tag_path = $repo_tag;
-	$repo_tag_path =~ s/\W/_/g;
-
-	$inst_dir = "$root_dir/install_$repo_tag_path";
-	$binary_dir = $opt_skip_install ? "$root_dir/build" : $inst_dir;
 }
 
 
@@ -649,10 +658,34 @@ sub install {
 	info("Copied : "); info_ok("$inst_copied\n");
 	info("Skipped: "); info_ok("$inst_skipped\n");
 	info("Deleted: "); info_ok("$inst_deleted\n");
+}
 
+sub create_archive {
+	info("\n\n");
+	important("############################################################\n");
+	important("# Creating achive\n");
+	important("############################################################\n");
+	info("\n");
 
+	if (!exists $DD->{packaging}) {
+		fatal("Packaging not implemented for this distribution");
+	}
 
+	my $archive = VircadiaBuilder::Package::Archive->new();
+	$archive->set_version( get_source_version() );
+	$archive->set_install_dir( $inst_dir );
+	$archive->set_packaging_data( $DD->{packaging} );
+	$archive->set_targets( @build_list );
 
+	my $dest_file = $archive->get_output_file();
+	info("Writing into $dest_file... ");
+
+	if ( $archive->build() ) {
+		my $size = int((-s $dest_file) / (1024*1024));
+		info_ok("done, $size MiB written.\n");
+	} else {
+		error("Failed!");
+	}
 }
 
 
@@ -1997,6 +2030,26 @@ sub add_lib_path_search_func {
 		info(".");
 	}
 }
+
+sub get_source_version {
+	my $tag = read_from_cmd("git", "-C", "$root_dir/source", "describe", "--tags");
+	chomp $tag;
+	return $tag;
+}
+
+sub get_install_dir_relpath {
+	my $tag = get_source_version();
+	return "vircadia_$tag";
+}
+
+sub get_install_dir_path {
+	return "$root_dir/" . get_install_dir_relpath();
+}
+
+sub get_archive_path {
+	return get_install_dir_path . ".tar.xz";
+}
+
 
 
 sub help {
