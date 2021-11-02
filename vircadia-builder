@@ -152,7 +152,7 @@ my $distro;
 
 my $using_system_qt;
 
-my ($opt_keep_source, $opt_auto, $opt_build_qt, $opt_build, $opt_skip_build, $opt_skip_systemd_restart, $opt_no_modify_rpath, $opt_skip_install, $opt_make_appimage, $opt_install_deps_only);
+my ($opt_keep_source, $opt_auto, $opt_build_qt, $opt_build, $opt_skip_build, $opt_skip_systemd_restart, $opt_no_modify_rpath, $opt_skip_install, $opt_make_appimage, $opt_install_deps_only, $opt_verbose);
 my ($opt_qt_debug, $opt_qt_debug_info, $cmd_get_install_dir, $cmd_get_archive_name, $cmd_make_archive);
 my ($cmd_help, $cmd_get_supported, $cmd_get_source_deps, $cmd_get_qt_deps, $cmd_get_system_qt_deps, $cmd_get_qt_version, $cmd_get_qt_patches, $cmd_make_pkglist);
 
@@ -193,7 +193,8 @@ GetOptions(
 	"no-modify-rpath"        => \$opt_no_modify_rpath,
 	"qt-debug"               => \$opt_qt_debug,
 	"qt-debug-info"          => \$opt_qt_debug_info,
-	"install-deps-only"      => \$opt_install_deps_only
+	"install-deps-only"      => \$opt_install_deps_only,
+	"verbose|v"              => \$opt_verbose
 ) or help(1);
 
 
@@ -582,10 +583,15 @@ sub build {
 	chdir("$root_dir/build");
 
 	run($DD->{cmake}, "../source");
+	my @make_extra_opts;
+
+	if ( $opt_verbose ) {
+		push @make_extra_opts,"VERBOSE=1"
+	}
 
 	foreach my $target (@build_list) {
 		important("Building target $target\n");
-		run("make", $target, "-j${build_cores}");
+		run("make", $target, "-j${build_cores}", @make_extra_opts);
 	}
 
 	if (!$using_system_qt) {
@@ -2075,6 +2081,7 @@ Options:
 	-k, --keep-source       Don't overwrite the current source tree
 	-r, --repo REPO         Set the repository to REPO
 	-t, --tag TAG           Set the tag to TAG
+	-v, --verbose           Run a verbose build, showing the full compiler commands
 	-y, --auto              Run without asking any questions
 	--qt-debug              Build Qt in debug mode
 	--qt-debug-info         Build Qt with debug symbols in release mode
