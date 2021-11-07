@@ -119,6 +119,21 @@ my @excluded_system_libs = (
 #	qr/^libz\.so\.1/
 );
 
+my $optimization_presets = {
+	native      => {
+		description => "Build code optimized for this specific machine. Not suitable for packaging or copying to other systems.",
+		flags       => '-march=native -mtune=native',
+	},
+	compatible  => {
+		description => "Build code optimized for SSE3. This should work on almost anything.",
+		flags       => '-msse3'
+	},
+	none => {
+		description => "Do not perform any CPU-specific optimizations. Suitable for any hardware.",
+		flags       => '-march=x86-64'
+	}
+};
+
 my $appimagetool_release = 13;
 my $appimagetool_url = "https://github.com/AppImage/AppImageKit/releases/download/${appimagetool_release}/appimagetool-x86_64.AppImage";
 
@@ -146,6 +161,7 @@ my $build_no     = "";
 
 my $build_cores;
 my $build_cores_qt;
+my $optimization_level;
 
 my $desktop;
 my $distro;
@@ -153,11 +169,13 @@ my $distro;
 my $using_system_qt;
 
 my ($opt_keep_source, $opt_auto, $opt_build_qt, $opt_build, $opt_skip_build, $opt_skip_systemd_restart, $opt_no_modify_rpath, $opt_skip_install, $opt_make_appimage, $opt_install_deps_only, $opt_verbose);
-my ($opt_qt_debug, $opt_qt_debug_info, $cmd_get_install_dir, $cmd_get_archive_name, $cmd_make_archive);
+my ($opt_qt_debug, $opt_qt_debug_info, $cmd_get_install_dir, $cmd_get_archive_name, $cmd_make_archive, $opt_debug);
 my ($cmd_help, $cmd_get_supported, $cmd_get_source_deps, $cmd_get_qt_deps, $cmd_get_system_qt_deps, $cmd_get_qt_version, $cmd_get_qt_patches, $cmd_make_pkglist);
 
 $opt_build = "client";
+
 my @build_list;
+
 
 
 GetOptions(
@@ -194,11 +212,26 @@ GetOptions(
 	"qt-debug"               => \$opt_qt_debug,
 	"qt-debug-info"          => \$opt_qt_debug_info,
 	"install-deps-only"      => \$opt_install_deps_only,
-	"verbose|v"              => \$opt_verbose
+	"verbose|v"              => \$opt_verbose,
+        "debug"                  => \$opt_debug,
+        "optimization-level=s"   => \$optimization_level
 ) or help(1);
 
 
 @build_list = parse_build_option($opt_build);
+if ( $opt_make_appimage ) {
+	# If we're building an AppImage, and no level has been manually specified, default to 'compatible'
+	$optimization_level //= "compatible";
+} else {
+	# Otherwise we build for the local system specifically
+	$optimization_level //= "native";
+}
+
+if (!optimization_preset_is_valid($optimization_level)) {
+	list_optimization_presets();
+	exit(1);
+}
+
 load_data();
 
 
@@ -478,6 +511,17 @@ sub collect_info {
 	important("Everything seems to be in order. I am going to ask you some questions now.\n");
 	important("The defaults should be just fine. Simply press ENTER to accept the suggested\n");
 	important("value.\n\n");
+	important("By default, the code will be compiled to target your specific hardware.\n");
+	important("If you are going to deploy this build on another machine, choose the 'compatible'\n");
+	important("optimization level. It will be automatically selected by default for AppImage builds.\n\n");
+
+
+	my $opt_levels = "";
+	foreach my $lvl ( sort keys %$optimization_presets ) {
+		$opt_levels .= ", " if ($opt_levels);
+		$opt_levels .= $lvl;
+	}
+	$opt_levels .= "or help";
 
 	my $rl = Term::ReadLine->new('vircadia_setup');
 	my $ok = $opt_auto ? "yes" : "no";
@@ -491,6 +535,18 @@ sub collect_info {
 		$root_dir        = $rl->readline("Installation dir           : ", $root_dir);
 		$build_cores     = $rl->readline("CPU cores to use for Vircadia: ", $build_cores);
 		$build_cores_qt  = $rl->readline("CPU cores to use for Qt5   : ", $build_cores_qt);
+
+		my $first_time=1;
+		while( $first_time || !optimization_preset_is_valid($optimization_level)) {
+			$optimization_level = $rl->readline("Optimization level ($opt_levels): ", $optimization_level);
+
+			if (!optimization_preset_is_valid($optimization_level)) {
+				list_optimization_presets();
+			}
+
+			undef $first_time;
+		}
+
 
 		info("\n");
 		$ok = $rl->readline("If the above is okay, say 'yes' to begin installation: ", "yes");
@@ -582,12 +638,22 @@ sub build {
 	mkdir("$root_dir/build");
 	chdir("$root_dir/build");
 
-	run($DD->{cmake}, "../source");
+	my @cmake_extra_opts;
+	if ( $opt_debug ) {
+		push @cmake_extra_opts, "-DVIRCADIA_OPTIMIZE=0";
+	} else {
+		if ( exists $optimization_presets->{$optimization_level} ) {
+			push @cmake_extra_opts, "-DVIRCADIA_CPU_ARCHITECTURE=" . $optimization_presets->{$optimization_level}->{flags};
+		}
+	}
+
+	run($DD->{cmake}, "../source", @cmake_extra_opts);
 	my @make_extra_opts;
 
 	if ( $opt_verbose ) {
 		push @make_extra_opts,"VERBOSE=1"
 	}
+
 
 	foreach my $target (@build_list) {
 		important("Building target $target\n");
@@ -2112,4 +2178,25 @@ HELP
 
 	exit(1);
 	exit($retval);
+}
+
+
+sub optimization_preset_is_valid {
+	my ($preset) = @_;
+	return exists $optimization_presets->{$preset};
+}
+
+sub list_optimization_presets {
+	important("Optimization presets:\n");
+
+	foreach my $p ( sort keys %$optimization_presets) {
+		my $pv = $optimization_presets->{$p};
+		important("\t" . pad($p, 16) . ": " . $pv->{description} . "\n");
+		important("\t" . pad("", 16) . "  Options: " . $pv->{flags} . "\n");
+	}
+}
+
+sub pad {
+	my ($str, $len) = @_;
+	return $str . (" " x ($len - length $str));
 }
