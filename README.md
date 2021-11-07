@@ -12,13 +12,15 @@ Builds Vircadia (codename "Project Athena"), an open source Interface and Server
 * Fedora 32 (end of life)
 * Fedora 33 (can use system Qt)
 * Fedora 34 (can use system Qt)
+* Fedora 35 (can use system Qt)
 * Manjaro (can use system Qt)
     * Manjaro ARM
-* Ubuntu 18.04.x (codename Bionic, has pre-built Qt)
+* Ubuntu 18.04.x (codename Bionic, has pre-built Qt). See note below.
     * Linux Mint 19.x
 * Ubuntu 20.04.x (codename Focal)
     * Linux Mint 20.x
 * Ubuntu 21.04 (codename Hirsute, can use system Qt)
+* Ubuntu 21.10 (codename Impish, can use system Qt)
 * OpenSuSE Tumbleweed
 * (more coming soon)
 
@@ -36,6 +38,13 @@ Before starting the build
 - CentOS/RHEL has two Python version, make sure Python 2 is default
   dnf install python2 python36
   alternatives --set python /usr/bin/python2
+
+## Notes on Ubuntu 18.04
+
+Vircadia requires OpenSSL 1.1 at the very least, but installing libssl-dev conflicts with installing npm. 
+Therefore the system npm package can't be used, and isn't listed as a dependency. As a result, jsdoc can't be generated, and tab completion in the JS console won't work.
+
+It's possible to install npm from an outside source, and the build process should find it and use it in that case.
 
 ## Notes on Amazon Linux 2
 
