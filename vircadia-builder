@@ -1625,7 +1625,6 @@ sub parse_build_option {
 
 	if ( $split{client} ) {
 		delete $split{client};
-		$split{'jsdoc'}            = 1; # Horrible hack to deal with vircadia/vircadia#513
 		$split{'interface'}        = 1;
 	}
 
