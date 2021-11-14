@@ -476,8 +476,27 @@ sub import_nvm_environment {
 	if (!-x "/usr/bin/npm" && !-x "/usr/local/bin/npm") {
 		if ( -f "$ENV{HOME}/.nvm/nvm.sh" ) {
 			info_ok("NVM found, importing environment... ");
+			my $shell;
+			my $var_data;
 
-			my $var_data = run({keep_buf => 1}, "source \"$ENV{HOME}/.nvm/nvm.sh\" && env --null");
+
+			# On Ubuntu 18.04, /bin/sh is dash, which doesn't recognize the source command.
+			# We try and force using bash if at all possible. If that doesn't work, we'll 
+			# try whatever Perl wants to invoke, but that might not work.
+			foreach my $sh (qw(/bin/bash /usr/bin/bash)) {
+				if ( -x "$sh") {
+					$shell = $sh;
+					info_ok("Found bash in $sh; ");
+				}
+			}
+
+			if ( $shell ) {
+				$var_data = run({keep_buf => 1}, $shell, "-c", "source \"$ENV{HOME}/.nvm/nvm.sh\" && env --null");
+			} else {
+				warning("Failed to find bash, this might fail;");
+				$var_data = run({keep_buf => 1}, "source \"$ENV{HOME}/.nvm/nvm.sh\" && env --null");
+			}
+
 			foreach my $var_line (split(/\0/, $var_data)) {
 				chomp $var_line;
 				my ($k, $v) = split(/=/, $var_line);
