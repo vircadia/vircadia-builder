@@ -1368,7 +1368,10 @@ sub clone_repo {
 		@git_extra_args = @{$opts{git_args}};
 	}
 
-	run("git", "clone", "--progress", "--recursive", $url, "$root_dir/$destdir", "-b", $tag, "--single-branch"); # "@git_extra_args);
+	run("git", "clone", "--progress", $url, "$root_dir/$destdir", "-b", $tag);
+	if (!$opts{'no_submodules'}) {
+		run("git", "-C", "$root_dir/$destdir", "submodule", "update", "-f", "--init", "--recursive");
+	}
 }
 
 sub update_repo {
