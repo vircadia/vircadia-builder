@@ -2126,7 +2126,14 @@ sub add_lib_path_search_func {
 }
 
 sub get_source_version {
-	my $tag = read_from_cmd("git", "-C", "$root_dir/source", "describe", "--tags");
+	my $tag = read_from_cmd({ fail_ok => 1 }, "git", "-C", "$root_dir/source", "describe", "--tags");
+	unless ( $tag ) {
+		# If there are no tags, use whatever we can work with. Clean it up a bit so that it's an
+		# usable directory name.
+		$tag = read_from_cmd({ fail_ok => 1 }, "git", "-C", "$root_dir/source", "describe", "--all");
+		$tag =~ s/^heads\///;
+		$tag =~ s/\//-/g;
+	}
 	chomp $tag;
 	return $tag;
 }
