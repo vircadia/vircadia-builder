@@ -149,7 +149,7 @@ my $mem_per_core_qt     = 1.2 * 1024 * 1024;
 
 my $repo         = "https://github.com/vircadia/vircadia";
 my $qt_repo      = "git://code.qt.io/qt/qt5.git";
-my $repo_tag     = "master";
+my $repo_tag;
 
 my $root_dir     = "$ENV{HOME}/Vircadia";
 my $inst_dir     = "$root_dir/install"; # Where files will be installed
@@ -171,6 +171,7 @@ my $using_system_qt;
 my ($opt_keep_source, $opt_auto, $opt_build_qt, $opt_build, $opt_skip_build, $opt_skip_systemd_restart, $opt_no_modify_rpath, $opt_skip_install, $opt_make_appimage, $opt_install_deps_only, $opt_verbose);
 my ($opt_qt_debug, $opt_qt_debug_info, $cmd_get_install_dir, $cmd_get_archive_name, $cmd_make_archive, $opt_debug);
 my ($cmd_help, $cmd_get_supported, $cmd_get_source_deps, $cmd_get_qt_deps, $cmd_get_system_qt_deps, $cmd_get_qt_version, $cmd_get_qt_patches, $cmd_make_pkglist);
+my $opt_fork;
 
 $opt_build = "client";
 
@@ -214,7 +215,8 @@ GetOptions(
 	"install-deps-only"      => \$opt_install_deps_only,
 	"verbose|v"              => \$opt_verbose,
         "debug"                  => \$opt_debug,
-        "optimization-level=s"   => \$optimization_level
+        "optimization-level=s"   => \$optimization_level,
+	"fork|F=s"               => \$opt_fork,
 ) or help(1);
 
 
@@ -235,6 +237,50 @@ if (!optimization_preset_is_valid($optimization_level)) {
 load_data();
 
 
+
+my $fork_name;
+
+if ( !$opt_fork) {
+	my $exe = basename($0);
+	if ( $exe =~ /vircadia/i ) {
+		$opt_fork = "vircadia";
+	} elsif ( $exe =~ /overte/i ) {
+		$opt_fork = "overte";
+	} elsif ( $exe =~ /tivoli/ ) {
+		$opt_fork = "tivoli";
+	} else {
+		warn "--fork not specified, and can't determine fork from filename. Defaulting to vircadia";
+		$opt_fork = "vircadia";
+	}
+
+	debug("Selected fork $opt_fork based on our filename $0\n");
+}
+
+$opt_fork = lc($opt_fork);
+
+if ( $opt_fork eq "vircadia" ) {
+	$fork_name = "Vircadia";
+	$repo      = "https://github.com/vircadia/vircadia";
+	$repo_tag //= "master";
+} elsif ( $opt_fork eq "overte" ) {
+	$fork_name = "Overte";
+	$repo      = "https://github.com/overte-org/overte";
+	$repo_tag //= "master";
+} elsif ( $opt_fork eq "tivoli" ) {
+	$fork_name = "Tivoli";
+	$repo      = "https://github.com/tivolicloud/interface";
+	$repo_tag //= "main";
+} else {
+	die "Unrecognized fork: $opt_fork";
+}
+
+debug("Fork is $fork_name, repo $repo\n");
+
+$root_dir     = "$ENV{HOME}/$fork_name";
+$inst_dir     = "$root_dir/install"; # Where files will be installed
+$binary_dir   = $inst_dir;           # Where the final binaries are found
+
+
 help(1) if ($cmd_help);
 
 get_supported() if ( $cmd_get_supported );
@@ -250,7 +296,9 @@ make_pkglist()                                          if ( $cmd_make_pkglist )
 init_log();
 
 
-$build_cores    //= calculate_cores("Vircadia", $mem_per_core_vircadia);
+
+
+$build_cores    //= calculate_cores($fork_name, $mem_per_core_vircadia);
 $build_cores_qt //= calculate_cores("Qt", $mem_per_core_qt);
 $desktop        //= get_desktop();
 $distro         //= detect_distro();
@@ -553,7 +601,7 @@ sub collect_info {
 		$rel_no          = $rl->readline("Release number             : ", $rel_no);
 		$build_no        = $rl->readline("Build number               : ", $build_no);
 		$root_dir        = $rl->readline("Installation dir           : ", $root_dir);
-		$build_cores     = $rl->readline("CPU cores to use for Vircadia: ", $build_cores);
+		$build_cores     = $rl->readline("CPU cores to use for $fork_name: ", $build_cores);
 		$build_cores_qt  = $rl->readline("CPU cores to use for Qt5   : ", $build_cores_qt);
 
 		my $first_time=1;
@@ -1117,16 +1165,16 @@ sub setup_desktop {
 	mkdir("$ENV{HOME}/.local");
 	mkdir("$ENV{HOME}/.local/share");
 	mkdir("$ENV{HOME}/.local/share/applications");
-	my $desktop_file = "$ENV{HOME}/.local/share/applications/Vircadia.desktop";
+	my $desktop_file = "$ENV{HOME}/.local/share/applications/$fork_name.desktop";
 
 	link("$root_dir/source/interface/icon/interface.ico", "$binary_dir/interface.ico");
 	create_desktop_file($desktop_file, "$binary_dir/run_interface", "$binary_dir/interface.ico");
 
 	info("Creating a link in the user's desktop... ");
 	mkdir($desktop);
-	unlink("$desktop/Vircadia.desktop") if ( -e "$desktop/Vircadia.desktop" );
+	unlink("$desktop/$fork_name.desktop") if ( -e "$desktop/$fork_name.desktop" );
 
-	if ( symlink($desktop_file, "$desktop/Vircadia.desktop") ) {
+	if ( symlink($desktop_file, "$desktop/$fork_name.desktop") ) {
 		info_ok("done.\n");
 	} else {
 		warning("failed: $!\n");
@@ -1148,7 +1196,7 @@ sub create_desktop_file {
 	open(my $dsk, ">", $desktop_file) or fatal("Can't create $desktop_file: $!");
 	print $dsk "[Desktop Entry]\n";
 	print $dsk "Version=1.0\n";
-	print $dsk "Name=Vircadia\n";
+	print $dsk "Name=$fork_name\n";
 	print $dsk "Terminal=false\n";
 	print $dsk "Type=Application\n";
 	print $dsk "Exec=$application\n";
@@ -1756,7 +1804,7 @@ sub install_into_appimage {
 		return;
 	}
 
-	my $appimage_base    = "$root_dir/Vircadia.AppImage";
+	my $appimage_base    = "$root_dir/$fork_name.AppImage";
 	my $appimage_instdir = "$appimage_base/vircadia";
 	my $appimage_qtdir   = "$appimage_base/qt5-install";
 	my $tool_path        = "$root_dir/appimagetool.${appimagetool_release}";
@@ -1779,7 +1827,7 @@ sub install_into_appimage {
 	# Also, unlike with the install, for AppImage generation, we will modify the Qt libraries,
 	# so the directory must be copied rather than linked.
 
-	info("Copying Vircadia files to $appimage_instdir\n");
+	info("Copying $fork_name files to $appimage_instdir\n");
 	mkdir($appimage_instdir);
 
 	find({ follow      => 1,
@@ -1813,24 +1861,24 @@ sub install_into_appimage {
 
 		info_ok("$res, ");
 		my $icon_path     = "$appimage_base/usr/share/icons/hicolor/$res/apps";
-		my $icon_filename = "$icon_path/Vircadia.png";
+		my $icon_filename = "$icon_path/$fork_name.png";
 
 		mkdir_path($icon_path);
 		rename($icon, $icon_filename);
 
 		if ( $max_size < $size ) {
 			$max_size = $size;
-			symlink("usr/share/icons/hicolor/$res/apps/Vircadia.png", "$appimage_base/Vircadia.png");
+			symlink("usr/share/icons/hicolor/$res/apps/$fork_name.png", "$appimage_base/$fork_name.png");
 		}
 
 	}
 	info_ok("done.\n");
 
 	mkdir_path("$appimage_base/usr/bin");
-	symlink("../../vircadia/interface/interface", "$appimage_base/usr/bin/Vircadia");
+	symlink("../../vircadia/interface/interface", "$appimage_base/usr/bin/$fork_name");
 
-	create_desktop_file("$appimage_base/Vircadia.desktop",
-	                    "Vircadia", "Vircadia");
+	create_desktop_file("$appimage_base/$fork_name.desktop",
+	                    "$fork_name", "$fork_name");
 
 	info("Finding library dependencies...\n");
 	my @dep_list = ldd("$root_dir/build/$target/$target");
@@ -1926,7 +1974,7 @@ sub install_into_appimage {
 		warning("appstream-util found. Please uninstall appstream-util to be able to include AppStream metadata. See https://github.com/AppImage/AppImageKit/issues/603");
 	} else {
 		info_ok("appstream-util not found. Adding AppStream metadata.");
-		create_appimage_metadata("$appimage_base/usr/share/metainfo/Vircadia.appdata.xml");
+		create_appimage_metadata("$appimage_base/usr/share/metainfo/$fork_name.appdata.xml");
 	}
 	info("Creating AppImage...");
 	chdir($root_dir);
@@ -1949,12 +1997,12 @@ sub create_appimage_metadata {
   <id>com.vircadia.interface</id>
   <metadata_license>FSFAP</metadata_license>
   <project_license>Apache-2.0</project_license>
-  <name>Vircadia</name>
-  <summary>Vircadia Metaverse client</summary>
+  <name>$fork_name</name>
+  <summary>$fork_name Metaverse client</summary>
 
   <description>
     <p>
-      Vircadia is the Open Source continuation of the High Fidelity metaverse.
+      $fork_name is the Open Source continuation of the High Fidelity metaverse.
     </p>
   </description>
   <categories>
@@ -1964,7 +2012,7 @@ sub create_appimage_metadata {
   </categories>
   <screenshots>
     <screenshot type="default">
-      <caption>Vircadia running on Linux Mint 19.3</caption>
+      <caption>$fork_name running on Linux Mint 19.3</caption>
       <image>https://docs.vircadia.com/_images/29th_september_interface_linux.jpg</image>
     </screenshot>
     <screenshot>
@@ -1988,7 +2036,7 @@ sub create_appimage_metadata {
   <project_group>Internet</project_group>
 
   <provides>
-    <binary>Vircadia</binary>
+    <binary>$fork_name</binary>
   </provides>
 
 <!--
@@ -1999,7 +2047,7 @@ sub create_appimage_metadata {
       </description>
     </release>
   </releases>
-  <developer_name>Vircadia</developer_name>
+  <developer_name>$fork_name</developer_name>
 -->
 </component>
 METADATA
@@ -2140,7 +2188,7 @@ sub get_source_version {
 
 sub get_install_dir_relpath {
 	my $tag = get_source_version();
-	return "vircadia_$tag";
+	return lc($fork_name) . "_$tag";
 }
 
 sub get_install_dir_path {
@@ -2159,7 +2207,7 @@ sub help {
 	print <<HELP;
 
 $0 [options]
-Downloads, compiles and installs Vircadia.
+Downloads, compiles and installs $fork_name.
 
 Options:
 	-A, --make-appimage     Create an AppImage
@@ -2170,6 +2218,7 @@ Options:
 	-C, --collect-info      Collect additional info for debugging
 	-D, --distro DIST       Set the distribution
 	-d, --destdir DIR       Set the installation directory
+	-F, --fork FORK         Builds the specified fork. Valid values are Vircadia, Overte and Tivoli
 	-h, --help              Shows this text
 	-j, --cores NUM         Use NUM cores during main build
 	-J, --qt-cores NUM      Use NUM cores during Qt build
