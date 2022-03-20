@@ -147,7 +147,7 @@ my $mem_per_core_vircadia = 1 * 1024 * 1024;
 # Qt has a build stage that consumes a huge amount of RAM. Be a bit conservative here.
 my $mem_per_core_qt     = 1.2 * 1024 * 1024;
 
-my $repo         = "https://github.com/vircadia/vircadia";
+my $repo;
 my $qt_repo      = "git://code.qt.io/qt/qt5.git";
 my $repo_tag;
 
@@ -171,7 +171,7 @@ my $using_system_qt;
 my ($opt_keep_source, $opt_auto, $opt_build_qt, $opt_build, $opt_skip_build, $opt_skip_systemd_restart, $opt_no_modify_rpath, $opt_skip_install, $opt_make_appimage, $opt_install_deps_only, $opt_verbose);
 my ($opt_qt_debug, $opt_qt_debug_info, $cmd_get_install_dir, $cmd_get_archive_name, $cmd_make_archive, $opt_debug);
 my ($cmd_help, $cmd_get_supported, $cmd_get_source_deps, $cmd_get_qt_deps, $cmd_get_system_qt_deps, $cmd_get_qt_version, $cmd_get_qt_patches, $cmd_make_pkglist);
-my $opt_fork;
+my ($opt_fork, $opt_pr);
 
 $opt_build = "client";
 
@@ -217,6 +217,7 @@ GetOptions(
         "debug"                  => \$opt_debug,
         "optimization-level=s"   => \$optimization_level,
 	"fork|F=s"               => \$opt_fork,
+	"pr|P=s"                 => \$opt_pr,
 ) or help(1);
 
 
@@ -238,7 +239,32 @@ load_data();
 
 
 
+my $custom_fork;
 my $fork_name;
+
+if ( $opt_pr ) {
+	if ( $opt_pr =~ m#https://github.com/vircadia/vircadia/pulls/(\d+)# ) {
+		$opt_pr = $1;
+		$opt_fork = "vircadia";
+	} elsif ( $opt_pr =~ m#https://github.com/overte-org/overte/pull/(\d+)# ) {
+		$opt_pr = $1;
+		$opt_fork = "overte";
+	} elsif ( $opt_pr =~ m#https://github.com/tivolicloud/interface/pull/(\d+)# ) {
+		$opt_pr = $1;
+		$opt_fork = "tivoli";
+	} elsif ( $opt_pr =~ m#https://github.com/(\w+)/(\w+)/pull/(\d+)# ) {
+		$opt_fork = $1;
+		$repo     = "https://github.com/$1/$2";
+		$opt_pr = $3;
+
+		# This ensures we don't fail due to an unrecognized fork name later.
+		$custom_fork = 1;
+	} elsif ( $opt_pr =~ /^(\d+)/ ) {
+		# Nothing, PR number specified as-is
+	} else {
+		die "Invalid argument to --pr. Either pass a PR number, or a full URL to the PR on github";
+	}
+}
 
 if ( !$opt_fork) {
 	my $exe = basename($0);
@@ -260,18 +286,18 @@ $opt_fork = lc($opt_fork);
 
 if ( $opt_fork eq "vircadia" ) {
 	$fork_name = "Vircadia";
-	$repo      = "https://github.com/vircadia/vircadia";
+	$repo     //= "https://github.com/vircadia/vircadia";
 	$repo_tag //= "master";
 } elsif ( $opt_fork eq "overte" ) {
 	$fork_name = "Overte";
-	$repo      = "https://github.com/overte-org/overte";
+	$repo     //= "https://github.com/overte-org/overte";
 	$repo_tag //= "master";
 } elsif ( $opt_fork eq "tivoli" ) {
 	$fork_name = "Tivoli";
-	$repo      = "https://github.com/tivolicloud/interface";
+	$repo     //= "https://github.com/tivolicloud/interface";
 	$repo_tag //= "main";
 } else {
-	die "Unrecognized fork: $opt_fork";
+	die "Unrecognized fork: $opt_fork" unless ($custom_fork);
 }
 
 debug("Fork is $fork_name, repo $repo\n");
@@ -657,7 +683,7 @@ sub get_source {
 
 	mkdir($root_dir);
 
-	get_source_from_git($repo, "source", $repo_tag, no_submodules => 1);
+	get_source_from_git($repo, "source", $repo_tag, no_submodules => 1, pr => $opt_pr);
 }
 
 sub build {
@@ -1417,7 +1443,16 @@ sub clone_repo {
 		@git_extra_args = @{$opts{git_args}};
 	}
 
-	run("git", "clone", "--progress", $url, "$root_dir/$destdir", "-b", $tag);
+	if ( $opts{pr} ) {
+		my $pr = $opts{pr};
+		info("Checking out PR $pr\n");
+		run("git", "clone", "--progress", $url, "$root_dir/$destdir");
+		run("git", "fetch", "origin", "pull/$pr/head:PR-$pr");
+		run("git", "checkout", "PR-$pr");
+	} else {
+		run("git", "clone", "--progress", $url, "$root_dir/$destdir", "-b", $tag);
+	}
+
 	if (!$opts{'no_submodules'}) {
 		run("git", "-C", "$root_dir/$destdir", "submodule", "update", "-f", "--init", "--recursive");
 	}
@@ -1437,7 +1472,15 @@ sub update_repo {
 		run("git", "fetch", "origin", "$tag:refs/remotes/origin/$tag");
 		run("git", "submodule", "update", "-f", "--init", "--recursive") unless ($opts{'no_submodules'});
 		run("git", "clean", "-f");
-		run("git", "checkout", "origin/$tag");
+
+		if ( $opts{pr} ) {
+			my $pr = $opts{pr};
+			info("Checking out PR $pr\n");
+			run("git", "fetch", "origin", "pull/$pr/head:PR-$pr");
+			run("git", "checkout", "PR-$pr");
+		} else {
+			run("git", "checkout", "origin/$tag");
+		}
 	}
 
 }
@@ -2223,6 +2266,7 @@ Options:
 	-j, --cores NUM         Use NUM cores during main build
 	-J, --qt-cores NUM      Use NUM cores during Qt build
 	-k, --keep-source       Don't overwrite the current source tree
+	-P, --pr PR             Builds the specified pull request. PR is either a PR number, or the URL to the PR on Github
 	-r, --repo REPO         Set the repository to REPO
 	-t, --tag TAG           Set the tag to TAG
 	-v, --verbose           Run a verbose build, showing the full compiler commands
