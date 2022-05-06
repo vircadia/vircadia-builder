@@ -683,7 +683,7 @@ sub get_source {
 
 	mkdir($root_dir);
 
-	get_source_from_git($repo, "source", $repo_tag, no_submodules => 1, pr => $opt_pr);
+	get_source_from_git($repo, "source", $repo_tag, no_submodules => 0, pr => $opt_pr);
 }
 
 sub build {
