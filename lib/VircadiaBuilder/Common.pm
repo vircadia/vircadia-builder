@@ -60,6 +60,7 @@ sub run {
 	my $cmdstr = join(' ', @command);
 	debug("RUN: $cmdstr\n");
 	my $out_buf = "";
+	my $err_buf = "";
 	my $start = time;
 
 
@@ -105,6 +106,10 @@ sub run {
 				$out_buf .= $data;
 			}
 
+			if ( $fh == $err && $opts{keep_buf} ) {
+				$err_buf .= $data;
+			}
+
 			if (!$opts{quiet}) {
 				print $data        if ( $fh == $out && !$opts{keep_buf});
 				print STDERR $data if ( $fh == $err );
@@ -120,13 +125,18 @@ sub run {
 
 	if ( $retval != 0 ) {
 		if ( $opts{fail_ok} ) {
-			warning( "Command '$cmdstr' " . error_to_text($?, $!) . "\n" );
+			warning( "Command '$cmdstr' " . error_to_text($?, $!) . "\n" ) unless ($opts{quiet});
 		} else {
 			fatal( "Command '$cmdstr' " . error_to_text($?, $!) . "\n" );
 		}
 	}
 
-	return  wantarray ? split(/\n/, $out_buf) : $out_buf;
+	if ( $opts{get_retval} ) {
+		return { retval => $retval, stdout => $out_buf, stderr => $err_buf };
+
+	} else {
+		return  wantarray ? split(/\n/, $out_buf) : $out_buf;
+	}
 }
 
 sub info {

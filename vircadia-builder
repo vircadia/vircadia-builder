@@ -507,7 +507,7 @@ sub install_missing_packages {
 
 
 	my @missing = grep { !exists $PACKAGES{$_} } @required_packages;
-
+	my $failed;
 
 	if ( @missing ) {
 		print scalar(@missing) . " additional packages needed: " . join(", ", @missing) . "\n";
@@ -519,7 +519,10 @@ sub install_missing_packages {
 		} elsif ( $DD->{package_manager} eq "apt" ) {
 			$ENV{DEBIAN_FRONTEND} = 'noninteractive';
 			sudo_run("apt-get", "update");
-			sudo_run("--preserve-env=DEBIAN_FRONTEND", "apt-get", "install", "-y", @missing);
+			my $ret = sudo_run({ fail_ok => 1, get_retval => 1 }, "--preserve-env=DEBIAN_FRONTEND", "apt-get", "install", "-y", "--no-remove", @missing);
+			if ( $ret->{retval} > 0 ) {
+				$failed = 1;
+			}
 		} elsif ( $DD->{package_manager} eq "pacman" ) {
 			sudo_run("pacman", "-S", "--noconfirm", @missing);
 		} elsif ( $DD->{package_manager} eq "zypper" ) {
@@ -530,11 +533,71 @@ sub install_missing_packages {
 			fatal("Internal error: unknown package manager " . $DD->{package_manager});
 		}
 
-		info_ok("\nPackages have been installed, please run $0 again.\n\n");
-		exit(0);
+		if ( $failed ) {
+			warning("\nFailed to install packages\n");
+			diagnose_package_install_error(@missing);
+			exit(1);
+		} else {
+			info_ok("\nPackages have been installed, please run $0 again.\n\n");
+			exit(0);
+		}
 	} else {
 		info_ok("no.\n");
 	}
+}
+
+
+sub diagnose_package_install_error {
+	my (@packages) = @_;
+	info("Trying to diagnose package install problem. Please wait, this may take a while.\n");
+	info("Checking: ");
+
+	my @would_remove;
+	my @other_errors;
+
+
+
+	foreach my $pkg ( @packages ) {
+		if ( $DD->{package_manager} eq "dnf" ) {
+			# TODO
+		} elsif ( $DD->{package_manager} eq "yum" ) {
+			# TODO
+		} elsif ( $DD->{package_manager} eq "apt" ) {
+			info("$pkg ");
+			$ENV{DEBIAN_FRONTEND} = 'noninteractive';
+
+			my $ret_norem = run({ fail_ok => 1, get_retval => 1, quiet => 1 }, "apt-get", "install", "-y", "--no-remove", "-s", $pkg);
+			my $ret       = run({ fail_ok => 1, get_retval => 1, quiet => 1 }, "apt-get", "install", "-y", "-s", $pkg);
+
+			info("(" . $ret_norem->{retval} . "/" . $ret->{retval} . "), ");
+			if ( $ret_norem->{retval} > 0 && $ret->{retval} == 0 ) {
+				push @would_remove, $pkg;
+			} elsif ( $ret->{retval} > 0 ) {
+				push @other_errors, $pkg;
+			}
+		} elsif ( $DD->{package_manager} eq "pacman" ) {
+			# TODO
+		} elsif ( $DD->{package_manager} eq "zypper" ) {
+			# TODO
+		} elsif ( $DD->{package_manager} eq "none" ) {
+			# Nothing
+		} else {
+			fatal("Internal error: unknown package manager " . $DD->{package_manager});
+		}
+	}
+
+	info_ok("done\n\n");
+	if ( @would_remove ) {
+		warning("Installing these packages would require uninstalling packages from your system: " . join(', ', @would_remove) . "\n");
+	}
+	if ( @other_errors ) {
+		warning("These packages can't be installed in your system: " . join(', ', @other_errors) . "\n");
+	}
+
+	fatal("$0 failed to install required dependencies. Please look at the output above, there may be some clues as to what is the problem.\n".
+	      "Also, try to install any updates to your Linux distribution");
+
+
 }
 
 sub import_nvm_environment {
@@ -1326,12 +1389,18 @@ sub join_path {
 
 sub sudo_run {
 	my (@command) = @_;
+	my $run_args = {};
+
+	if ( ref($command[0]) eq "HASH" ) {
+		$run_args = shift @command;
+	}
 
 	important("Root privileges are needed to run the following command:\n");
 	important("\t" . join(' ', @command) . "\n");
 	important("Please enter your password to continue\n\n");
 
-	run("sudo", @command);
+	run($run_args, "sudo", @command);
+
 }
 
 sub calculate_cores {
