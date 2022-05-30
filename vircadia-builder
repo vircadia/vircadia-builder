@@ -338,6 +338,14 @@ my $DD = $data->{$distro};
 
 my %PACKAGES = get_package_list();
 set_environment();
+
+# We need to build Qt if:
+# A. The user explicitly wants to build it
+# B. Both of these are the case:
+#    * There's no binary package
+#    * System Qt is not supported.
+my $need_to_build_qt = $opt_build_qt || (!$DD->{has_binary_qt_package}  && !$DD->{system_qt_dependencies});
+
 install_missing_packages();
 
 exit(0) if ( $opt_install_deps_only );
@@ -345,19 +353,13 @@ exit(0) if ( $opt_install_deps_only );
 import_nvm_environment();
 collect_info();
 
-# We need to build Qt if:
-# A. The user explicitly wants to build it
-# B. Both of these are the case:
-#    * There's no binary package
-#    * System Qt is not supported.
-my $need_to_buld_qt = $opt_build_qt || (!$DD->{has_binary_qt_package}  && !$DD->{system_qt_dependencies});
 
 unless($opt_skip_build) {
 	get_source();
 	$inst_dir = get_install_dir_path();
 	$binary_dir = $opt_skip_install ? "$root_dir/build" : $inst_dir;
 
-	install_qt() if ($need_to_buld_qt);
+	install_qt() if ($need_to_build_qt);
 	build();
 }
 
@@ -365,7 +367,7 @@ unless($opt_skip_build) {
 $inst_dir = get_install_dir_path();
 $binary_dir = $opt_skip_install ? "$root_dir/build" : $inst_dir;
 
-setup_qt() if ($need_to_buld_qt);
+setup_qt() if ($need_to_build_qt);
 adjust_library_paths() unless ($opt_no_modify_rpath);
 
 if ( $opt_make_appimage ) {
@@ -480,12 +482,12 @@ sub set_environment {
 sub install_missing_packages {
 	my @required_packages = @{$DD->{source_dependencies}};
 
-	info("Checking Qt availability...");
+	info("Checking Qt availability... N=$need_to_build_qt");
 
-	if ( $DD->{system_qt_dependencies} ) {
+	if ( $DD->{system_qt_dependencies} && !$need_to_build_qt ) {
 		info_ok(" system Qt available.\n");
 		push @required_packages, @{ $DD->{system_qt_dependencies}};
-	} elsif ( $DD->{has_binary_qt_package}) {
+	} elsif ( $DD->{has_binary_qt_package} && !$need_to_build_qt) {
 		info_ok(" binary Qt package available.\n");
 	} else {
 		push @required_packages, @{ $DD->{qt_source_dependencies}};
@@ -542,7 +544,7 @@ sub install_missing_packages {
 			exit(0);
 		}
 	} else {
-		info_ok("no.\n");
+		info_ok("no, all " . scalar(@required_packages) . " required packages are present.\n");
 	}
 }
 
