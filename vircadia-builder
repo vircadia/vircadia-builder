@@ -220,7 +220,6 @@ GetOptions(
 	"pr|P=s"                 => \$opt_pr,
 ) or help(1);
 
-
 @build_list = parse_build_option($opt_build);
 if ( $opt_make_appimage ) {
 	# If we're building an AppImage, and no level has been manually specified, default to 'compatible'
@@ -1643,6 +1642,9 @@ sub check_qt_install {
 
 sub ver_parse {
 	my ($ver) = @_;
+	$ver =~ s/^[^0-9]+//;  # Remove any leading non-digits
+	$ver =~ s/[^0-9.].*?$//; # Remove anything starting from a non-digit at the end
+
 	my ($maj, $min, $rev) = split(/\./, $ver);
 	return ($maj * 1000000) + ($min*1000) + $rev;
 }
