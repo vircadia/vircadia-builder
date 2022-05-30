@@ -1104,6 +1104,12 @@ sub install_qt {
 	mkdir($root_dir);
 	chdir($root_dir);
 #	run("git", "clone", "--recursive", $qt_repo
+
+	if ( $DD->{qt_repo} ) {
+		# Override the repository if the config has an URL
+		$qt_repo = $DD->{qt_repo};
+	}
+
 	get_source_from_git($qt_repo, "qt5",  $DD->{qt_version});
 
 
