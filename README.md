@@ -1,4 +1,7 @@
 # Project Vircadia builder
+
+## **NOTE:** This is deprecated, the normal build method should be used: https://github.com/vircadia/vircadia/blob/master/BUILD_LINUX.md#build-linux
+
 Builds Vircadia (codename "Project Athena"), an open source Interface and Server solution for virtual worlds.
 
 ## Supported platforms
